@@ -1,28 +1,114 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Mapa de Direcciones</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAg-pHzpWI9Ik34rYvyPZYGU9s2aWWtFx4"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            height: 70%;
+            width: 100%;
+        }
+        .direccion-list {
+            width: 50%;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: auto;
+            max-height: 30%;
+        }
+        .direccion-item {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div class="direccion-list">
+        <h2>Direcciones (Total: <span id="total-direcciones"></span>):</h2>
+        <ul id="direccion-items"></ul>
+    </div>
+
     <script>
         function initMap() {
             var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 12,
-                center: {lat: -6.7712768, lng: -79.84516099999999} // Centro del mapa
+                zoom: 10,
+                center: { lat: -6.780803, lng: -79.844461 }
             });
 
-            var locations = {{ direcciones_geocodificadas|safe }};
-            locations.forEach(function(location) {
-                new google.maps.Marker({
-                    position: {lat: location.latitude, lng: location.longitude},
+            var direcciones = {{ direcciones_geocodificadas | safe }};
+            var markers = [];  // Arreglo para almacenar los marcadores
+            var direccionList = document.getElementById('direccion-items');
+
+            // Agregar marcadores y líneas
+            for (var i = 0; i < direcciones.length; i++) {
+                var direccion = direcciones[i];
+                var marker = new google.maps.Marker({
+                    position: { lat: direccion.latitude, lng: direccion.longitude },
                     map: map,
-                    title: location.address
+                    label: `${i + 1}`,  // Etiquetas numeradas
+                    title: direccion.address
                 });
+                markers.push(marker);
+
+                // Agregar la dirección a la lista
+                var li = document.createElement('li');
+                li.textContent = `${i + 1}. ${direccion.address}`;
+                li.className = 'direccion-item';
+                direccionList.appendChild(li);
+
+                // Conectar con una línea al siguiente marcador (ciclo cerrado)
+                var nextIndex = (i + 1) % direcciones.length;
+                var nextDireccion = direcciones[nextIndex];
+                var line = new google.maps.Polyline({
+                    path: [
+                        { lat: direccion.latitude, lng: direccion.longitude },
+                        { lat: nextDireccion.latitude, lng: nextDireccion.longitude }
+                    ],
+                    geodesic: true,
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.5,
+                    strokeWeight: 2,
+                    map: map
+                });
+            }
+
+            // Mostrar el total de direcciones
+            document.getElementById('total-direcciones').textContent = direcciones.length;
+
+            // Trazar la ruta desde la primera dirección a la dirección de inicio (cierre del ciclo)
+            var directionsService = new google.maps.DirectionsService();
+            var directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+
+            var startAddress = direcciones[direcciones.length - 1].address;  // Dirección de inicio
+            var endAddress = direcciones[0].address;  // Primera dirección optimizada
+
+            var request = {
+                origin: startAddress,
+                destination: endAddress,
+                travelMode: 'DRIVING'
+            };
+
+            directionsService.route(request, function(response, status) {
+                if (status == 'OK') {
+                    directionsRenderer.setDirections(response);
+                } else {
+                    window.alert('No se pudo trazar la ruta debido a: ' + status);
+                }
             });
         }
     </script>
-</head>
-<body onload="initMap()">
-    <h1>Mapa de Direcciones</h1>
-    <div id="map" style="height: 500px; width: 100%;"></div>
+    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAg-pHzpWI9Ik34rYvyPZYGU9s2aWWtFx4&callback=initMap"></script>
 </body>
 </html>

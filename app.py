@@ -10,6 +10,7 @@ from azure.identity import DefaultAzureCredential
 from azure.mgmt.datafactory import DataFactoryManagementClient
 import googlemaps
 import json
+import random
 
 app = Flask(__name__)
 
@@ -89,6 +90,100 @@ def upload():
     except Exception as e:
         return f"Error: {e}"
 
+def fitness(solution):
+    # Sumar las longitudes de las direcciones como medida de distancia total
+    total_distance = sum(len(direccion) for direccion in solution)
+    return total_distance
+
+# Función para inicializar la población
+def initialize_population(pop_size, direcciones):
+    """
+    Inicializa una población de soluciones para el algoritmo genético.
+    
+    Args:
+        pop_size (int): Tamaño de la población.
+        direcciones (list): Lista de direcciones a optimizar.
+        
+    Returns:
+        list: Población inicial de soluciones.
+    """
+    initial_population = []
+    num_genes = len(direcciones)
+    
+    for _ in range(pop_size):
+        # Generar una solución aleatoria de direcciones
+        solution = random.sample(direcciones, num_genes)
+        initial_population.append(solution)
+    
+    return initial_population
+
+# Función de selección de padres (torneo binario)
+def select_parents(population, fitness_values, num_parents):
+    selected_parents = []
+    for _ in range(num_parents):
+        idx1 = random.randint(0, len(population) - 1)
+        idx2 = random.randint(0, len(population) - 1)
+        parent = population[idx1] if fitness_values[idx1] < fitness_values[idx2] else population[idx2]
+        selected_parents.append(parent)
+    return selected_parents
+
+# Función de crossover (un punto)
+def crossover(parent1, parent2):
+    # Seleccionar un punto de corte aleatorio
+    point = random.randint(0, len(parent1) - 1)
+    
+    # Crear los hijos intercambiando las partes de los padres en el punto de corte
+    child1 = parent1[:point] + parent2[point:]
+    child2 = parent2[:point] + parent1[point:]
+    
+    return child1, child2
+
+# Función de mutación (bit flip) mejorada para direcciones
+def mutate(solution, mutation_rate):
+    mutated_solution = solution[:]
+    for i in range(len(mutated_solution)):
+        if random.random() < mutation_rate:
+            # Obtener la dirección original
+            original_address = solution[i]
+            
+            # Dividir la dirección en partes (por ejemplo, calle, número, etc.)
+            address_parts = original_address.split(',')
+            
+            # Modificar una parte aleatoria de la dirección
+            if len(address_parts) > 1:
+                # Escoger aleatoriamente una parte para modificar
+                index_to_mutate = random.randint(0, len(address_parts) - 1)
+                
+                # Modificar esa parte de la dirección original
+                mutated_part = address_parts[index_to_mutate].strip()
+                address_parts[index_to_mutate] = mutated_part
+            
+            # Reconstruir la dirección mutada
+            mutated_address = ','.join(address_parts)
+            
+            # Actualizar la solución mutada
+            mutated_solution[i] = mutated_address
+    
+    return mutated_solution
+
+# Función principal del algoritmo genético
+def genetic_algorithm(pop_size, direcciones, max_generations):
+    population = initialize_population(pop_size, direcciones)
+    for generation in range(max_generations):
+        fitness_values = [fitness(solution) for solution in population]
+        parents = select_parents(population, fitness_values, num_parents=2)
+        offspring = []
+        for i in range(0, pop_size, 2):
+            child1, child2 = crossover(parents[0], parents[1])  # Use parents directly, not modulo operations
+            offspring.append(mutate(child1, mutation_rate=0.1))
+            offspring.append(mutate(child2, mutation_rate=0.1))
+        population = offspring
+    best_solution = min(population, key=fitness)
+    return best_solution
+
+from flask import render_template
+
+
 @app.route('/ver_mapa')
 def ver_mapa():
     try:
@@ -98,33 +193,75 @@ def ver_mapa():
         cursor.execute("SELECT direccion, distrito FROM manifiesto2")
         rows = cursor.fetchall()
         conn.close()
-
+        
         # Preparar las direcciones para geocodificar
         direcciones = [f"{row.direccion.strip()}, {row.distrito.strip()}" for row in rows]
-
+        
+        # Ejecutar el algoritmo genético para optimizar las direcciones
+        pop_size = 10  # Tamaño de la población inicial
+        max_generations = 50  # Número máximo de generaciones
+        best_solution = genetic_algorithm(pop_size, direcciones, max_generations)  # Pasar direcciones como lista
+        
         # Geocodificar todas las direcciones usando Google Maps API
         geocoded_addresses = []
-        for direccion in direcciones:
-            geocode_result = gmaps.geocode(direccion)
-            if geocode_result:
-                location = geocode_result[0]['geometry']['location']
-                geocoded_addresses.append({
-                    'address': direccion,
-                    'latitude': location['lat'],
-                    'longitude': location['lng']
-                })
-            else:
-                print(f"No se pudo geocodificar la dirección: {direccion}")
+        for i, direccion in enumerate(best_solution):
+            try:
+                geocode_result = gmaps.geocode(direccion)
+                if geocode_result:
+                    #
+                    # Obtener cada elemento
+                    location = geocode_result[0]['geometry']['location']
+                    latitud = location['lat']
+                    longitud = location['lng']
+                    
+                    # Verificar si la latitud y longitud ya existen en geocoded_addresses
+                    if any(addr['latitude'] == latitud and addr['longitude'] == longitud for addr in geocoded_addresses):
+                        print(f"Dirección duplicada encontrada: {direccion} (Lat: {latitud}, Lng: {longitud})")
+                        continue  # Omitir la dirección duplicada
 
+                    # Determinar la etiqueta para la dirección
+                    if i == 0:
+                        # Agregar la etiqueta 'DIRECCION 1' a la primera dirección
+                        etiqueta = 'DIRECCION 1'
+                    else:
+                        etiqueta = f'DIRECCION {i + 1}'
+
+                    geocoded_addresses.append({
+                        'label': etiqueta,
+                        'address': direccion,
+                        'latitude': latitud,
+                        'longitude': longitud
+                    })
+                    #
+                else:
+                    print(f"No se encontraron resultados para la dirección: {direccion}")
+            except googlemaps.exceptions.ApiError as ex:
+                print(f"Error de API al geocodificar {direccion}: {ex}")
+        
+        # Añadir la dirección de inicio como dirección de fin (cierre del ciclo)
+        start_address = "CALLE LOS SAUCES URBANIZACION SANTA VICTORIA, CHICLAYO"
+        geocode_result = gmaps.geocode(start_address)
+        if geocode_result:
+            location = geocode_result[0]['geometry']['location']
+            geocoded_addresses.append({
+                'label': 'DIRECCION 1',  # Etiquetar como dirección inicial
+                'address': start_address,
+                'latitude': location['lat'],
+                'longitude': location['lng']
+            })
+        else:
+            print(f"No se encontraron resultados para la dirección de inicio: {start_address}")
+        
         # Convertir a formato JSON
         json_data = json.dumps(geocoded_addresses, indent=4)
         
         # Renderizar la plantilla mapa.html con los datos geocodificados
         return render_template('mapa.html', direcciones_geocodificadas=json_data)
+    
     except pyodbc.Error as e:
         return f"Error de base de datos: {e}"
     except Exception as e:
-        return f"Error: {e}"
-
+        return f"Error inesperado: {e}"
+    
 if __name__ == '__main__':
     app.run(debug=True)
