@@ -1,0 +1,3 @@
+pip install azure-ai-formrecognizer
+pip install googlemaps pandas gmplot
+pip install flask pandas

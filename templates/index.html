@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Subir Documento</title>
+    <script>
+        function convertToBase64() {
+            const fileInput = document.getElementById('photo');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function(event) {
+                    const base64Data = event.target.result;
+                    const image = new Image();
+
+                    image.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+
+                        canvas.width = image.width;
+                        canvas.height = image.height;
+                        context.drawImage(image, 0, 0);
+
+                        const jpegData = canvas.toDataURL('image/jpeg', 0.8);
+                        document.getElementById('base64Data').value = jpegData;
+                        document.getElementById('uploadForm').submit();
+                    };
+
+                    image.src = base64Data;
+                };
+
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <h1>Subir Documento</h1>
+    <form id="uploadForm" action="/analizar" method="post" enctype="multipart/form-data">
+        <input type="file" id="photo" accept="image/*">
+        <input type="hidden" id="base64Data" name="base64Data">
+        <button type="button" onclick="convertToBase64()">Subir</button>
+    </form>
+</body>
+
+</html>

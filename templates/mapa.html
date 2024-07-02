@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mapa de Direcciones</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAg-pHzpWI9Ik34rYvyPZYGU9s2aWWtFx4"></script>
+    <script>
+        function initMap() {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 12,
+                center: {lat: -6.7712768, lng: -79.84516099999999} // Centro del mapa
+            });
+
+            var locations = {{ direcciones_geocodificadas|safe }};
+            locations.forEach(function(location) {
+                new google.maps.Marker({
+                    position: {lat: location.latitude, lng: location.longitude},
+                    map: map,
+                    title: location.address
+                });
+            });
+        }
+    </script>
+</head>
+<body onload="initMap()">
+    <h1>Mapa de Direcciones</h1>
+    <div id="map" style="height: 500px; width: 100%;"></div>
+</body>
+</html>

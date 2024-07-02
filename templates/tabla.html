@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Hoja de Ruta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+            font-weight: bold;
+            position: relative;
+        }
+
+        th::after {
+            content: '\25BC';
+            font-size: 12px;
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        th.active::after {
+            content: '\25B2';
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f2f2f2;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #filterContainer {
+            margin-bottom: 16px;
+        }
+
+        #searchContainer {
+            margin-bottom: 16px;
+        }
+
+        #search {
+            width: 200px;
+        }
+
+        #totalItems {
+            margin-top: 16px;
+            text-align: right;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Hoja de Ruta</h1>
+    
+    <div id="filterContainer">
+        <label for="filter">Filtro:</label>
+        <select id="filter">
+            <option value="10">10</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="150">150</option>
+        </select>
+    </div>
+
+    <div id="searchContainer">
+        <input type="text" id="search" placeholder="Buscar...">
+        <button onclick="searchTable()">Buscar</button>
+    </div>
+
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th onclick="sortTable(0)">Item</th>
+                <th onclick="sortTable(1)">Codigo</th>
+                <th onclick="sortTable(2)">Cliente</th>
+                <th onclick="sortTable(3)">Direccion</th>
+                <th onclick="sortTable(4)">Distrito</th>
+                <th onclick="sortTable(5)">Servicio</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                {% for cell in row %}
+                <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div id="totalItems"></div>
+    
+    <button onclick="window.location.href='/ver_mapa'">Ver Mapa</button>
+    <button onclick="window.location.href='/'">Atrás</button>
+
+    <script>
+        function filterTable() {
+            var filter = document.getElementById("filter").value;
+            var table = document.getElementById("dataTable");
+            var rows = table.getElementsByTagName("tr");
+
+            for (var i = 1; i < rows.length; i++) {
+                var row = rows[i];
+                if (i <= filter) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            }
+
+            updateTotalItems();
+        }
+
+        function searchTable() {
+            var input = document.getElementById("search").value.toUpperCase();
+            var table = document.getElementById("dataTable");
+            var rows = table.getElementsByTagName("tr");
+
+            for (var i = 1; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName("td");
+                var found = false;
+                for (var j = 0; j < cells.length; j++) {
+                    var cell = cells[j];
+                    if (cell) {
+                        var textValue = cell.textContent || cell.innerText;
+                        if (textValue.toUpperCase().indexOf(input) > -1) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (found) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+
+            updateTotalItems();
+        }
+
+        function updateTotalItems() {
+            var table = document.getElementById("dataTable");
+            var rows = table.getElementsByTagName("tr");
+            var filteredRows = 0;
+
+            for (var i = 1; i < rows.length; i++) {
+                if (rows[i].style.display !== "none") {
+                    filteredRows++;
+                }
+            }
+
+            document.getElementById("totalItems").textContent = "Total de items filtrados: " + filteredRows;
+        }
+
+        function sortTable(column) {
+            var table, rows, switching, i, x, y, shouldSwitch;
+            table = document.getElementById("dataTable");
+            switching = true;
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName("TD")[column];
+                    y = rows[i + 1].getElementsByTagName("TD")[column];
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                }
+            }
+
+            var headers = document.getElementsByTagName("th");
+            for (var j = 0; j < headers.length; j++) {
+                headers[j].classList.remove("active");
+            }
+            headers[column].classList.add("active");
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            filterTable();
+            document.getElementById("filter").addEventListener("change", filterTable);
+        });
+    </script>
+
+</body>
+
+</html>
