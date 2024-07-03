@@ -511,8 +511,8 @@ def editar_usuario(usuarioid):
         db.conn.commit()
     return redirect(url_for('usuario'))
 ################################# LOGIN ################################
-@app.route('/login')
-def login():
+@app.route('/sesion')
+def sesion():
     cursor = db.conn.cursor()
     cursor.execute("SELECT * FROM login")
     myresult = cursor.fetchall()
@@ -522,7 +522,7 @@ def login():
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    return render_template('/static/html/login.html', data=insertObject)
+    return render_template('/static/html/sesion.html', data=insertObject)
 
 @app.route('/agregar_login', methods=['POST'])
 def agregar_login():
@@ -536,7 +536,7 @@ def agregar_login():
         data = (email, contrasena, rolid, estado)
         cursor.execute(sql, data)
         db.conn.commit()
-    return redirect(url_for('login'))
+    return redirect(url_for('sesion'))
 
 @app.route('/eliminar_login/<string:loginid>', methods=['GET'])
 def eliminar_login(loginid):
@@ -545,7 +545,7 @@ def eliminar_login(loginid):
     data = (loginid,)
     cursor.execute(sql, data)
     db.conn.commit()
-    return redirect(url_for('login')) 
+    return redirect(url_for('sesion')) 
 
 @app.route('/editar_login/<string:loginid>', methods=['POST'])
 def editar_login(loginid):
@@ -559,7 +559,7 @@ def editar_login(loginid):
         data = (email, contrasena, rolid, estado, loginid)
         cursor.execute(sql, data)
         db.conn.commit()
-    return redirect(url_for('login'))
+    return redirect(url_for('sesion'))
 ################################ VEHICULO ##############################
 @app.route('/vehiculo')
 def vehiculo():
