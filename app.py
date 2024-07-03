@@ -208,23 +208,12 @@ def ver_mapa():
             try:
                 geocode_result = gmaps.geocode(direccion)
                 if geocode_result:
-                    #
-                    # Obtener cada elemento
                     location = geocode_result[0]['geometry']['location']
                     latitud = location['lat']
                     longitud = location['lng']
                     
-                    # Verificar si la latitud y longitud ya existen en geocoded_addresses
-                    if any(addr['latitude'] == latitud and addr['longitude'] == longitud for addr in geocoded_addresses):
-                        print(f"Dirección duplicada encontrada: {direccion} (Lat: {latitud}, Lng: {longitud})")
-                        continue  # Omitir la dirección duplicada
-
                     # Determinar la etiqueta para la dirección
-                    if i == 0:
-                        # Agregar la etiqueta 'DIRECCION 1' a la primera dirección
-                        etiqueta = 'DIRECCION 1'
-                    else:
-                        etiqueta = f'DIRECCION {i + 1}'
+                    etiqueta = f'DIRECCION {i + 1}'
 
                     geocoded_addresses.append({
                         'label': etiqueta,
@@ -232,18 +221,28 @@ def ver_mapa():
                         'latitude': latitud,
                         'longitude': longitud
                     })
-                    #
                 else:
                     print(f"No se encontraron resultados para la dirección: {direccion}")
             except googlemaps.exceptions.ApiError as ex:
                 print(f"Error de API al geocodificar {direccion}: {ex}")
+        
+        # Filtrar duplicados por coordenadas después de geocodificar
+        unique_geocoded_addresses = []
+        seen_addresses = set()
+        for address in geocoded_addresses:
+            coordinates = (address['latitude'], address['longitude'])
+            if coordinates not in seen_addresses:
+                unique_geocoded_addresses.append(address)
+                seen_addresses.add(coordinates)
+            else:
+                print(f"Dirección duplicada encontrada: {address['address']} (Lat: {address['latitude']}, Lng: {address['longitude']})")
         
         # Añadir la dirección de inicio como dirección de fin (cierre del ciclo)
         start_address = "CALLE LOS SAUCES URBANIZACION SANTA VICTORIA, CHICLAYO"
         geocode_result = gmaps.geocode(start_address)
         if geocode_result:
             location = geocode_result[0]['geometry']['location']
-            geocoded_addresses.append({
+            unique_geocoded_addresses.append({
                 'label': 'DIRECCION 1',  # Etiquetar como dirección inicial
                 'address': start_address,
                 'latitude': location['lat'],
@@ -253,7 +252,7 @@ def ver_mapa():
             print(f"No se encontraron resultados para la dirección de inicio: {start_address}")
         
         # Convertir a formato JSON
-        json_data = json.dumps(geocoded_addresses, indent=4)
+        json_data = json.dumps(unique_geocoded_addresses, indent=4)
         
         # Renderizar la plantilla mapa.html con los datos geocodificados
         return render_template('mapa.html', direcciones_geocodificadas=json_data)
