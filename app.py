@@ -447,7 +447,69 @@ def editar_tipodocumento(TipodocumentoID):
         db.conn.commit()
     return redirect(url_for('tipodocumento'))
 ################################ USUARIO ###############################
+@app.route('/usuario')
+def usuario():
+    cursor = db.conn.cursor()
+    cursor.execute("SELECT * FROM usuario")
+    myresult = cursor.fetchall()
+    # Convertir los datos a diccionario
+    insertObject = []
+    columnNames = [column[0] for column in cursor.nombreusuario]
+    for record in myresult:
+        insertObject.append(dict(zip(columnNames, record)))
+    cursor.close()
+    return render_template('/static/html/usuario.html', data=insertObject)
 
+@app.route('/agregar_usuario', methods=['POST'])
+def agregar_usuario():
+    nombreusuario = request.form['nombreusuario']
+    contrasena = request.form['contrasena']
+    tipodocumento = request.form['tipodocumento']
+    documento = request.form['documento']
+    nombres = request.form['nombres']
+    apellidos = request.form['apellidos']
+    correo = request.form['correo']
+    telefono = request.form['telefono']
+    direccion = request.form['direccion']
+    estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
+    cargoid = request.form['cargoid']
+    if nombreusuario and contrasena and tipodocumento and documento and nombres and apellidos and correo and telefono and direccion and cargoid:
+        cursor = db.conn.cursor()
+        sql = "INSERT INTO usuario (nombreusuario, contrasena, tipodocumento, documento, nombres, apellidos, correo, telefono, direccion, estado, cargoid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        data = (nombreusuario, contrasena, tipodocumento, documento, nombres, apellidos, correo, telefono, direccion, estado, cargoid)
+        cursor.execute(sql, data)
+        db.conn.commit()
+    return redirect(url_for('usuario'))
+
+@app.route('/eliminar_usuario/<string:usuarioid>', methods=['GET'])
+def eliminar_usuario(usuarioid):
+    cursor = db.conn.cursor()
+    sql = "DELETE FROM usuario WHERE usuarioid=?"
+    data = (usuarioid,)
+    cursor.execute(sql, data)
+    db.conn.commit()
+    return redirect(url_for('usuario')) 
+
+@app.route('/editar_usuario/<string:usuarioid>', methods=['POST'])
+def editar_usuario(usuarioid):
+    nombreusuario = request.form['nombreusuario']
+    contrasena = request.form['contrasena']
+    tipodocumento = request.form['tipodocumento']
+    documento = request.form['documento']
+    nombres = request.form['nombres']
+    apellidos = request.form['apellidos']
+    correo = request.form['correo']
+    telefono = request.form['telefono']
+    direccion = request.form['direccion']
+    estado = 'estado' in request.form
+    cargoid = request.form['cargoid']
+    if nombreusuario and contrasena and tipodocumento and documento and nombres and apellidos and correo and telefono and direccion and cargoid:
+        cursor = db.conn.cursor()
+        sql = "UPDATE usuario SET nombreusuario = ?, contrsena = ?, tipodocumento = ?, documento = ?, nombres = ?, apellidos = ?, correo = ?, telefono = ?, direccion = ?, estado = ?, cargoid = ? WHERE usuarioid = ?"
+        data = (nombreusuario, contrasena, tipodocumento, documento, nombres, apellidos, correo, telefono, direccion, estado, cargoid, usuarioid)
+        cursor.execute(sql, data)
+        db.conn.commit()
+    return redirect(url_for('usuario'))
 ################################# LOGIN ################################
 @app.route('/login')
 def login():

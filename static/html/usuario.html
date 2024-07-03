@@ -145,36 +145,54 @@
                     <td>{{u.estado}}</td>
                     <td>{{u.cargoid}}</td>
                     <td>
-                      <button class="btn btn-primary btn-sm" id="btn-edit{{c.cargoid}}" data-bs-toggle="modal"
-                        data-bs-target="#modal{{c.cargoid}}">
+                      <button class="btn btn-primary btn-sm" id="btn-edit{{u.usuarioid}}" data-bs-toggle="modal"
+                        data-bs-target="#modal{{u.usuarioid}}">
                         Editar
                       </button>
                     </td>
                     <td>
-                      <a href="{{url_for('eliminar_cargo', cargoid=c.cargoid)}}"
+                      <a href="{{url_for('eliminar_usuario', usuarioid=u.usuarioid)}}"
                         class="btn btn-danger btn-sm">Eliminar</a>
                     </td>
                   </tr>
                   <!-- modal -->
-                  <div class="modal fade" id="modal{{c.cargoid}}" tabindex="-1" aria-labelledby="exampleModalLabel"
+                  <div class="modal fade" id="modal{{u.usuarioid}}" tabindex="-1" aria-labelledby="exampleModalLabel"
                     aria-hidden="true">
                     <div class="modal-dialog">
                       <div class="modal-content">
                         <div class="modal-header">
-                          <h1 class="modal-title fs-5" id="exampleModalLabel">{{c.titulo}}</h1>
+                          <h1 class="modal-title fs-5" id="exampleModalLabel">{{u.nombreusuario}}</h1>
                           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                          <form action="/editar_cargo/{{c.cargoid}}" method="post">
-                            <label>Título</label>
-                            <input type="text" class="form-control mb-3" name="titulo" value="{{c.titulo}}" />
-                            <label>Descripción</label>
-                            <input type="text" class="form-control mb-3" name="descripcion" value="{{c.descripcion}}" />
+                          <form action="/editar_cargo/{{u.usuarioid}}" method="post">
+                            <label>Nombre Usuario</label>
+                            <input type="text" class="form-control mb-3" name="nombreusuario" value="{{u.nombreusuario}}" />
+                            <label>Contraseña</label>
+                            <input type="text" class="form-control mb-3" name="contrasena" value="{{u.contrasena}}" />
+                            <label>Nombre Usuario</label>
+                            <input type="text" class="form-control mb-3" name="nombreusuario" value="{{u.nombreusuario}}" />
+                            <label>Tipo de Documento</label>
+                            <input type="text" class="form-control mb-3" name="tipodocumento" value="{{u.tipodocumento}}" />
+                            <label>Documento</label>
+                            <input type="text" class="form-control mb-3" name="documento" value="{{u.documento}}" />
+                            <label>Nombres</label>
+                            <input type="text" class="form-control mb-3" name="nombres" value="{{u.nombres}}" />
+                            <label>Apellidos</label>
+                            <input type="text" class="form-control mb-3" name="apellidos" value="{{u.apellidos}}" />
+                            <label>Correo</label>
+                            <input type="text" class="form-control mb-3" name="correo" value="{{u.correo}}" /> 
+                            <label>Teléfono</label>
+                            <input type="text" class="form-control mb-3" name="telefono" value="{{u.telefono}}" />
+                            <label>Dirección</label>
+                            <input type="text" class="form-control mb-3" name="direccion" value="{{u.direccion}}" /> 
+                            <label>Cargo ID</label>
+                            <input type="text" class="form-control mb-3" name="cargoid" value="{{u.cargoid}}" />                                                        
                             <label>Estado</label>
                             <div class="form-check">
-                              <input type="checkbox" class="form-check-input" name="estado" id="estado{{c.cargoid}}"
-                                value="true" {% if c.estado %}checked{% endif %} />
-                              <label class="form-check-label" for="estado{{c.cargoid}}">Activo</label>
+                              <input type="checkbox" class="form-check-input" name="estado" id="estado{{u.usuarioid}}"
+                                value="true" {% if u.estado %}checked{% endif %} />
+                              <label class="form-check-label" for="estado{{u.usuarioid}}">Activo</label>
                             </div>
                             <div class="modal-footer">
                               <button type="submit" class="btn btn-primary">Guardar cambios</button>
@@ -196,5 +214,4 @@
     </main>
   </div>
 </body>
-
 </html>
