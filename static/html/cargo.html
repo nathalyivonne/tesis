@@ -29,12 +29,13 @@
                         <span> DASHBOARD </span></a>
                 </li>
                 <li>
-                    <li class=""><a class="fa-solid fa-id-card" href="/static/html/cargo.html">Cargo</a></li>
-                    <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a></li>
-                    <li class=""><a class="fa-solid fa-users" href="/static/html/roles.html">Roles</a></li>
-                    <li class=""><a class="fa-solid fa-file" href="/static/html/tipoDocumento.html">Tipo Documento</a></li>
-                    <li class=""><a class="fa-solid fa-truck" href="/static/html/vehiculo.html">Vehiculo</a></li>
-                    <li class=""><a class="fa-solid fa-user" href="/static/html/usuario.html">Usuario</a></li>
+                <li class=""><a class="fa-solid fa-id-card" href="/static/html/cargo.html">Cargo</a></li>
+                <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a></li>
+                <li class=""><a class="fa-solid fa-users" href="/static/html/roles.html">Roles</a></li>
+                <li class=""><a class="fa-solid fa-file" href="/static/html/tipoDocumento.html">Tipo Documento</a></li>
+                <li class=""><a class="fa-solid fa-truck" href="/static/html/vehiculo.html">Vehiculo</a></li>
+                <li class=""><a class="fa-solid fa-user" href="/static/html/usuario.html">Usuario</a></li>
+                <li class=""><a class="fa-solid fa-user" href="/static/html/login.html">Login</a></li>
                 </li>
             </ul>
         </div>
@@ -118,7 +119,8 @@
                                                         aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <form action="{{ url_for('editar_cargo', cargoid=c.cargoid) }}" method="post">
+                                                    <form action="{{ url_for('editar_cargo', cargoid=c.cargoid) }}"
+                                                        method="post">
                                                         <label>Título</label>
                                                         <input type="text" class="form-control mb-3" name="titulo"
                                                             value="{{c.titulo}}" />
@@ -128,7 +130,8 @@
                                                         <label>Estado</label>
                                                         <div class="form-check">
                                                             <input type="checkbox" class="form-check-input"
-                                                                name="estado" id="estado{{c.cargoid}}" {% if c.estado %}checked{% endif %} />
+                                                                name="estado" id="estado{{c.cargoid}}" {% if c.estado
+                                                                %}checked{% endif %} />
                                                             <label class="form-check-label"
                                                                 for="estado{{c.cargoid}}">Activo</label>
                                                         </div>
