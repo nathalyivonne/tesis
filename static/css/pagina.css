@@ -317,3 +317,18 @@ td {
         grid-template-columns: 100%;
     }
 }
+
+.btn-exit {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px;
+    background-color: #f44336; 
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-exit:hover {
+    background-color: #d32f2f; 
+}

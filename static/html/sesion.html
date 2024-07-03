@@ -57,12 +57,16 @@
                         <form action="{{ url_for('agregar_login') }}" method="POST">
                             <div class="row mb-3">
                                 <div class="col">
-                                    <label>Título</label>
-                                    <input type="text" class="form-control mb-3" name="titulo" />
+                                    <label>Email</label>
+                                    <input type="text" class="form-control mb-3" name="email" />
                                 </div>
                                 <div class="col">
-                                    <label>Descripción</label>
-                                    <input type="text" class="form-control mb-3" name="descripcion" />
+                                    <label>Contraseña</label>
+                                    <input type="text" class="form-control mb-3" name="contrasena" />
+                                </div>
+                                <div class="col">
+                                    <label>Rol ID</label>
+                                    <input type="text" class="form-control mb-3" name="rolid" />
                                 </div>
                                 <div class="col">
                                     <label>Estado</label>
