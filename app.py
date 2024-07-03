@@ -14,6 +14,7 @@ import random
 import secrets
 import os
 import database as db
+from flask import send_from_directory
 
 app = Flask(__name__)
        
@@ -304,8 +305,6 @@ def ver_mapa():
 ################################ MANTENIMIENTOS ###############################
 #################################### CARGO ####################################
 
-from flask import send_from_directory
-
 @app.route('/cargo', methods=['GET'])
 def cargo():
     cursor = db.conn.cursor()
@@ -319,7 +318,7 @@ def cargo():
     cursor.close()
     print(insertObject)
     # Renderizar el template cargo.html desde la carpeta templates/static/html
-    return render_template('static/html/cargo.html', data=insertObject)
+    return render_template('/static/html/cargo.html', data=insertObject)
 
 @app.route('/agregar_cargo', methods=['POST'])
 def agregar_cargo():
@@ -358,6 +357,60 @@ def editar_cargo(cargoid):
     return redirect(url_for('cargo'))
 
 #################################### ROLES ####################################
+@app.route('/roles', methods=['GET'])
+def roles():
+    cursor = db.conn.cursor()
+    cursor.execute("SELECT * FROM roles")
+    myresult = cursor.fetchall()
+    # Convertir los datos a diccionario
+    insertObject = []
+    columnNames = [column[0] for column in cursor.description]
+    for record in myresult:
+        insertObject.append(dict(zip(columnNames, record)))
+    cursor.close()
+    print(insertObject)
+    return render_template('/static/html/roles.html', data=insertObject)
+
+@app.route('/agregar_roles', methods=['POST'])
+def agregar_roles():
+    descripcion = request.form['descripcion']
+    estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
+
+    if descripcion:
+        cursor = db.conn.cursor()
+        sql = "INSERT INTO roles (descripcion, estado) VALUES (?, ?)"
+        data = (descripcion, estado)
+        cursor.execute(sql, data)
+        db.conn.commit()
+    return redirect(url_for('roles'))
+
+@app.route('/eliminar_roles/<string:rolid>', methods=['GET'])
+def eliminar_roles(rolid):
+    cursor = db.conn.cursor()
+    sql = "DELETE FROM rol WHERE rolid=?"
+    data = (rolid,)
+    cursor.execute(sql, data)
+    db.conn.commit()
+    return redirect(url_for('roles')) 
+
+@app.route('/editar_roles/<string:rolid>', methods=['POST'])
+def editar_roles(rolid):
+    descripcion = request.form['descripcion']
+    estado = 'estado' in request.form
+    if descripcion:
+        cursor = db.conn.cursor()
+        sql = "UPDATE roles SET descripcion = ?, estado = ? WHERE rolid = ?"
+        data = (descripcion, estado, rolid)
+        cursor.execute(sql, data)
+        db.conn.commit()
+    return redirect(url_for('roles'))
 ################################ TIPO DOCUMENTO ###############################
+
+
+
+
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
