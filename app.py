@@ -304,8 +304,9 @@ def ver_mapa():
 ################################ MANTENIMIENTOS ###############################
 #################################### CARGO ####################################
 
-#Rutas de la aplicación
-@app.route('/')
+from flask import send_from_directory
+
+@app.route('/cargo', methods=['GET'])
 def cargo():
     cursor = db.conn.cursor()
     cursor.execute("SELECT * FROM cargo")
@@ -316,9 +317,10 @@ def cargo():
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    return render_template('cargo.html', data=insertObject)
+    print(insertObject)
+    # Renderizar el template cargo.html desde la carpeta templates/static/html
+    return render_template('static/html/cargo.html', data=insertObject)
 
-#Ruta para guardar usuarios en la bd
 @app.route('/agregar_cargo', methods=['POST'])
 def agregar_cargo():
     titulo = request.form['titulo']
@@ -333,7 +335,7 @@ def agregar_cargo():
         db.conn.commit()
     return redirect(url_for('cargo'))
 
-@app.route('/eliminar_cargo/<string:cargoid>')
+@app.route('/eliminar_cargo/<string:cargoid>', methods=['GET'])
 def eliminar_cargo(cargoid):
     cursor = db.conn.cursor()
     sql = "DELETE FROM cargo WHERE cargoid=?"
@@ -346,9 +348,7 @@ def eliminar_cargo(cargoid):
 def editar_cargo(cargoid):
     titulo = request.form['titulo']
     descripcion = request.form['descripcion']
-    # Verificar si 'estado' está en request.form
     estado = 'estado' in request.form
-
     if titulo and descripcion:
         cursor = db.conn.cursor()
         sql = "UPDATE cargo SET titulo = ?, descripcion = ?, estado = ? WHERE cargoid = ?"
@@ -357,5 +357,7 @@ def editar_cargo(cargoid):
         db.conn.commit()
     return redirect(url_for('cargo'))
 
+#################################### ROLES ####################################
+################################ TIPO DOCUMENTO ###############################
 if __name__ == '__main__':
     app.run(debug=True)
