@@ -59,15 +59,15 @@ def login():
             # Conectar a la base de datos SQL Server
             conn = pyodbc.connect(conn_str)
             cursor = conn.cursor()
-            cursor.execute('SELECT loginid, rolid FROM login WHERE email = ? AND contrasena = ?', (_email, _contrasena))
+            cursor.execute('SELECT usuarioid, rolid FROM usuario WHERE email = ? AND contrasena = ?', (_email, _contrasena))
             account = cursor.fetchone()
             conn.close()
 
             if account:
                 # Autenticación exitosa
-                loginid, rolid = account[0], account[1]
+                usuarioid, rolid = account[0], account[1]
                 
-                if rolid == 1:
+                if rolid in (3,1):
                     return render_template("index2.html")
                 elif rolid == 2:
                     return render_template("admin2.html")
@@ -311,12 +311,12 @@ def cargo():
     myresult = cursor.fetchall()
     # Convertir los datos a diccionario
     insertObject = []
-    columnNames = [column[0] for column in cursor.descripcion]
+    columnNames = [column[0] for column in cursor.description]
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
     # Renderizar el template cargo.html desde la carpeta templates/static/html
-    return render_template('/static/html/cargo.html', data=insertObject)
+    return render_template('cargo.html', data=insertObject)
 
 @app.route('/agregar_cargo', methods=['POST'])
 def agregar_cargo():
@@ -360,11 +360,11 @@ def roles():
     myresult = cursor.fetchall()
     # Convertir los datos a diccionario
     insertObject = []
-    columnNames = [column[0] for column in cursor.descripcion]
+    columnNames = [column[0] for column in cursor.description]
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    return render_template('/static/html/roles.html', data=insertObject)
+    return render_template('roles.html', data=insertObject)
 
 @app.route('/agregar_roles', methods=['POST'])
 def agregar_roles():
@@ -381,7 +381,7 @@ def agregar_roles():
 @app.route('/eliminar_roles/<string:rolid>', methods=['GET'])
 def eliminar_roles(rolid):
     cursor = db.conn.cursor()
-    sql = "DELETE FROM rol WHERE rolid=?"
+    sql = "DELETE FROM roles WHERE rolid=?"
     data = (rolid,)
     cursor.execute(sql, data)
     db.conn.commit()
@@ -399,18 +399,18 @@ def editar_roles(rolid):
         db.conn.commit()
     return redirect(url_for('roles'))
 ################################ TIPO DOCUMENTO ###############################
-@app.route('/tipodocumento')
-def tipodocumento():
+@app.route('/tipoDocumento')
+def tipoDocumento():
     cursor = db.conn.cursor()
-    cursor.execute("SELECT * FROM tipodocumento")
+    cursor.execute("SELECT * FROM TipoDocumento")
     myresult = cursor.fetchall()
     # Convertir los datos a diccionario
     insertObject = []
-    columnNames = [column[0] for column in cursor.descripcion]
+    columnNames = [column[0] for column in cursor.description]
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    return render_template('/static/html/tipoDocumento.html', data=insertObject)
+    return render_template('tipoDocumento.html', data=insertObject)
 
 @app.route('/agregar_tipodocumento', methods=['POST'])
 def agregar_tipodocumento():
@@ -419,20 +419,20 @@ def agregar_tipodocumento():
     estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
     if Acronimo and Descripcion:
         cursor = db.conn.cursor()
-        sql = "INSERT INTO tipodocumento (Acronimo, Descripcion, estado) VALUES (?, ?, ?)"
+        sql = "INSERT INTO TipoDocumento (Acronimo, Descripcion, estado) VALUES (?, ?, ?)"
         data = (Acronimo, Descripcion, estado)
         cursor.execute(sql, data)
         db.conn.commit()
-    return redirect(url_for('tipodocumento'))
+    return redirect(url_for('tipoDocumento'))
 
 @app.route('/eliminar_tipodocumento/<string:TipodocumentoID>', methods=['GET'])
 def eliminar_tipodocumento(TipodocumentoID):
     cursor = db.conn.cursor()
-    sql = "DELETE FROM tipodocumento WHERE TipodocumentoID=?"
+    sql = "DELETE FROM TipoDocumento WHERE TipodocumentoID=?"
     data = (TipodocumentoID,)
     cursor.execute(sql, data)
     db.conn.commit()
-    return redirect(url_for('tipodocumento')) 
+    return redirect(url_for('tipoDocumento')) 
 
 @app.route('/editar_tipodocumento/<string:TipodocumentoID>', methods=['POST'])
 def editar_tipodocumento(TipodocumentoID):
@@ -441,11 +441,11 @@ def editar_tipodocumento(TipodocumentoID):
     estado = 'estado' in request.form
     if Acronimo and Descripcion:
         cursor = db.conn.cursor()
-        sql = "UPDATE tipodocumento SET Acronimo = ?, Descripcion = ?, estado = ? WHERE TipodocumentoID = ?"
+        sql = "UPDATE TipoDocumento SET Acronimo = ?, Descripcion = ?, estado = ? WHERE TipodocumentoID = ?"
         data = (Acronimo, Descripcion, estado, TipodocumentoID)
         cursor.execute(sql, data)
         db.conn.commit()
-    return redirect(url_for('tipodocumento'))
+    return redirect(url_for('tipoDocumento'))
 ################################ USUARIO ###############################
 @app.route('/usuario')
 def usuario():
@@ -454,29 +454,30 @@ def usuario():
     myresult = cursor.fetchall()
     # Convertir los datos a diccionario
     insertObject = []
-    columnNames = [column[0] for column in cursor.nombreusuario]
+    columnNames = [column[0] for column in cursor.description]
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    return render_template('/static/html/usuario.html', data=insertObject)
+    return render_template('usuario.html', data=insertObject)
 
 @app.route('/agregar_usuario', methods=['POST'])
 def agregar_usuario():
-    nombreusuario = request.form['nombreusuario']
+    email = request.form ['email']
     contrasena = request.form['contrasena']
+    nombreusuario = request.form['nombreusuario']    
     tipodocumento = request.form['tipodocumento']
     documento = request.form['documento']
     nombres = request.form['nombres']
     apellidos = request.form['apellidos']
-    correo = request.form['correo']
     telefono = request.form['telefono']
     direccion = request.form['direccion']
     estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
     cargoid = request.form['cargoid']
-    if nombreusuario and contrasena and tipodocumento and documento and nombres and apellidos and correo and telefono and direccion and cargoid:
+    rolid = request.form['rolid']
+    if email and nombreusuario and contrasena and tipodocumento and documento and nombres and apellidos and telefono and direccion and cargoid and rolid:
         cursor = db.conn.cursor()
-        sql = "INSERT INTO usuario (nombreusuario, contrasena, tipodocumento, documento, nombres, apellidos, correo, telefono, direccion, estado, cargoid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        data = (nombreusuario, contrasena, tipodocumento, documento, nombres, apellidos, correo, telefono, direccion, estado, cargoid)
+        sql = "INSERT INTO usuario (email, nombreusuario, contrasena, tipodocumento, documento, nombres, apellidos, telefono, direccion, estado, cargoid, rolid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        data = (email, nombreusuario, contrasena, tipodocumento, documento, nombres, apellidos, telefono, direccion, estado, cargoid, rolid)
         cursor.execute(sql, data)
         db.conn.commit()
     return redirect(url_for('usuario'))
@@ -492,74 +493,25 @@ def eliminar_usuario(usuarioid):
 
 @app.route('/editar_usuario/<string:usuarioid>', methods=['POST'])
 def editar_usuario(usuarioid):
-    nombreusuario = request.form['nombreusuario']
+    email = request.form ['email']
     contrasena = request.form['contrasena']
+    nombreusuario = request.form['nombreusuario']    
     tipodocumento = request.form['tipodocumento']
     documento = request.form['documento']
     nombres = request.form['nombres']
     apellidos = request.form['apellidos']
-    correo = request.form['correo']
     telefono = request.form['telefono']
     direccion = request.form['direccion']
     estado = 'estado' in request.form
     cargoid = request.form['cargoid']
-    if nombreusuario and contrasena and tipodocumento and documento and nombres and apellidos and correo and telefono and direccion and cargoid:
+    rolid = request.form['rolid']
+    if email and nombreusuario and contrasena and tipodocumento and documento and nombres and apellidos and telefono and direccion and cargoid and roldid:
         cursor = db.conn.cursor()
-        sql = "UPDATE usuario SET nombreusuario = ?, contrsena = ?, tipodocumento = ?, documento = ?, nombres = ?, apellidos = ?, correo = ?, telefono = ?, direccion = ?, estado = ?, cargoid = ? WHERE usuarioid = ?"
-        data = (nombreusuario, contrasena, tipodocumento, documento, nombres, apellidos, correo, telefono, direccion, estado, cargoid, usuarioid)
+        sql = "UPDATE usuario SET email = ?, nombreusuario = ?, contrsena = ?, tipodocumento = ?, documento = ?, nombres = ?, apellidos = ?, telefono = ?, direccion = ?, estado = ?, cargoid = ?, rolid = ? WHERE usuarioid = ?"
+        data = (email, nombreusuario, contrasena, tipodocumento, documento, nombres, apellidos, telefono, direccion, estado, cargoid, usuarioid, rolid)
         cursor.execute(sql, data)
         db.conn.commit()
     return redirect(url_for('usuario'))
-################################# LOGIN ################################
-@app.route('/sesion')
-def sesion():
-    cursor = db.conn.cursor()
-    cursor.execute("SELECT * FROM login")
-    myresult = cursor.fetchall()
-    # Convertir los datos a diccionario
-    insertObject = []
-    columnNames = [column[0] for column in cursor.email]
-    for record in myresult:
-        insertObject.append(dict(zip(columnNames, record)))
-    cursor.close()
-    return render_template('/static/html/sesion.html', data=insertObject)
-
-@app.route('/agregar_login', methods=['POST'])
-def agregar_login():
-    email = request.form['email']
-    contrasena = request.form['contrasena']
-    rolid = request.form['rolid']
-    estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
-    if email and contrasena and rolid:
-        cursor = db.conn.cursor()
-        sql = "INSERT INTO login (email, contrasena, rolid, estado) VALUES (?, ?, ?, ?)"
-        data = (email, contrasena, rolid, estado)
-        cursor.execute(sql, data)
-        db.conn.commit()
-    return redirect(url_for('sesion'))
-
-@app.route('/eliminar_login/<string:loginid>', methods=['GET'])
-def eliminar_login(loginid):
-    cursor = db.conn.cursor()
-    sql = "DELETE FROM login WHERE loginid=?"
-    data = (loginid,)
-    cursor.execute(sql, data)
-    db.conn.commit()
-    return redirect(url_for('sesion')) 
-
-@app.route('/editar_login/<string:loginid>', methods=['POST'])
-def editar_login(loginid):
-    email = request.form['email']
-    contrasena = request.form['contrasena']
-    rolid = request.form['rolid']
-    estado = 'estado' in request.form
-    if email and contrasena and rolid:
-        cursor = db.conn.cursor()
-        sql = "UPDATE login SET email = ?, contrasena = ?, rolid = ?, estado = ? WHERE loginid = ?"
-        data = (email, contrasena, rolid, estado, loginid)
-        cursor.execute(sql, data)
-        db.conn.commit()
-    return redirect(url_for('sesion'))
 ################################ VEHICULO ##############################
 @app.route('/vehiculo')
 def vehiculo():
@@ -568,11 +520,11 @@ def vehiculo():
     myresult = cursor.fetchall()
     # Convertir los datos a diccionario
     insertObject = []
-    columnNames = [column[0] for column in cursor.nombre]
+    columnNames = [column[0] for column in cursor.description]
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    return render_template('/static/html/vehiculo.html', data=insertObject)
+    return render_template('vehiculo.html', data=insertObject)
 
 @app.route('/agregar_vehiculo', methods=['POST'])
 def agregar_vehiculo():
@@ -610,7 +562,7 @@ def editar_vehiculo(vehiculoid):
     if nombre and marca and modelo and placa and usuarioid:
         cursor = db.conn.cursor()
         sql = "UPDATE vehiculo SET nombre = ?, marca = ?, modelo = ?, placa = ?, usuarioid = ?, estado = ? WHERE vehiculoid = ?"
-        data = (nombre, marca, modelo, placa, usuarioid, estado)
+        data = (nombre, marca, modelo, placa, usuarioid, estado, vehiculoid)
         cursor.execute(sql, data)
         db.conn.commit()
     return redirect(url_for('vehiculo'))

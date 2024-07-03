@@ -29,13 +29,12 @@
                         <span> DASHBOARD </span></a>
                 </li>
                 <li>
-                    <li class=""><a class="fa-solid fa-id-card" href="/static/html/cargo.html">Cargo</a></li>
+                    <li class=""><a class="fa-solid fa-id-card" href="{{ url_for('cargo')}}">Cargo</a></li>
                     <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a></li>
-                    <li class=""><a class="fa-solid fa-users" href="/static/html/roles.html">Roles</a></li>
-                    <li class=""><a class="fa-solid fa-file" href="/static/html/tipoDocumento.html">Tipo Documento</a></li>
-                    <li class=""><a class="fa-solid fa-truck" href="/static/html/vehiculo.html">Vehiculo</a></li>
-                    <li class=""><a class="fa-solid fa-user" href="/static/html/usuario.html">Usuario</a></li>
-                    <li class=""><a class="fa-solid fa-user" href="/static/html/sesion.html">Login</a></li>
+                    <li class=""><a class="fa-solid fa-users" href="{{ url_for('roles')}}">Roles</a></li>
+                    <li class=""><a class="fa-solid fa-file" href="{{ url_for('tipoDocumento')}}">Tipo Documento</a></li>
+                    <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehiculo</a></li>
+                    <li class=""><a class="fa-solid fa-user" href="{{ url_for('usuario')}}">Usuario</a></li>
                 </li>
             </ul>
         </div>
@@ -46,27 +45,35 @@
                 <label for="nav-toggle">
                     <span class="fa fa-bars"></span>
                 </label>
-                MANTENIMIENTO LOGIN
+                MANTENIMIENTO VEHÍCULO
             </h2>
         </header>
         <main>
-            <h1 class="text-center mt-5 mb-5 text-primary">LOGIN</h1>
+            <h1 class="text-center mt-5 mb-5 text-primary">VEHÍCULO</h1>
             <div class="container">
                 <div class="card shadow">
                     <div class="card-body">
-                        <form action="{{ url_for('agregar_login') }}" method="POST">
+                        <form action="{{ url_for('agregar_vehiculo') }}" method="POST">
                             <div class="row mb-3">
                                 <div class="col">
-                                    <label>Email</label>
-                                    <input type="text" class="form-control mb-3" name="email" />
+                                    <label>Nombre</label>
+                                    <input type="text" class="form-control mb-3" name="nombre" />
                                 </div>
                                 <div class="col">
-                                    <label>Contraseña</label>
-                                    <input type="text" class="form-control mb-3" name="contrasena" />
+                                    <label>Marca</label>
+                                    <input type="text" class="form-control mb-3" name="marca" />
                                 </div>
                                 <div class="col">
-                                    <label>Rol ID</label>
-                                    <input type="text" class="form-control mb-3" name="rolid" />
+                                    <label>Modelo</label>
+                                    <input type="text" class="form-control mb-3" name="modelo" />
+                                </div>
+                                <div class="col">
+                                    <label>Placa</label>
+                                    <input type="text" class="form-control mb-3" name="placa" />
+                                </div>
+                                <div class="col">
+                                    <label>Usuario ID</label>
+                                    <input type="text" class="form-control mb-3" name="usuarioid" />
                                 </div>
                                 <div class="col">
                                     <label>Estado</label>
@@ -86,61 +93,73 @@
                                 <thead>
                                     <tr>
                                         <th scope="col">ID</th>
-                                        <th scope="col">Email</th>
-                                        <th scope="col">Contraseña</th>
-                                        <th scope="col">Rol ID</th>
+                                        <th scope="col">Nombre</th>
+                                        <th scope="col">Marca</th>
+                                        <th scope="col">Modelo</th>
+                                        <th scope="col">Placa</th>
+                                        <th scope="col">Usuario ID</th>
                                         <th scope="col">Estado</th>
                                         <th scope="col">Editar</th>
                                         <th scope="col">Eliminar</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for l in data %}
+                                    {% for v in data %}
                                     <tr>
-                                        <td>{{l.loginid}}</td>
-                                        <td>{{l.email}}</td>
-                                        <td>{{l.contrasena}}</td>
-                                        <td>{{l.rolid}}</td>
-                                        <td>{{l.estado}}</td>
+                                        <td>{{v.vehiculoid}}</td>
+                                        <td>{{v.nombre}}</td>
+                                        <td>{{v.marca}}</td>
+                                        <td>{{v.modelo}}</td>
+                                        <td>{{v.placa}}</td>
+                                        <td>{{v.usuarioid}}</td>                                       
+                                        <td>{{v.estado}}</td>
                                         <td>
-                                            <button class="btn btn-primary btn-sm" id="btn-edit{{l.loginid}}"
-                                                data-bs-toggle="modal" data-bs-target="#modal{{l.loginid}}">
+                                            <button class="btn btn-primary btn-sm" id="btn-edit{{v.vehiculoid}}"
+                                                data-bs-toggle="modal" data-bs-target="#modal{{v.vehiculoid}}">
                                                 Editar
                                             </button>
                                         </td>
                                         <td>
-                                            <a href="{{url_for('eliminar_login', loginid=l.loginid)}}"
+                                            <a href="{{url_for('eliminar_vehiculo', vehiculoid=v.vehiculoid)}}"
                                                 class="btn btn-danger btn-sm">Eliminar</a>
                                         </td>
                                     </tr>
                                     <!-- modal -->
-                                    <div class="modal fade" id="modal{{l.loginid}}" tabindex="-1"
+                                    <div class="modal fade" id="modal{{v.vehiculoid}}" tabindex="-1"
                                         aria-labelledby="exampleModalLabel" aria-hidden="true">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
                                                 <div class="modal-header">
-                                                    <h1 class="modal-title fs-5" id="exampleModalLabel">{{l.email}}
+                                                    <h1 class="modal-title fs-5" id="exampleModalLabel">{{v.nombre}}
                                                     </h1>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                         aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <form action="{{ url_for('editar_login', loginid=l.loginid) }}" method="post">
-                                                        <label>Email</label>
-                                                        <input type="text" class="form-control mb-3" name="email"
-                                                            value="{{l.email}}" />
-                                                        <label>Contraseña</label>
-                                                        <input type="text" class="form-control mb-3" name="contrasena"
-                                                            value="{{l.contrasena}}" />
-                                                        <label>Rol ID</label>
-                                                        <input type="text" class="form-control mb-3" name="rolid"
-                                                            value="{{l.rolid}}" />
+                                                    <form action="{{ url_for('editar_vehiculo', vehiculoid=v.vehiculoid) }}"
+                                                        method="post">
+                                                        <label>Nombre</label>
+                                                        <input type="text" class="form-control mb-3" name="nombre"
+                                                            value="{{v.nombre}}" />
+                                                        <label>Marca</label>
+                                                        <input type="text" class="form-control mb-3" name="marca"
+                                                            value="{{v.marca}}" />
+                                                        <label>Modelo</label>
+                                                        <input type="text" class="form-control mb-3" name="modelo"
+                                                            value="{{v.modelo}}" />
+                                                        <label>Placa</label>
+                                                        <input type="text" class="form-control mb-3" name="placa"
+                                                            value="{{v.placa}}" />
+                                                        <label>Usuario ID</label>
+                                                        <input type="text" class="form-control mb-3" name="usuarioid"
+                                                            value="{{v.usuarioid}}" />
                                                         <label>Estado</label>
                                                         <div class="form-check">
                                                             <input type="checkbox" class="form-check-input"
-                                                                name="estado" id="estado{{l.loginid}}" {% if l.estado %}checked{% endif %} />
+                                                                name="estado" id="estado{{v.vehiculoid}}" {% if v.vehiculo
+                                                                %}checked{% endif %} />
                                                             <label class="form-check-label"
-                                                                for="estado{{l.loginid}}">Activo</label>
+                                                                for="estado{{v.vehiculoid}}">Activo</label>
                                                         </div>
                                                         <div class="modal-footer">
                                                             <button type="submit" class="btn btn-primary">Guardar cambios</button>

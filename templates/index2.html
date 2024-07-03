@@ -24,13 +24,12 @@
                         <span> DASHBOARD </span></a>
                 </li>
                 <li>
-                    <li class=""><a class="fa-solid fa-id-card" href="/static/html/cargo.html">Cargo</a></li>
+                    <li class=""><a class="fa-solid fa-id-card" href="{{ url_for('cargo')}}">Cargo</a></li>
                     <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a></li>
-                    <li class=""><a class="fa-solid fa-users" href="/static/html/roles.html">Roles</a></li>
-                    <li class=""><a class="fa-solid fa-file" href="/static/html/tipoDocumento.html">Tipo Documento</a></li>
-                    <li class=""><a class="fa-solid fa-truck" href="/static/html/vehiculo.html">Vehiculo</a></li>
-                    <li class=""><a class="fa-solid fa-user" href="/static/html/usuario.html">Usuario</a></li>
-                    <li class=""><a class="fa-solid fa-user" href="/static/html/sesion.html">Login</a></li>
+                    <li class=""><a class="fa-solid fa-users" href="{{ url_for('roles')}}">Roles</a></li>
+                    <li class=""><a class="fa-solid fa-file" href="{{ url_for('tipoDocumento')}}">Tipo Documento</a></li>
+                    <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehiculo</a></li>
+                    <li class=""><a class="fa-solid fa-user" href="{{ url_for('usuario')}}">Usuario</a></li>
                 </li>
             </ul>
         </div>
