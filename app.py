@@ -311,7 +311,7 @@ def cargo():
     myresult = cursor.fetchall()
     # Convertir los datos a diccionario
     insertObject = []
-    columnNames = [column[0] for column in cursor.description]
+    columnNames = [column[0] for column in cursor.descripcion]
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
@@ -360,7 +360,7 @@ def roles():
     myresult = cursor.fetchall()
     # Convertir los datos a diccionario
     insertObject = []
-    columnNames = [column[0] for column in cursor.description]
+    columnNames = [column[0] for column in cursor.descripcion]
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
@@ -406,7 +406,7 @@ def tipodocumento():
     myresult = cursor.fetchall()
     # Convertir los datos a diccionario
     insertObject = []
-    columnNames = [column[0] for column in cursor.description]
+    columnNames = [column[0] for column in cursor.descripcion]
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
@@ -447,56 +447,111 @@ def editar_tipodocumento(TipodocumentoID):
         db.conn.commit()
     return redirect(url_for('tipodocumento'))
 ################################ USUARIO ###############################
+
 ################################# LOGIN ################################
-################################ VEHICULO ##############################
-@app.route('/cargo')
-def cargo():
+@app.route('/login')
+def login():
     cursor = db.conn.cursor()
-    cursor.execute("SELECT * FROM cargo")
+    cursor.execute("SELECT * FROM login")
     myresult = cursor.fetchall()
     # Convertir los datos a diccionario
     insertObject = []
-    columnNames = [column[0] for column in cursor.description]
+    columnNames = [column[0] for column in cursor.email]
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    # Renderizar el template cargo.html desde la carpeta templates/static/html
-    return render_template('/static/html/cargo.html', data=insertObject)
+    return render_template('/static/html/login.html', data=insertObject)
 
-@app.route('/agregar_cargo', methods=['POST'])
-def agregar_cargo():
-    titulo = request.form['titulo']
-    descripcion = request.form['descripcion']
+@app.route('/agregar_login', methods=['POST'])
+def agregar_login():
+    email = request.form['email']
+    contrasena = request.form['contrasena']
+    rolid = request.form['rolid']
     estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
-    if titulo and descripcion:
+    if email and contrasena and rolid:
         cursor = db.conn.cursor()
-        sql = "INSERT INTO cargo (titulo, descripcion, estado) VALUES (?, ?, ?)"
-        data = (titulo, descripcion, estado)
+        sql = "INSERT INTO login (email, contrasena, rolid, estado) VALUES (?, ?, ?, ?)"
+        data = (email, contrasena, rolid, estado)
         cursor.execute(sql, data)
         db.conn.commit()
-    return redirect(url_for('cargo'))
+    return redirect(url_for('login'))
 
-@app.route('/eliminar_cargo/<string:cargoid>', methods=['GET'])
-def eliminar_cargo(cargoid):
+@app.route('/eliminar_login/<string:loginid>', methods=['GET'])
+def eliminar_login(loginid):
     cursor = db.conn.cursor()
-    sql = "DELETE FROM cargo WHERE cargoid=?"
-    data = (cargoid,)
+    sql = "DELETE FROM login WHERE loginid=?"
+    data = (loginid,)
     cursor.execute(sql, data)
     db.conn.commit()
-    return redirect(url_for('cargo')) 
+    return redirect(url_for('login')) 
 
-@app.route('/editar_cargo/<string:cargoid>', methods=['POST'])
-def editar_cargo(cargoid):
-    titulo = request.form['titulo']
-    descripcion = request.form['descripcion']
+@app.route('/editar_login/<string:loginid>', methods=['POST'])
+def editar_login(loginid):
+    email = request.form['email']
+    contrasena = request.form['contrasena']
+    rolid = request.form['rolid']
     estado = 'estado' in request.form
-    if titulo and descripcion:
+    if email and contrasena and rolid:
         cursor = db.conn.cursor()
-        sql = "UPDATE cargo SET titulo = ?, descripcion = ?, estado = ? WHERE cargoid = ?"
-        data = (titulo, descripcion, estado, cargoid)
+        sql = "UPDATE login SET email = ?, contrasena = ?, rolid = ?, estado = ? WHERE loginid = ?"
+        data = (email, contrasena, rolid, estado, loginid)
         cursor.execute(sql, data)
         db.conn.commit()
-    return redirect(url_for('cargo'))
+    return redirect(url_for('login'))
+################################ VEHICULO ##############################
+@app.route('/vehiculo')
+def vehiculo():
+    cursor = db.conn.cursor()
+    cursor.execute("SELECT * FROM vehiculo")
+    myresult = cursor.fetchall()
+    # Convertir los datos a diccionario
+    insertObject = []
+    columnNames = [column[0] for column in cursor.nombre]
+    for record in myresult:
+        insertObject.append(dict(zip(columnNames, record)))
+    cursor.close()
+    return render_template('/static/html/vehiculo.html', data=insertObject)
+
+@app.route('/agregar_vehiculo', methods=['POST'])
+def agregar_vehiculo():
+    nombre = request.form['nombre']
+    marca = request.form['marca']
+    modelo = request.form['modelo']
+    placa = request.form['placa']
+    usuarioid = request.form['usuarioid']
+    estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
+    if nombre and marca and modelo and placa and usuarioid:
+        cursor = db.conn.cursor()
+        sql = "INSERT INTO vehiculo (nombre, marca, modelo, placa, usuarioid, estado) VALUES (?, ?, ?, ?, ?, ?)"
+        data = (nombre, marca, modelo, placa, usuarioid, estado)
+        cursor.execute(sql, data)
+        db.conn.commit()
+    return redirect(url_for('vehiculo'))
+
+@app.route('/eliminar_vehiculo/<string:vehiculoid>', methods=['GET'])
+def eliminar_vehiculo(vehiculoid):
+    cursor = db.conn.cursor()
+    sql = "DELETE FROM vehiculo WHERE vehiculoid=?"
+    data = (vehiculoid,)
+    cursor.execute(sql, data)
+    db.conn.commit()
+    return redirect(url_for('vehiculo')) 
+
+@app.route('/editar_vehiculo/<string:vehiculoid>', methods=['POST'])
+def editar_vehiculo(vehiculoid):
+    nombre = request.form['nombre']
+    marca = request.form['marca']
+    modelo = request.form['modelo']
+    placa = request.form['placa']
+    usuarioid = request.form['usuarioid']
+    estado = 'estado' in request.form
+    if nombre and marca and modelo and placa and usuarioid:
+        cursor = db.conn.cursor()
+        sql = "UPDATE vehiculo SET nombre = ?, marca = ?, modelo = ?, placa = ?, usuarioid = ?, estado = ? WHERE vehiculoid = ?"
+        data = (nombre, marca, modelo, placa, usuarioid, estado)
+        cursor.execute(sql, data)
+        db.conn.commit()
+    return redirect(url_for('vehiculo'))
 
 if __name__ == '__main__':
     app.run(debug=True)
