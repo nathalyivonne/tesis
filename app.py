@@ -304,8 +304,7 @@ def ver_mapa():
         return f"Error inesperado: {e}"
 ################################ MANTENIMIENTOS ###############################
 #################################### CARGO ####################################
-
-@app.route('/cargo', methods=['GET'])
+@app.route('/cargo')
 def cargo():
     cursor = db.conn.cursor()
     cursor.execute("SELECT * FROM cargo")
@@ -316,7 +315,6 @@ def cargo():
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    print(insertObject)
     # Renderizar el template cargo.html desde la carpeta templates/static/html
     return render_template('/static/html/cargo.html', data=insertObject)
 
@@ -325,7 +323,6 @@ def agregar_cargo():
     titulo = request.form['titulo']
     descripcion = request.form['descripcion']
     estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
-
     if titulo and descripcion:
         cursor = db.conn.cursor()
         sql = "INSERT INTO cargo (titulo, descripcion, estado) VALUES (?, ?, ?)"
@@ -355,9 +352,8 @@ def editar_cargo(cargoid):
         cursor.execute(sql, data)
         db.conn.commit()
     return redirect(url_for('cargo'))
-
 #################################### ROLES ####################################
-@app.route('/roles', methods=['GET'])
+@app.route('/roles')
 def roles():
     cursor = db.conn.cursor()
     cursor.execute("SELECT * FROM roles")
@@ -368,14 +364,12 @@ def roles():
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    print(insertObject)
     return render_template('/static/html/roles.html', data=insertObject)
 
 @app.route('/agregar_roles', methods=['POST'])
 def agregar_roles():
     descripcion = request.form['descripcion']
     estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
-
     if descripcion:
         cursor = db.conn.cursor()
         sql = "INSERT INTO roles (descripcion, estado) VALUES (?, ?)"
@@ -405,12 +399,104 @@ def editar_roles(rolid):
         db.conn.commit()
     return redirect(url_for('roles'))
 ################################ TIPO DOCUMENTO ###############################
+@app.route('/tipodocumento')
+def tipodocumento():
+    cursor = db.conn.cursor()
+    cursor.execute("SELECT * FROM tipodocumento")
+    myresult = cursor.fetchall()
+    # Convertir los datos a diccionario
+    insertObject = []
+    columnNames = [column[0] for column in cursor.description]
+    for record in myresult:
+        insertObject.append(dict(zip(columnNames, record)))
+    cursor.close()
+    return render_template('/static/html/tipoDocumento.html', data=insertObject)
 
+@app.route('/agregar_tipodocumento', methods=['POST'])
+def agregar_tipodocumento():
+    Acronimo = request.form['Acronimo']
+    Descripcion = request.form['Descripcion']
+    estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
+    if Acronimo and Descripcion:
+        cursor = db.conn.cursor()
+        sql = "INSERT INTO tipodocumento (Acronimo, Descripcion, estado) VALUES (?, ?, ?)"
+        data = (Acronimo, Descripcion, estado)
+        cursor.execute(sql, data)
+        db.conn.commit()
+    return redirect(url_for('tipodocumento'))
 
+@app.route('/eliminar_tipodocumento/<string:TipodocumentoID>', methods=['GET'])
+def eliminar_tipodocumento(TipodocumentoID):
+    cursor = db.conn.cursor()
+    sql = "DELETE FROM tipodocumento WHERE TipodocumentoID=?"
+    data = (TipodocumentoID,)
+    cursor.execute(sql, data)
+    db.conn.commit()
+    return redirect(url_for('tipodocumento')) 
 
+@app.route('/editar_tipodocumento/<string:TipodocumentoID>', methods=['POST'])
+def editar_tipodocumento(TipodocumentoID):
+    Acronimo = request.form['Acronimo']
+    Descripcion = request.form['Descripcion']
+    estado = 'estado' in request.form
+    if Acronimo and Descripcion:
+        cursor = db.conn.cursor()
+        sql = "UPDATE tipodocumento SET Acronimo = ?, Descripcion = ?, estado = ? WHERE TipodocumentoID = ?"
+        data = (Acronimo, Descripcion, estado, TipodocumentoID)
+        cursor.execute(sql, data)
+        db.conn.commit()
+    return redirect(url_for('tipodocumento'))
+################################ USUARIO ###############################
+################################# LOGIN ################################
+################################ VEHICULO ##############################
+@app.route('/cargo')
+def cargo():
+    cursor = db.conn.cursor()
+    cursor.execute("SELECT * FROM cargo")
+    myresult = cursor.fetchall()
+    # Convertir los datos a diccionario
+    insertObject = []
+    columnNames = [column[0] for column in cursor.description]
+    for record in myresult:
+        insertObject.append(dict(zip(columnNames, record)))
+    cursor.close()
+    # Renderizar el template cargo.html desde la carpeta templates/static/html
+    return render_template('/static/html/cargo.html', data=insertObject)
 
+@app.route('/agregar_cargo', methods=['POST'])
+def agregar_cargo():
+    titulo = request.form['titulo']
+    descripcion = request.form['descripcion']
+    estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
+    if titulo and descripcion:
+        cursor = db.conn.cursor()
+        sql = "INSERT INTO cargo (titulo, descripcion, estado) VALUES (?, ?, ?)"
+        data = (titulo, descripcion, estado)
+        cursor.execute(sql, data)
+        db.conn.commit()
+    return redirect(url_for('cargo'))
 
+@app.route('/eliminar_cargo/<string:cargoid>', methods=['GET'])
+def eliminar_cargo(cargoid):
+    cursor = db.conn.cursor()
+    sql = "DELETE FROM cargo WHERE cargoid=?"
+    data = (cargoid,)
+    cursor.execute(sql, data)
+    db.conn.commit()
+    return redirect(url_for('cargo')) 
 
+@app.route('/editar_cargo/<string:cargoid>', methods=['POST'])
+def editar_cargo(cargoid):
+    titulo = request.form['titulo']
+    descripcion = request.form['descripcion']
+    estado = 'estado' in request.form
+    if titulo and descripcion:
+        cursor = db.conn.cursor()
+        sql = "UPDATE cargo SET titulo = ?, descripcion = ?, estado = ? WHERE cargoid = ?"
+        data = (titulo, descripcion, estado, cargoid)
+        cursor.execute(sql, data)
+        db.conn.commit()
+    return redirect(url_for('cargo'))
 
 if __name__ == '__main__':
     app.run(debug=True)
