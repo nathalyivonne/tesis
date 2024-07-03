@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session, redirect, url_for
 from PIL import Image
 import base64
 from funcion import recognize_invoices
@@ -11,9 +11,12 @@ from azure.mgmt.datafactory import DataFactoryManagementClient
 import googlemaps
 import json
 import random
+import secrets
+import os
+import database as db
 
 app = Flask(__name__)
-
+       
 # Parámetros de Azure
 subscription_id = 'cbe95d56-10d1-4e9a-a0b7-b99aaabe8a67'
 resource_group_name = 'datafactory-rg749'
@@ -38,8 +41,45 @@ google_maps_api_key = 'AIzaSyAg-pHzpWI9Ik34rYvyPZYGU9s2aWWtFx4'  # Reemplazar co
 gmaps = googlemaps.Client(key=google_maps_api_key)
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def home():
+    return render_template('login.html')
+
+@app.route('/admin')
+def admin():
+    return render_template('index2.html')
+
+@app.route('/acceso-login', methods=["POST"])
+def login():
+    if request.method == 'POST' and 'txtEmail' in request.form and 'txtContrasena' in request.form:
+        _email = request.form['txtEmail']
+        _contrasena = request.form['txtContrasena']
+
+        try:
+            # Conectar a la base de datos SQL Server
+            conn = pyodbc.connect(conn_str)
+            cursor = conn.cursor()
+            cursor.execute('SELECT loginid, rolid FROM login WHERE email = ? AND contrasena = ?', (_email, _contrasena))
+            account = cursor.fetchone()
+            conn.close()
+
+            if account:
+                # Autenticación exitosa
+                loginid, rolid = account[0], account[1]
+                
+                if rolid == 1:
+                    return render_template("index2.html")
+                elif rolid == 2:
+                    return render_template("admin2.html")
+                else:
+                    return render_template('login.html', mensaje="Rol no válido")
+            else:
+                return render_template('login.html', mensaje="Usuario o contraseña incorrecta")
+        except pyodbc.Error as e:
+            return f"Error de base de datos: {e}"
+        except Exception as e:
+            return f"Error inesperado: {e}"
+    else:
+        return render_template('login.html')
 
 @app.route('/analizar', methods=['POST'])
 def upload():
@@ -261,6 +301,61 @@ def ver_mapa():
         return f"Error de base de datos: {e}"
     except Exception as e:
         return f"Error inesperado: {e}"
-    
+################################ MANTENIMIENTOS ###############################
+#################################### CARGO ####################################
+
+#Rutas de la aplicación
+@app.route('/')
+def cargo():
+    cursor = db.conn.cursor()
+    cursor.execute("SELECT * FROM cargo")
+    myresult = cursor.fetchall()
+    # Convertir los datos a diccionario
+    insertObject = []
+    columnNames = [column[0] for column in cursor.description]
+    for record in myresult:
+        insertObject.append(dict(zip(columnNames, record)))
+    cursor.close()
+    return render_template('cargo.html', data=insertObject)
+
+#Ruta para guardar usuarios en la bd
+@app.route('/agregar_cargo', methods=['POST'])
+def agregar_cargo():
+    titulo = request.form['titulo']
+    descripcion = request.form['descripcion']
+    estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
+
+    if titulo and descripcion:
+        cursor = db.conn.cursor()
+        sql = "INSERT INTO cargo (titulo, descripcion, estado) VALUES (?, ?, ?)"
+        data = (titulo, descripcion, estado)
+        cursor.execute(sql, data)
+        db.conn.commit()
+    return redirect(url_for('cargo'))
+
+@app.route('/eliminar_cargo/<string:cargoid>')
+def eliminar_cargo(cargoid):
+    cursor = db.conn.cursor()
+    sql = "DELETE FROM cargo WHERE cargoid=?"
+    data = (cargoid,)
+    cursor.execute(sql, data)
+    db.conn.commit()
+    return redirect(url_for('cargo')) 
+
+@app.route('/editar_cargo/<string:cargoid>', methods=['POST'])
+def editar_cargo(cargoid):
+    titulo = request.form['titulo']
+    descripcion = request.form['descripcion']
+    # Verificar si 'estado' está en request.form
+    estado = 'estado' in request.form
+
+    if titulo and descripcion:
+        cursor = db.conn.cursor()
+        sql = "UPDATE cargo SET titulo = ?, descripcion = ?, estado = ? WHERE cargoid = ?"
+        data = (titulo, descripcion, estado, cargoid)
+        cursor.execute(sql, data)
+        db.conn.commit()
+    return redirect(url_for('cargo'))
+
 if __name__ == '__main__':
     app.run(debug=True)

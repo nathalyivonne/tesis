@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Check Service Cargo</title>
+    <link rel="stylesheet"
+        href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+    <script src="https://kit.fontawesome.com/325f4c844a.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pagina.css') }}">
+</head>
+
+<body>
+    <input type="checkbox" id="nav-toggle">
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h2><span class="fa-solid fa-truck"></span><span>Check Service Cargo</span></h2>
+        </div>
+        <div class="sidebar-menu">
+            <ul>
+                <li>
+                    <a href="" class="active"><span class="fa-solid fa-table-columns"></span>
+                        <span> Dashboard </span></a>
+                </li>
+                <li>
+                    <a href=""><span class="fa-solid fa-user"></span>
+                        <span> Mantenimientos </span></a>
+                    <li class=""><a class="" href="/static/html/cargo.html">Cargo</a></li>
+                    <li class=""><a class="" href="/static/html/manifiesto.html">Manifiesto</a></li>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="main-content">
+        <header>
+            <h2>
+                <label for="nav-toggle">
+                    <span class="fa-solid fa-bars"></span>
+                </label>
+                SISTEMA WEB
+            </h2>
+        </header>
+        <main>
+            <div class="cards">
+                <div class="card-single">
+                    <div>
+                        <h1>10</h1>
+                        <span>Trabajadores</span>
+                    </div>
+                    <div>
+                        <span class="fa-solid fa-user"></span>
+                    </div>
+                </div>
+                <div class="card-single">
+                    <div>
+                        <h1>3</h1>
+                        <span>Vehículo</span>
+                    </div>
+                    <div>
+                        <span class="fa-solid fa-truck"></span>
+                    </div>
+                </div>
+                <div class="card-single">
+                    <div>
+                        <h1>5</h1>
+                        <span>Empresas</span>
+                    </div>
+                    <div>
+                        <span class="fa-solid fa-business-time"></span>
+                    </div>
+                </div>
+                <div class="card-single">
+                    <div>
+                        <h1>40</h1>
+                        <span>Manifiestos</span>
+                    </div>
+                    <div>
+                        <span class="fa-solid fa-folder-open"></span>
+                    </div>
+                </div>
+                <div class="card-single">
+                    <div>
+                        <h1>5</h1>
+                        <span>Asignación</span>
+                    </div>
+                    <div>
+                        <span class="fa-solid fa-route"></span>
+                    </div>
+                </div>
+            </div>
+    </div>
+    </main>
+    </div>
+    {%block contenido %} {% endblock %}
+</body>
+</html>
