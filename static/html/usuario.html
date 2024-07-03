@@ -129,7 +129,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% for c in data %}
+                  {% for u in data %}
                   <tr>
                     <td>{{u.usuarioid}}</td>
                     <td>{{u.nombreusuario}}</td>
@@ -142,7 +142,7 @@
                     <td>{{u.telefono}}</td>
                     <td>{{u.direccion}}</td>
                     <td>{{u.estado}}</td>
-                    <td>{{c.cargoid}}</td>
+                    <td>{{u.cargoid}}</td>
                     <td>
                       <button class="btn btn-primary btn-sm" id="btn-edit{{c.cargoid}}" data-bs-toggle="modal"
                         data-bs-target="#modal{{c.cargoid}}">
