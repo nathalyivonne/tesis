@@ -545,6 +545,23 @@ def editar_vehiculo(vehiculoid):
         cursor.execute(sql, data)
         db.conn.commit()
     return redirect(url_for('vehiculo'))
+######################################## REPORTES ########################################
+# from sqlalchemy import create_engine, text
+
+# engine = create_engine(conn_str, echo=True)  # El parámetro 'echo=True' muestra las consultas SQL generadas
+
+# @app.route('/reporte')
+# def reporte():
+#     with engine.connect() as connection:
+#         query = text("""
+#             SELECT distrito, COUNT(*) as total
+#             FROM manifiesto2
+#             GROUP BY distrito
+#         """)
+#         result = connection.execute(query)
+#         data = [{"distrito": row["distrito"], "total": row["total"]} for row in result]
+
+#     return render_template('reporte.html', data=data)
 
 if __name__ == '__main__':
     app.run(debug=True)
