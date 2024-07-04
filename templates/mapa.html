@@ -112,8 +112,6 @@
                 li.textContent = `${i + 1}. ${direccion.address}`;
                 li.className = 'direccion-item';
                 direccionList.appendChild(li);
-
-                // Conectar con una línea al siguiente marcador (ciclo cerrado)
                 var nextIndex = (i + 1) % direcciones.length;
                 var nextDireccion = direcciones[nextIndex];
                 var line = new google.maps.Polyline({
