@@ -91,24 +91,20 @@ def upload():
         image = Image.open(BytesIO(image_data))
         invoice_data = recognize_invoices(image)
 
-        # Guardar datos en archivo.csv
         with open("archivo.csv", mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=';')
             writer.writerows(invoice_data)
 
-        # Ejecutar script csv_to_database.py
         subprocess.run(['python', 'csv_to_database.py'], check=True)
 
-        # Ejecutar el pipeline de Azure Data Factory
         response = adf_client.pipelines.create_run(resource_group_name, data_factory_name, pipeline_name)
         print(f'Pipeline run ID: {response.run_id}')
 
-        # Esperar la finalización del pipeline (opcional)
+        # Esperar la finalización del pipeline
         pipeline_run = adf_client.pipeline_runs.get(resource_group_name, data_factory_name, response.run_id)
         while pipeline_run.status in ['InProgress', 'Queued']:
             pipeline_run = adf_client.pipeline_runs.get(resource_group_name, data_factory_name, response.run_id)
 
-        # Conectar a la base de datos SQL Server y obtener los datos de la tabla manifiesto2
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM manifiesto2")
@@ -168,12 +164,9 @@ def select_parents(population, fitness_values, num_parents):
         selected_parents.append(parent)
     return selected_parents
 
-# Función de crossover (un punto)
+# Función de crossover (un punto), creacion de los hijos
 def crossover(parent1, parent2):
-    # Seleccionar un punto de corte aleatorio
     point = random.randint(0, len(parent1) - 1)
-    
-    # Crear los hijos intercambiando las partes de los padres en el punto de corte
     child1 = parent1[:point] + parent2[point:]
     child2 = parent2[:point] + parent1[point:]
     
@@ -215,27 +208,22 @@ def genetic_algorithm(pop_size, direcciones, max_generations):
         parents = select_parents(population, fitness_values, num_parents=2)
         offspring = []
         for i in range(0, pop_size, 2):
-            child1, child2 = crossover(parents[0], parents[1])  # Use parents directly, not modulo operations
+            child1, child2 = crossover(parents[0], parents[1])  
             offspring.append(mutate(child1, mutation_rate=0.1))
             offspring.append(mutate(child2, mutation_rate=0.1))
         population = offspring
     best_solution = min(population, key=fitness)
     return best_solution
 
-from flask import render_template
-
-
 @app.route('/ver_mapa')
 def ver_mapa():
     try:
-        # Conectar a la base de datos SQL Server y obtener los datos de la tabla manifiesto2
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
         cursor.execute("SELECT direccion, distrito FROM manifiesto2")
         rows = cursor.fetchall()
         conn.close()
         
-        # Preparar las direcciones para geocodificar
         direcciones = [f"{row.direccion.strip()}, {row.distrito.strip()}" for row in rows]
         
         # Ejecutar el algoritmo genético para optimizar las direcciones
@@ -253,7 +241,6 @@ def ver_mapa():
                     latitud = location['lat']
                     longitud = location['lng']
                     
-                    # Determinar la etiqueta para la dirección
                     etiqueta = f'DIRECCION {i + 1}'
 
                     geocoded_addresses.append({
@@ -277,27 +264,20 @@ def ver_mapa():
                 seen_addresses.add(coordinates)
             else:
                 print(f"Dirección duplicada encontrada: {address['address']} (Lat: {address['latitude']}, Lng: {address['longitude']})")
-        
-        # Añadir la dirección de inicio como dirección de fin (cierre del ciclo)
         start_address = "CALLE LOS SAUCES URBANIZACION SANTA VICTORIA, CHICLAYO"
         geocode_result = gmaps.geocode(start_address)
         if geocode_result:
             location = geocode_result[0]['geometry']['location']
             unique_geocoded_addresses.append({
-                'label': 'DIRECCION 1',  # Etiquetar como dirección inicial
+                'label': 'DIRECCION 1', 
                 'address': start_address,
                 'latitude': location['lat'],
                 'longitude': location['lng']
             })
         else:
             print(f"No se encontraron resultados para la dirección de inicio: {start_address}")
-        
-        # Convertir a formato JSON
         json_data = json.dumps(unique_geocoded_addresses, indent=4)
-        
-        # Renderizar la plantilla mapa.html con los datos geocodificados
-        return render_template('mapa.html', direcciones_geocodificadas=json_data)
-    
+        return render_template('mapa.html', direcciones_geocodificadas=json_data)   
     except pyodbc.Error as e:
         return f"Error de base de datos: {e}"
     except Exception as e:
@@ -315,14 +295,13 @@ def cargo():
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    # Renderizar el template cargo.html desde la carpeta templates/static/html
     return render_template('cargo.html', data=insertObject)
 
 @app.route('/agregar_cargo', methods=['POST'])
 def agregar_cargo():
     titulo = request.form['titulo']
     descripcion = request.form['descripcion']
-    estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
+    estado = 1 if 'estado' in request.form else 0 
     if titulo and descripcion:
         cursor = db.conn.cursor()
         sql = "INSERT INTO cargo (titulo, descripcion, estado) VALUES (?, ?, ?)"
