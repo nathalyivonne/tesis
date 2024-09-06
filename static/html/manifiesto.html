@@ -9,38 +9,67 @@
     <link rel="stylesheet"
         href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
     <script src="https://kit.fontawesome.com/325f4c844a.js" crossorigin="anonymous"></script>
+    <style>
+        /* Estilo opcional para el ícono de carga */
+        #loadingIcon {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: #333;
+        }
+    
+        /* Animación de giro */
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+    
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>    
     <script>
         function convertToBase64() {
+            // Muestra el ícono de carga
+            document.getElementById('loadingIcon').style.display = 'block';
+    
             const fileInput = document.getElementById('photo');
             const file = fileInput.files[0];
-
+    
             if (file) {
                 const reader = new FileReader();
-
+    
                 reader.onload = function (event) {
                     const base64Data = event.target.result;
                     const image = new Image();
-
+    
                     image.onload = function () {
                         const canvas = document.createElement('canvas');
                         const context = canvas.getContext('2d');
-
+    
                         canvas.width = image.width;
                         canvas.height = image.height;
                         context.drawImage(image, 0, 0);
-
+    
                         const jpegData = canvas.toDataURL('image/jpeg', 0.8);
                         document.getElementById('base64Data').value = jpegData;
+    
+                        // Envía el formulario
                         document.getElementById('uploadForm').submit();
                     };
-
+    
                     image.src = base64Data;
                 };
-
+    
                 reader.readAsDataURL(file);
+            } else {
+                // Oculta el ícono de carga si no hay archivo seleccionado
+                document.getElementById('loadingIcon').style.display = 'none';
+                alert("Por favor, selecciona un archivo primero.");
             }
         }
-    </script>
+    </script>   
 </head>
 
 <body>
@@ -56,7 +85,7 @@
                         </span></a>
                 </li>
                 <li>
-                    <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a></li>
+                    <a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a>
                 </li>
             </ul>
         </div>
@@ -79,6 +108,11 @@
                 <input type="hidden" id="base64Data" name="base64Data">
                 <button type="button" onclick="convertToBase64()">Subir</button>
             </form>
+
+            <!-- Contenedor del ícono de carga -->
+            <div id="loadingIcon">
+                <span class="fa fa-spinner fa-spin"></span> Cargando...
+            </div>
         </main>
     </div>
 </body>

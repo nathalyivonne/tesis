@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask, render_template, request, session, redirect, url_for, send_from_directory
 from PIL import Image
 import base64
 from funcion import recognize_invoices
@@ -14,7 +14,7 @@ import random
 import secrets
 import os
 import database as db
-from flask import send_from_directory
+import pandas as pd
 
 app = Flask(__name__)
        
@@ -220,11 +220,13 @@ def ver_mapa():
     try:
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
-        cursor.execute("SELECT direccion, distrito FROM manifiesto2")
+        cursor.execute("SELECT direccion, distrito, servicio FROM manifiesto2")
         rows = cursor.fetchall()
         conn.close()
         
         direcciones = [f"{row.direccion.strip()}, {row.distrito.strip()}" for row in rows]
+        servicios = [row.servicio.strip() for row in rows]
+        servicios_unicos = sorted(set(servicios))  # Obtener servicios únicos y ordenarlos
         
         # Ejecutar el algoritmo genético para optimizar las direcciones
         pop_size = 10  # Tamaño de la población inicial
@@ -247,7 +249,8 @@ def ver_mapa():
                         'label': etiqueta,
                         'address': direccion,
                         'latitude': latitud,
-                        'longitude': longitud
+                        'longitude': longitud,
+                        'servicio': servicios[i]  # Usar el servicio correspondiente al índice
                     })
                 else:
                     print(f"No se encontraron resultados para la dirección: {direccion}")
@@ -264,7 +267,9 @@ def ver_mapa():
                 seen_addresses.add(coordinates)
             else:
                 print(f"Dirección duplicada encontrada: {address['address']} (Lat: {address['latitude']}, Lng: {address['longitude']})")
-        start_address = "CALLE LOS SAUCES URBANIZACION SANTA VICTORIA, CHICLAYO"
+        
+        # Geocodificar y agregar la dirección de inicio
+        start_address = "CALLE LOS SAUCES 568 URBANIZACION SANTA VICTORIA, CHICLAYO"
         geocode_result = gmaps.geocode(start_address)
         if geocode_result:
             location = geocode_result[0]['geometry']['location']
@@ -272,16 +277,19 @@ def ver_mapa():
                 'label': 'DIRECCION 1', 
                 'address': start_address,
                 'latitude': location['lat'],
-                'longitude': location['lng']
+                'longitude': location['lng'],
+                'servicio': 'Punto de inicio'
             })
         else:
             print(f"No se encontraron resultados para la dirección de inicio: {start_address}")
+        
         json_data = json.dumps(unique_geocoded_addresses, indent=4)
-        return render_template('mapa.html', direcciones_geocodificadas=json_data)   
+        return render_template('mapa.html', direcciones_geocodificadas=json_data, servicios_unicos= servicios_unicos)   
     except pyodbc.Error as e:
         return f"Error de base de datos: {e}"
     except Exception as e:
         return f"Error inesperado: {e}"
+
 ################################ MANTENIMIENTOS ###############################
 #################################### CARGO ####################################
 @app.route('/cargo')
