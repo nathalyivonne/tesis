@@ -119,14 +119,12 @@
                     <a href="" class="active"><span class="fa-solid fa-table-columns"></span>
                         <span> DASHBOARD </span></a>
                 </li>
-                <li>
-                    <li class=""><a class="fa-solid fa-id-card" href="{{ url_for('cargo')}}">Cargo</a></li>
-                    <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a></li>
-                    <li class=""><a class="fa-solid fa-users" href="{{ url_for('roles')}}">Roles</a></li>
-                    <li class=""><a class="fa-solid fa-file" href="{{ url_for('tipoDocumento')}}">Tipo Documento</a></li>
-                    <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehiculo</a></li>
-                    <li class=""><a class="fa-solid fa-user" href="{{ url_for('usuario')}}">Usuario</a></li>
-                </li>
+                <li class=""><a class="fa-solid fa-id-card" href="{{ url_for('cargo')}}">Cargo</a></li>
+                <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a></li>
+                <li class=""><a class="fa-solid fa-users" href="{{ url_for('roles')}}">Roles</a></li>
+                <li class=""><a class="fa-solid fa-file" href="{{ url_for('tipoDocumento')}}">Tipo Documento</a></li>
+                <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehiculo</a></li>
+                <li class=""><a class="fa-solid fa-user" href="{{ url_for('usuario')}}">Usuario</a></li>
             </ul>
         </div>
     </div>
@@ -166,17 +164,23 @@
                         <th onclick="sortTable(3)">Direccion</th>
                         <th onclick="sortTable(4)">Distrito</th>
                         <th onclick="sortTable(5)">Servicio</th>
+                        <th onclick="sortTable(6)">Fecha y Hora de Subida</th>
+                        <th onclick="sortTable(7)">Estado</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in data %}
                     <tr>
                         {% for cell in row %}
-                        <td>{{ cell }}</td>
+                            {% if loop.index0 == 7 %} <!-- Índice de la columna "Fecha y Hora de Entrega (estado)" -->
+                                <td>{{ cell if cell is not none and cell != 'NULL' else 'No entregado' }}</td>
+                            {% else %}
+                                <td>{{ cell }}</td>
+                            {% endif %}
                         {% endfor %}
                     </tr>
                     {% endfor %}
-                </tbody>
+                </tbody>               
             </table>
 
             <div id="totalItems"></div>

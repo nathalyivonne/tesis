@@ -20,9 +20,51 @@
             background-color: #f0f0f0;
         }
 
+        .main-content {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
         #map {
             height: 70vh;
             width: 100%;
+            border-radius: 8px;
+        }
+
+        .search-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        #search-service {
+            padding: 5px;
+            font-size: 1em;
+            width: 200px;
+            margin-right: 10px;
+        }
+
+        #search-button, #update-button {
+            padding: 5px 10px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        #search-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+        }
+
+        #update-button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            margin-left: 10px;
         }
 
         .direccion-list-container {
@@ -33,9 +75,11 @@
         }
 
         .direccion-list {
-            width: 90%;
+            width: 100%;
             border-collapse: collapse;
             background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         .direccion-list th, .direccion-list td {
@@ -85,24 +129,6 @@
 
         .check-btn:focus {
             outline: none;
-        }
-
-        .search-container {
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        #search-service {
-            padding: 5px;
-            font-size: 1em;
-            width: 200px;
-            margin-right: 10px;
-        }
-
-        #search-button {
-            padding: 5px 10px;
-            font-size: 1em;
-            cursor: pointer;
         }
 
         #totalItems {
@@ -159,6 +185,7 @@
                     {% endfor %}
                 </select>
                 <button id="search-button">Buscar Servicio</button>
+                <button id="update-button">Actualizar</button>
             </div>
 
             <div class="direccion-list-container">
@@ -170,6 +197,7 @@
                             <th>DIRECCIÓN</th>
                             <th>SERVICIO</th>
                             <th>COMPLETADA</th>
+                            <th>FECHA Y HORA</th>
                         </tr>
                     </thead>
                     <tbody id="direccion-items"></tbody>
@@ -182,6 +210,17 @@
     </div>
 
     <script>
+        function getLocalDateTime() {
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0');
+            var day = String(now.getDate()).padStart(2, '0');
+            var hours = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+            var seconds = String(now.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
         function initMap() {
             var map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 10,
@@ -219,12 +258,32 @@
                 var checkButton = document.createElement('button');
                 checkButton.className = 'check-btn';
                 checkButton.innerHTML = '<i class="fa-solid fa-check"></i>';
+                checkButton.dataset.index = i; // Añadir índice como data attribute
                 checkButton.addEventListener('click', function() {
+                    var index = this.dataset.index;
+                    var formattedDate = getLocalDateTime();
+                    
                     this.classList.toggle('checked');
+                    var dateCell = this.closest('tr').querySelector('td:nth-child(5)');
+                    if (this.classList.contains('checked')) {
+                        // Actualizar la fecha y hora en la columna
+                        dateCell.textContent = formattedDate;
+                    } else {
+                        // Limpiar la fecha y hora si se desmarca
+                        dateCell.textContent = '';
+                    }
+
+                    // Opcional: Aquí puedes agregar código para enviar la fecha y hora al servidor si es necesario
+                    console.log(`Fecha y hora de completado para ítem ${index + 1}: ${formattedDate}`);
                 });
 
                 tdCheck.appendChild(checkButton);
                 tr.appendChild(tdCheck);
+
+                // Añadir una celda vacía para la fecha y hora
+                var tdDateTime = document.createElement('td');
+                tr.appendChild(tdDateTime);
+
                 direccionItems.appendChild(tr);
             }
 
@@ -281,6 +340,43 @@
                 }
             });
         }
+        document.getElementById('update-button').addEventListener('click', function() {
+            var items = [];
+            var rows = document.querySelectorAll('#direccion-items tr');
+
+            rows.forEach(function(row) {
+                var checkButton = row.querySelector('.check-btn');
+                if (checkButton && checkButton.classList.contains('checked')) {
+                    var item = {
+                        item: row.querySelector('td:nth-child(1)').textContent,
+                        direccion: row.querySelector('td:nth-child(2)').textContent,
+                        servicio: row.querySelector('td:nth-child(3)').textContent,
+                        fecha_hora_entrega: row.querySelector('td:nth-child(5)').textContent
+                    };
+                    items.push(item);
+                }
+            });
+
+            fetch('/actualizar_hora_entrega', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ items: items })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Actualización exitosa');
+                } else {
+                    alert('Error al actualizar: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al actualizar');
+            });
+        });
     </script>
     <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAg-pHzpWI9Ik34rYvyPZYGU9s2aWWtFx4&callback=initMap"></script>
 </body>

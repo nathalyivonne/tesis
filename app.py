@@ -5,7 +5,8 @@ from funcion import recognize_invoices
 from io import BytesIO
 import subprocess
 import csv
-import pyodbc
+import pyodbc 
+from datetime import datetime
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.datafactory import DataFactoryManagementClient
 import googlemaps
@@ -15,6 +16,7 @@ import secrets
 import os
 import database as db
 import pandas as pd
+from datetime import datetime
 
 app = Flask(__name__)
        
@@ -105,6 +107,9 @@ def upload():
         while pipeline_run.status in ['InProgress', 'Queued']:
             pipeline_run = adf_client.pipeline_runs.get(resource_group_name, data_factory_name, response.run_id)
 
+        # Ejecutar el script para actualizar la fecha y hora en la tabla manifiesto2
+        subprocess.run(['python', 'update_fecha_subida.py'], check=True)
+        
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM manifiesto2")
@@ -289,7 +294,30 @@ def ver_mapa():
         return f"Error de base de datos: {e}"
     except Exception as e:
         return f"Error inesperado: {e}"
+    
+@app.route('/actualizar_hora_entrega', methods=['POST'])
+def actualizar_hora_entrega():
+    data = request.json
+    try:
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
 
+        for item in data['items']:
+            sql = """
+                UPDATE manifiesto2
+                SET fecha_hora_entrega = ?, servicio = ?, direccion = ?
+                WHERE item = ?
+            """
+            cursor.execute(sql, (item['fecha_hora_entrega'], item['servicio'], item['direccion'], item['item']))
+        
+        conn.commit()
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
 ################################ MANTENIMIENTOS ###############################
 #################################### CARGO ####################################
 @app.route('/cargo')
@@ -613,6 +641,31 @@ def reporte_clientes():
         return f"Error de base de datos: {e}"
     except Exception as e:
         return f"Error inesperado: {e}"
+############################## CLIENTE_DISTRITOS ##############################
+@app.route('/reporte_clientes_distritos')
+def reporte_clientes_distritos():
+    try:
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+        
+        query = """
+        SELECT cliente, distrito, COUNT(*) as cantidad
+        FROM manifiesto2
+        GROUP BY cliente, distrito
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        clientes_distritos = [{"cliente": row[0], "distrito": row[1], "cantidad": row[2]} for row in results]
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"clientes_distritos": clientes_distritos})
+    except pyodbc.Error as e:
+        return f"Error de base de datos: {e}"
+    except Exception as e:
+        return f"Error inesperado: {e}"
 ################################ ENVIOS_FECHA #################################
 # @app.route('/reporte_envios_fecha')
 # def reporte_envios_fecha():
@@ -666,31 +719,6 @@ def reporte_clientes():
 #         return f"Error de base de datos: {e}"
 #     except Exception as e:
 #         return f"Error inesperado: {e}"
-############################## CLIENTE_DISTRITOS ##############################
-@app.route('/reporte_clientes_distritos')
-def reporte_clientes_distritos():
-    try:
-        conn = pyodbc.connect(conn_str)
-        cursor = conn.cursor()
-        
-        query = """
-        SELECT cliente, distrito, COUNT(*) as cantidad
-        FROM manifiesto2
-        GROUP BY cliente, distrito
-        """
-        cursor.execute(query)
-        results = cursor.fetchall()
-        
-        clientes_distritos = [{"cliente": row[0], "distrito": row[1], "cantidad": row[2]} for row in results]
-        
-        cursor.close()
-        conn.close()
-        
-        return jsonify({"clientes_distritos": clientes_distritos})
-    except pyodbc.Error as e:
-        return f"Error de base de datos: {e}"
-    except Exception as e:
-        return f"Error inesperado: {e}"
 ################################ MONTO_CLIENTE ################################
 @app.route('/reporte_monto_cliente')
 def reporte_monto_cliente():
