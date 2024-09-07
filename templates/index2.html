@@ -97,6 +97,12 @@
                     <div class="chart-title">Clientes por Distrito</div>
                     <div id="chart-clientes-distritos"></div>
                 </div>
+
+                <div class="chart-box">
+                    <div class="chart-title">Porcentaje de Items Faltantes y Entregados</div>
+                    <div id="chart-faltantes-entregado"></div>
+                </div>
+                
             </div>
         </main>
     </div>
@@ -193,6 +199,47 @@
                 var chartClientesDistritos = new ApexCharts(document.querySelector("#chart-clientes-distritos"), optionsClientesDistritos);
                 chartClientesDistritos.render();
             });
+            // Gráfico de caja de porcentaje items no entregados y entregados
+            fetch('/reporte_porcentaje_faltantes')
+    .then(response => response.json())
+    .then(data => {
+        // Total de items para calcular el porcentaje
+        const total = data.cantidades.reduce((acc, val) => acc + val, 0);
+        // Calcular porcentajes
+        const porcentajes = data.cantidades.map(cantidad => (cantidad / total) * 100);
+
+        var optionsFaltantesEntregados = {
+            chart: {
+                type: 'pie',  // Cambiar a 'pie' para mostrar porcentajes
+            },
+            series: porcentajes,  // Datos de porcentaje
+            labels: data.estados,  // Etiquetas 'Faltantes' y 'Entregados'
+            title: {
+                text: 'Porcentaje de Items Faltantes vs Entregados'
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '75%',
+                    }
+                }
+            },
+            responsive: [{
+                breakpoint: 480,
+                options: {
+                    chart: {
+                        width: 200
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }]
+        };
+
+        var chartFaltantesEntregados = new ApexCharts(document.querySelector("#chart-faltantes-entregado"), optionsFaltantesEntregados);
+        chartFaltantesEntregados.render();
+    });
     </script>
 </body>
 

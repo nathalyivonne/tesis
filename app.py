@@ -720,31 +720,31 @@ def reporte_clientes_distritos():
 #     except Exception as e:
 #         return f"Error inesperado: {e}"
 ################################ MONTO_CLIENTE ################################
-@app.route('/reporte_monto_cliente')
-def reporte_monto_cliente():
-    try:
-        conn = pyodbc.connect(conn_str)
-        cursor = conn.cursor()
+# @app.route('/reporte_monto_cliente')
+# def reporte_monto_cliente():
+#     try:
+#         conn = pyodbc.connect(conn_str)
+#         cursor = conn.cursor()
         
-        query = """
-        SELECT cliente, SUM(monto) as monto_total
-        FROM manifiesto2
-        GROUP BY cliente
-        """
-        cursor.execute(query)
-        results = cursor.fetchall()
+#         query = """
+#         SELECT cliente, SUM(monto) as monto_total
+#         FROM manifiesto2
+#         GROUP BY cliente
+#         """
+#         cursor.execute(query)
+#         results = cursor.fetchall()
         
-        clientes = [row[0] for row in results]
-        montos = [row[1] for row in results]
+#         clientes = [row[0] for row in results]
+#         montos = [row[1] for row in results]
         
-        cursor.close()
-        conn.close()
+#         cursor.close()
+#         conn.close()
         
-        return jsonify({"clientes": clientes, "montos": montos})
-    except pyodbc.Error as e:
-        return f"Error de base de datos: {e}"
-    except Exception as e:
-        return f"Error inesperado: {e}"
+#         return jsonify({"clientes": clientes, "montos": montos})
+#     except pyodbc.Error as e:
+#         return f"Error de base de datos: {e}"
+#     except Exception as e:
+#         return f"Error inesperado: {e}"
 ################################ ESTADO_ENVIOS ################################
 @app.route('/reporte_estado_envios')
 def reporte_estado_envios():
@@ -772,39 +772,49 @@ def reporte_estado_envios():
     except Exception as e:
         return f"Error inesperado: {e}"
 ################################ ENVIOS_RANGO #################################
-@app.route('/reporte_envios_rango')
-def reporte_envios_rango():
-    start_date = request.args.get('start_date')
-    end_date = request.args.get('end_date')
-    
-    if not start_date or not end_date:
-        return "Parámetros de fecha no proporcionados", 400
-    
+@app.route('/reporte_porcentaje_faltantes')
+def reporte_porcentaje_faltantes():
     try:
+        # Conexión a la base de datos
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
-        
+
+        # Consulta SQL que cuenta los items faltantes (sin fecha_hora_entrega) y entregados (con fecha_hora_entrega)
         query = """
-        SELECT CAST(fecha AS DATE) AS fecha, COUNT(*) as cantidad
-        FROM manifiesto2
-        WHERE fecha BETWEEN ? AND ?
-        GROUP BY CAST(fecha AS DATE)
-        ORDER BY fecha
+        SELECT 
+            CASE 
+                WHEN fecha_hora_entrega IS NULL THEN 'Faltantes' 
+                ELSE 'Entregados' 
+            END AS estado,
+            COUNT(*) AS cantidad
+        FROM 
+            manifiesto2
+        GROUP BY 
+            CASE 
+                WHEN fecha_hora_entrega IS NULL THEN 'Faltantes' 
+                ELSE 'Entregados' 
+            END;
         """
-        cursor.execute(query, (start_date, end_date))
+        
+        # Ejecutar la consulta y obtener los resultados
+        cursor.execute(query)
         results = cursor.fetchall()
+
+        # Procesar los resultados para convertirlos en JSON
+        estados = [row[0] for row in results]  # 'Faltantes' o 'Entregados'
+        cantidades = [row[1] for row in results]  # Cantidad de items en cada estado
         
-        fechas = [row[0].strftime('%Y-%m-%d') for row in results]
-        cantidades = [row[1] for row in results]
-        
+        # Cerrar conexión a la base de datos
         cursor.close()
         conn.close()
-        
-        return jsonify({"fechas": fechas, "cantidades": cantidades})
+
+        # Devolver los datos en formato JSON
+        return jsonify({"estados": estados, "cantidades": cantidades})
+
     except pyodbc.Error as e:
-        return f"Error de base de datos: {e}"
+        return f"Error de base de datos: {e}", 500
     except Exception as e:
-        return f"Error inesperado: {e}"
+        return f"Error inesperado: {e}", 500
 
 if __name__ == '__main__':
     app.run(debug=True)
