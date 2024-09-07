@@ -121,10 +121,18 @@
             align-items: center;
             height: 100%;
             width: 100%;
+            text-align: center; /* Centrar el texto dentro del botón */
+            border-radius: 4px; /* Opcional: añadir bordes redondeados */
         }
 
         .check-btn.checked {
-            color: #28a745;
+            border-color: #28a745; /* Borde verde cuando está marcado */
+            background-color: #28a745; /* Fondo verde cuando está marcado */
+            color: white;
+        }
+        
+        .check-btn.checked i {
+            color: white; /* Color del ícono cuando está marcado */
         }
 
         .check-btn:focus {
@@ -137,6 +145,67 @@
             font-size: 14px;
             color: #666;
         }
+
+        .check-btn.disabled {
+            cursor: not-allowed;
+            color: #7dc7a6;
+        }
+        
+        /* Estilos del Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #confirm-ok {
+            background-color: #28a745;
+            color: white;
+        }
+
+        #confirm-cancel {
+            background-color: #dc3545;
+            color: white;
+        }
+
     </style>
 </head>
 
@@ -209,7 +278,75 @@
         </main>
     </div>
 
+    <!-- Modal de confirmación -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Confirmación</h2>
+            <p>¿Está seguro de que desea actualizar?</p>
+            <button id="confirm-ok" class="modal-button">OK</button>
+            <button id="confirm-cancel" class="modal-button">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Resultado -->
+    <div id="result-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="result-modal-close">&times;</span>
+            <p id="result-message"></p>
+        </div>
+    </div>
     <script>
+
+        function showModal(title, message) {
+            var modal = document.getElementById('update-modal');
+            var modalTitle = document.getElementById('modal-title');
+            var modalMessage = document.getElementById('modal-message');
+            var closeBtn = document.querySelector('.modal-close');
+        
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modal.style.display = 'block';
+        
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+            }
+        
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        }
+        
+        function showConfirmModal(callback) {
+            var confirmModal = document.getElementById('confirm-modal');
+            var confirmOk = document.getElementById('confirm-ok');
+            var confirmCancel = document.getElementById('confirm-cancel');
+            var closeBtn = document.getElementById('confirm-close');
+
+            confirmModal.style.display = 'block';
+
+            confirmOk.onclick = function() {
+                confirmModal.style.display = 'none';
+                callback();
+            }
+
+            confirmCancel.onclick = function() {
+                confirmModal.style.display = 'none';
+            }
+
+            closeBtn.onclick = function() {
+                confirmModal.style.display = 'none';
+            }
+
+            window.onclick = function(event) {
+                if (event.target == confirmModal) {
+                    confirmModal.style.display = 'none';
+                }
+            }
+        }
+
         function getLocalDateTime() {
             var now = new Date();
             var year = now.getFullYear();
@@ -260,22 +397,25 @@
                 checkButton.innerHTML = '<i class="fa-solid fa-check"></i>';
                 checkButton.dataset.index = i; // Añadir índice como data attribute
                 checkButton.addEventListener('click', function() {
+                    // Verificar si el botón ya está marcado o deshabilitado
+                    if (this.classList.contains('checked') || this.classList.contains('disabled')) {
+                        return; // No hacer nada si ya está marcado o deshabilitado
+                    }
+                
                     var index = this.dataset.index;
                     var formattedDate = getLocalDateTime();
-                    
-                    this.classList.toggle('checked');
+                
+                    this.classList.add('checked');
+                    this.classList.add('disabled'); // Añadir clase para deshabilitar el botón
                     var dateCell = this.closest('tr').querySelector('td:nth-child(5)');
-                    if (this.classList.contains('checked')) {
+                    if (dateCell) {
                         // Actualizar la fecha y hora en la columna
                         dateCell.textContent = formattedDate;
-                    } else {
-                        // Limpiar la fecha y hora si se desmarca
-                        dateCell.textContent = '';
                     }
-
+                
                     // Opcional: Aquí puedes agregar código para enviar la fecha y hora al servidor si es necesario
                     console.log(`Fecha y hora de completado para ítem ${index + 1}: ${formattedDate}`);
-                });
+                });                              
 
                 tdCheck.appendChild(checkButton);
                 tr.appendChild(tdCheck);
@@ -340,43 +480,66 @@
                 }
             });
         }
-        document.getElementById('update-button').addEventListener('click', function() {
-            var items = [];
-            var rows = document.querySelectorAll('#direccion-items tr');
 
-            rows.forEach(function(row) {
-                var checkButton = row.querySelector('.check-btn');
-                if (checkButton && checkButton.classList.contains('checked')) {
-                    var item = {
-                        item: row.querySelector('td:nth-child(1)').textContent,
-                        direccion: row.querySelector('td:nth-child(2)').textContent,
-                        servicio: row.querySelector('td:nth-child(3)').textContent,
-                        fecha_hora_entrega: row.querySelector('td:nth-child(5)').textContent
-                    };
-                    items.push(item);
-                }
-            });
+            // Mostrar el modal de confirmación
+            document.getElementById('update-button').addEventListener('click', function() {
+                var items = [];
+                var rows = document.querySelectorAll('#direccion-items tr');
+            
+                rows.forEach(function(row) {
+                    var checkButton = row.querySelector('.check-btn');
+                    if (checkButton && checkButton.classList.contains('checked')) {
+                        var item = {
+                            item: row.querySelector('td:nth-child(1)').textContent,
+                            direccion: row.querySelector('td:nth-child(2)').textContent,
+                            servicio: row.querySelector('td:nth-child(3)').textContent,
+                            fecha_hora_entrega: row.querySelector('td:nth-child(5)').textContent
+                        };
+                        items.push(item);
+                    }
+                });
 
-            fetch('/actualizar_hora_entrega', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ items: items })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alert('Actualización exitosa');
-                } else {
-                    alert('Error al actualizar: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al actualizar');
+                document.getElementById('confirm-modal').style.display = 'block';
+
+                document.getElementById('confirm-ok').addEventListener('click', function() {
+                    fetch('/actualizar_hora_entrega', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ items: items })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        var resultMessage = document.getElementById('result-message');
+                        var resultModal = document.getElementById('result-modal');
+            
+                        if (data.status === 'success') {
+                            resultMessage.textContent = 'Actualización exitosa';
+                        } else {
+                            resultMessage.textContent = 'Error al actualizar: ' + data.message;
+                        }
+            
+                        resultModal.style.display = 'block';
+                        // Cerrar el modal de confirmación
+                        document.getElementById('confirm-modal').style.display = 'none';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        document.getElementById('result-message').textContent = 'Error al actualizar';
+                        document.getElementById('result-modal').style.display = 'block';
+                    });
+                });
+            
+                document.getElementById('confirm-cancel').addEventListener('click', function() {
+                    document.getElementById('confirm-modal').style.display = 'none';
+                });
             });
-        });
+            
+            document.getElementById('result-modal-close').addEventListener('click', function() {
+                document.getElementById('result-modal').style.display = 'none';
+            });
+        
     </script>
     <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAg-pHzpWI9Ik34rYvyPZYGU9s2aWWtFx4&callback=initMap"></script>
 </body>
