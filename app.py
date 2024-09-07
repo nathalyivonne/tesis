@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, session, redirect, url_for, send_from_directory, jsonify
 from PIL import Image
 import base64
 from funcion import recognize_invoices
@@ -553,6 +553,230 @@ def editar_vehiculo(vehiculoid):
         cursor.execute(sql, data)
         db.conn.commit()
     return redirect(url_for('vehiculo'))
+
+################################### REPORTES ##################################
+################################## DISTRITOS ##################################
+@app.route('/reporte_distritos')
+def reporte_distritos():
+    try:
+        # Conectar a la base de datos SQL Server
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+        
+        # Consulta para obtener los distritos y la cantidad de manifiestos por distrito
+        query = """
+        SELECT distrito, COUNT(*) as cantidad
+        FROM manifiesto2
+        GROUP BY distrito
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        # Preparar los datos para el gráfico
+        distritos = [row[0] for row in results]
+        cantidades = [row[1] for row in results]
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"distritos": distritos, "cantidades": cantidades})
+    except pyodbc.Error as e:
+        return f"Error de base de datos: {e}"
+    except Exception as e:
+        return f"Error inesperado: {e}"
+################################### CLIENTE ###################################
+@app.route('/reporte_clientes')
+def reporte_clientes():
+    try:
+        # Conectar a la base de datos SQL Server
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+        
+        # Consulta para obtener los clientes y cantidad de envíos
+        query = """
+        SELECT cliente, COUNT(*) as cantidad
+        FROM manifiesto2
+        GROUP BY cliente
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        # Preparar los datos para el gráfico
+        clientes = [row[0] for row in results]
+        cantidades = [row[1] for row in results]
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"clientes": clientes, "cantidades": cantidades})
+    except pyodbc.Error as e:
+        return f"Error de base de datos: {e}"
+    except Exception as e:
+        return f"Error inesperado: {e}"
+################################ ENVIOS_FECHA #################################
+# @app.route('/reporte_envios_fecha')
+# def reporte_envios_fecha():
+#     try:
+#         conn = pyodbc.connect(conn_str)
+#         cursor = conn.cursor()
+        
+#         query = """
+#         SELECT CAST(fecha AS DATE) AS fecha, COUNT(*) as cantidad
+#         FROM manifiesto2
+#         GROUP BY CAST(fecha AS DATE)
+#         ORDER BY fecha
+#         """
+#         cursor.execute(query)
+#         results = cursor.fetchall()
+        
+#         fechas = [row[0].strftime('%Y-%m-%d') for row in results]
+#         cantidades = [row[1] for row in results]
+        
+#         cursor.close()
+#         conn.close()
+        
+#         return jsonify({"fechas": fechas, "cantidades": cantidades})
+#     except pyodbc.Error as e:
+#         return f"Error de base de datos: {e}"
+#     except Exception as e:
+#         return f"Error inesperado: {e}"
+############################### ENVIOS_SERVICIO ###############################
+# @app.route('/reporte_envios_servicio')
+# def reporte_envios_servicio():
+#     try:
+#         conn = pyodbc.connect(conn_str)
+#         cursor = conn.cursor()
+        
+#         query = """
+#         SELECT servicio, COUNT(*) as cantidad
+#         FROM manifiesto2
+#         GROUP BY servicio
+#         """
+#         cursor.execute(query)
+#         results = cursor.fetchall()
+        
+#         servicios = [row[0] for row in results]
+#         cantidades = [row[1] for row in results]
+        
+#         cursor.close()
+#         conn.close()
+        
+#         return jsonify({"servicios": servicios, "cantidades": cantidades})
+#     except pyodbc.Error as e:
+#         return f"Error de base de datos: {e}"
+#     except Exception as e:
+#         return f"Error inesperado: {e}"
+############################## CLIENTE_DISTRITOS ##############################
+@app.route('/reporte_clientes_distritos')
+def reporte_clientes_distritos():
+    try:
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+        
+        query = """
+        SELECT cliente, distrito, COUNT(*) as cantidad
+        FROM manifiesto2
+        GROUP BY cliente, distrito
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        clientes_distritos = [{"cliente": row[0], "distrito": row[1], "cantidad": row[2]} for row in results]
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"clientes_distritos": clientes_distritos})
+    except pyodbc.Error as e:
+        return f"Error de base de datos: {e}"
+    except Exception as e:
+        return f"Error inesperado: {e}"
+################################ MONTO_CLIENTE ################################
+@app.route('/reporte_monto_cliente')
+def reporte_monto_cliente():
+    try:
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+        
+        query = """
+        SELECT cliente, SUM(monto) as monto_total
+        FROM manifiesto2
+        GROUP BY cliente
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        clientes = [row[0] for row in results]
+        montos = [row[1] for row in results]
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"clientes": clientes, "montos": montos})
+    except pyodbc.Error as e:
+        return f"Error de base de datos: {e}"
+    except Exception as e:
+        return f"Error inesperado: {e}"
+################################ ESTADO_ENVIOS ################################
+@app.route('/reporte_estado_envios')
+def reporte_estado_envios():
+    try:
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+        
+        query = """
+        SELECT estado, COUNT(*) as cantidad
+        FROM manifiesto2
+        GROUP BY estado
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        estados = [row[0] for row in results]
+        cantidades = [row[1] for row in results]
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"estados": estados, "cantidades": cantidades})
+    except pyodbc.Error as e:
+        return f"Error de base de datos: {e}"
+    except Exception as e:
+        return f"Error inesperado: {e}"
+################################ ENVIOS_RANGO #################################
+@app.route('/reporte_envios_rango')
+def reporte_envios_rango():
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    
+    if not start_date or not end_date:
+        return "Parámetros de fecha no proporcionados", 400
+    
+    try:
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+        
+        query = """
+        SELECT CAST(fecha AS DATE) AS fecha, COUNT(*) as cantidad
+        FROM manifiesto2
+        WHERE fecha BETWEEN ? AND ?
+        GROUP BY CAST(fecha AS DATE)
+        ORDER BY fecha
+        """
+        cursor.execute(query, (start_date, end_date))
+        results = cursor.fetchall()
+        
+        fechas = [row[0].strftime('%Y-%m-%d') for row in results]
+        cantidades = [row[1] for row in results]
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"fechas": fechas, "cantidades": cantidades})
+    except pyodbc.Error as e:
+        return f"Error de base de datos: {e}"
+    except Exception as e:
+        return f"Error inesperado: {e}"
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -9,6 +9,39 @@
         href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
     <script src="https://kit.fontawesome.com/325f4c844a.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/pagina.css') }}">
+    <!-- Importando ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <!-- Importando Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAg-pHzpWI9Ik34rYvyPZYGU9s2aWWtFx4&libraries=visualization"></script>
+    <style>
+        /* Estilos para organizar los gráficos en una cuadrícula */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .chart-box {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        /* Estilos para el mapa */
+        #heatmap {
+            height: 500px;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 
 <body>
@@ -23,17 +56,16 @@
                     <a href="" class="active"><span class="fa-solid fa-table-columns"></span>
                         <span> DASHBOARD </span></a>
                 </li>
-                <li>
-                    <li class=""><a class="fa-solid fa-id-card" href="{{ url_for('cargo')}}">Cargo</a></li>
-                    <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a></li>
-                    <li class=""><a class="fa-solid fa-users" href="{{ url_for('roles')}}">Roles</a></li>
-                    <li class=""><a class="fa-solid fa-file" href="{{ url_for('tipoDocumento')}}">Tipo Documento</a></li>
-                    <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehiculo</a></li>
-                    <li class=""><a class="fa-solid fa-user" href="{{ url_for('usuario')}}">Usuario</a></li>
-                </li>
+                <li class=""><a class="fa-solid fa-id-card" href="{{ url_for('cargo')}}">Cargo</a></li>
+                <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a></li>
+                <li class=""><a class="fa-solid fa-users" href="{{ url_for('roles')}}">Roles</a></li>
+                <li class=""><a class="fa-solid fa-file" href="{{ url_for('tipoDocumento')}}">Tipo Documento</a></li>
+                <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehiculo</a></li>
+                <li class=""><a class="fa-solid fa-user" href="{{ url_for('usuario')}}">Usuario</a></li>
             </ul>
         </div>
     </div>
+
     <div class="main-content">
         <header>
             <h2>
@@ -44,57 +76,124 @@
             </h2>
             <a href="/" class="btn-exit">EXIT</a>
         </header>
+
         <main>
-            <div class="cards">
-                <div class="card-single">
-                    <div>
-                        <h1>10</h1>
-                        <span>Usuario</span>
-                    </div>
-                    <div>
-                        <span class="fa-solid fa-user"></span>
-                    </div>
+            <!-- Contenedor para los gráficos -->
+            <div class="charts-container">
+                <!-- Gráfico de Distritos -->
+                <div class="chart-box">
+                    <div class="chart-title">Manifiestos por Distrito</div>
+                    <div id="chart-distritos"></div>
                 </div>
-                <div class="card-single">
-                    <div>
-                        <h1>3</h1>
-                        <span>Vehículo</span>
-                    </div>
-                    <div>
-                        <span class="fa-solid fa-truck"></span>
-                    </div>
+
+                <!-- Gráfico de Clientes -->
+                <div class="chart-box">
+                    <div class="chart-title">Manifiestos por Cliente</div>
+                    <div id="chart-clientes"></div>
                 </div>
-                <div class="card-single">
-                    <div>
-                        <h1>5</h1>
-                        <span>Roles</span>
-                    </div>
-                    <div>
-                        <span class="fa-solid fa-business-time"></span>
-                    </div>
-                </div>
-                <div class="card-single">
-                    <div>
-                        <h1>40</h1>
-                        <span>Manifiestos</span>
-                    </div>
-                    <div>
-                        <span class="fa-solid fa-folder-open"></span>
-                    </div>
-                </div>
-                <div class="card-single">
-                    <div>
-                        <h1>5</h1>
-                        <span>Asignación</span>
-                    </div>
-                    <div>
-                        <span class="fa-solid fa-route"></span>
-                    </div>
+
+                <!-- Gráfico de Clientes por Distrito -->
+                <div class="chart-box">
+                    <div class="chart-title">Clientes por Distrito</div>
+                    <div id="chart-clientes-distritos"></div>
                 </div>
             </div>
+        </main>
     </div>
-    </main>
-    </div>
-    {%block contenido %} {% endblock %}
+
+    {% block contenido %} {% endblock %}
+
+    <script>
+        // Gráfico de Distritos
+        fetch('/reporte_distritos')
+            .then(response => response.json())
+            .then(data => {
+                var optionsDistritos = {
+                    chart: {
+                        type: 'bar'
+                    },
+                    series: [{
+                        name: 'Manifiestos',
+                        data: data.cantidades // Cantidades obtenidas de la base de datos
+                    }],
+                    xaxis: {
+                        categories: data.distritos // Distritos obtenidos de la base de datos
+                    }
+                };
+
+                // Renderizar el gráfico
+                var chartDistritos = new ApexCharts(document.querySelector("#chart-distritos"), optionsDistritos);
+                chartDistritos.render();
+            });
+
+        // Gráfico de Clientes
+        fetch('/reporte_clientes')
+            .then(response => response.json())
+            .then(data => {
+                var optionsClientes = {
+                    chart: {
+                        type: 'pie'
+                    },
+                    series: data.cantidades,  // Cantidades de manifiestos por cliente
+                    labels: data.clientes,  // Nombres de los clientes
+                    responsive: [{
+                        breakpoint: 480,
+                        options: {
+                            chart: {
+                                width: 200
+                            },
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }]
+                };
+
+                // Renderizar el gráfico
+                var chartClientes = new ApexCharts(document.querySelector("#chart-clientes"), optionsClientes);
+                chartClientes.render();
+            });
+
+        // Gráfico de Barras Apiladas para Clientes por Distrito
+        fetch('/reporte_clientes_distritos')
+            .then(response => response.json())
+            .then(data => {
+                // Procesar los datos
+                const distritos = [...new Set(data.clientes_distritos.map(item => item.distrito))];
+                const clientes = [...new Set(data.clientes_distritos.map(item => item.cliente))];
+
+                // Inicializar series vacías para cada cliente
+                const series = clientes.map(cliente => ({
+                    name: cliente,
+                    data: distritos.map(distrito => {
+                        const item = data.clientes_distritos.find(i => i.distrito === distrito && i.cliente === cliente);
+                        return item ? item.cantidad : 0;
+                    })
+                }));
+
+                var optionsClientesDistritos = {
+                    chart: {
+                        type: 'bar',
+                        stacked: true
+                    },
+                    series: series,
+                    xaxis: {
+                        categories: distritos
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Número de Manifiestos'
+                        }
+                    },
+                    legend: {
+                        position: 'top'
+                    }
+                };
+
+                var chartClientesDistritos = new ApexCharts(document.querySelector("#chart-clientes-distritos"), optionsClientesDistritos);
+                chartClientesDistritos.render();
+            });
+    </script>
 </body>
+
 </html>
