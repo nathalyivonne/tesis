@@ -666,6 +666,50 @@ def reporte_clientes_distritos():
         return f"Error de base de datos: {e}"
     except Exception as e:
         return f"Error inesperado: {e}"
+################################ ENVIOS_RANGO #################################
+@app.route('/reporte_porcentaje_faltantes')
+def reporte_porcentaje_faltantes():
+    try:
+        # Conexión a la base de datos
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+
+        # Consulta SQL que cuenta los items faltantes (sin fecha_hora_entrega) y entregados (con fecha_hora_entrega)
+        query = """
+        SELECT 
+            CASE 
+                WHEN fecha_hora_entrega IS NULL THEN 'Faltantes' 
+                ELSE 'Entregados' 
+            END AS estado,
+            COUNT(*) AS cantidad
+        FROM 
+            manifiesto2
+        GROUP BY 
+            CASE 
+                WHEN fecha_hora_entrega IS NULL THEN 'Faltantes' 
+                ELSE 'Entregados' 
+            END;
+        """
+        
+        # Ejecutar la consulta y obtener los resultados
+        cursor.execute(query)
+        results = cursor.fetchall()
+
+        # Procesar los resultados para convertirlos en JSON
+        estados = [row[0] for row in results]  # 'Faltantes' o 'Entregados'
+        cantidades = [row[1] for row in results]  # Cantidad de items en cada estado
+        
+        # Cerrar conexión a la base de datos
+        cursor.close()
+        conn.close()
+
+        # Devolver los datos en formato JSON
+        return jsonify({"estados": estados, "cantidades": cantidades})
+
+    except pyodbc.Error as e:
+        return f"Error de base de datos: {e}", 500
+    except Exception as e:
+        return f"Error inesperado: {e}", 500
 ################################ ENVIOS_FECHA #################################
 # @app.route('/reporte_envios_fecha')
 # def reporte_envios_fecha():
@@ -771,50 +815,6 @@ def reporte_estado_envios():
         return f"Error de base de datos: {e}"
     except Exception as e:
         return f"Error inesperado: {e}"
-################################ ENVIOS_RANGO #################################
-@app.route('/reporte_porcentaje_faltantes')
-def reporte_porcentaje_faltantes():
-    try:
-        # Conexión a la base de datos
-        conn = pyodbc.connect(conn_str)
-        cursor = conn.cursor()
-
-        # Consulta SQL que cuenta los items faltantes (sin fecha_hora_entrega) y entregados (con fecha_hora_entrega)
-        query = """
-        SELECT 
-            CASE 
-                WHEN fecha_hora_entrega IS NULL THEN 'Faltantes' 
-                ELSE 'Entregados' 
-            END AS estado,
-            COUNT(*) AS cantidad
-        FROM 
-            manifiesto2
-        GROUP BY 
-            CASE 
-                WHEN fecha_hora_entrega IS NULL THEN 'Faltantes' 
-                ELSE 'Entregados' 
-            END;
-        """
-        
-        # Ejecutar la consulta y obtener los resultados
-        cursor.execute(query)
-        results = cursor.fetchall()
-
-        # Procesar los resultados para convertirlos en JSON
-        estados = [row[0] for row in results]  # 'Faltantes' o 'Entregados'
-        cantidades = [row[1] for row in results]  # Cantidad de items en cada estado
-        
-        # Cerrar conexión a la base de datos
-        cursor.close()
-        conn.close()
-
-        # Devolver los datos en formato JSON
-        return jsonify({"estados": estados, "cantidades": cantidades})
-
-    except pyodbc.Error as e:
-        return f"Error de base de datos: {e}", 500
-    except Exception as e:
-        return f"Error inesperado: {e}", 500
 
 if __name__ == '__main__':
     app.run(debug=True)
