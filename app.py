@@ -690,7 +690,6 @@ def reporte_porcentaje_faltantes():
                 ELSE 'Entregados' 
             END;
         """
-        
         # Ejecutar la consulta y obtener los resultados
         cursor.execute(query)
         results = cursor.fetchall()
@@ -711,32 +710,49 @@ def reporte_porcentaje_faltantes():
     except Exception as e:
         return f"Error inesperado: {e}", 500
 ################################ ENVIOS_FECHA #################################
-# @app.route('/reporte_envios_fecha')
-# def reporte_envios_fecha():
-#     try:
-#         conn = pyodbc.connect(conn_str)
-#         cursor = conn.cursor()
-        
-#         query = """
-#         SELECT CAST(fecha AS DATE) AS fecha, COUNT(*) as cantidad
-#         FROM manifiesto2
-#         GROUP BY CAST(fecha AS DATE)
-#         ORDER BY fecha
-#         """
-#         cursor.execute(query)
-#         results = cursor.fetchall()
-        
-#         fechas = [row[0].strftime('%Y-%m-%d') for row in results]
-#         cantidades = [row[1] for row in results]
-        
-#         cursor.close()
-#         conn.close()
-        
-#         return jsonify({"fechas": fechas, "cantidades": cantidades})
-#     except pyodbc.Error as e:
-#         return f"Error de base de datos: {e}"
-#     except Exception as e:
-#         return f"Error inesperado: {e}"
+@app.route('/reporte_envios_fecha', methods=['GET'])
+def reporte_envios_fecha():
+    try:
+        fecha = request.args.get('fecha', None)  # Obtener la fecha desde los parámetros de la URL
+        print(f"Fecha seleccionada: {fecha}")
+
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+
+        # Si hay una fecha seleccionada, no necesitas agrupar
+        if fecha:
+            query = """
+            SELECT COUNT(*) as cantidad
+            FROM manifiesto2
+            WHERE CAST(fecha_hora_entrega AS DATE) = ?
+            """
+            cursor.execute(query, fecha)
+            result = cursor.fetchone()
+            fechas = [fecha]  # Como solo es una fecha, devolvemos la misma
+            cantidades = [result[0]]  # La cantidad obtenida
+        else:
+            # Si no hay fecha seleccionada, se agrupan todas las fechas
+            query = """
+            SELECT CAST(fecha_hora_entrega AS DATE) AS fecha_hora_entrega, COUNT(*) as cantidad
+            FROM manifiesto2
+            GROUP BY CAST(fecha_hora_entrega AS DATE)
+            ORDER BY fecha_hora_entrega
+            """
+            cursor.execute(query)
+            results = cursor.fetchall()
+            fechas = [row[0].strftime('%Y-%m-%d') for row in results]
+            cantidades = [row[1] for row in results]
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({"fechas": fechas, "cantidades": cantidades})
+    except pyodbc.Error as e:
+        print(f"Error de base de datos: {e}")
+        return f"Error de base de datos: {e}"
+    except Exception as e:
+        print(f"Error inesperado: {e}")
+        return f"Error inesperado: {e}"
 ############################### ENVIOS_SERVICIO ###############################
 # @app.route('/reporte_envios_servicio')
 # def reporte_envios_servicio():
