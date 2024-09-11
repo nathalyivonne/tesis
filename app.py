@@ -583,7 +583,7 @@ def editar_vehiculo(vehiculoid):
     return redirect(url_for('vehiculo'))
 
 ################################### REPORTES ##################################
-################################## DISTRITOS ##################################
+################################## 1.DISTRITOS ##################################
 @app.route('/reporte_distritos')
 def reporte_distritos():
     try:
@@ -612,7 +612,7 @@ def reporte_distritos():
         return f"Error de base de datos: {e}"
     except Exception as e:
         return f"Error inesperado: {e}"
-################################### CLIENTE ###################################
+################################### 2.CLIENTE ###################################
 @app.route('/reporte_clientes')
 def reporte_clientes():
     try:
@@ -641,7 +641,7 @@ def reporte_clientes():
         return f"Error de base de datos: {e}"
     except Exception as e:
         return f"Error inesperado: {e}"
-############################## CLIENTE_DISTRITOS ##############################
+############################## 3.CLIENTE_DISTRITOS ##############################
 @app.route('/reporte_clientes_distritos')
 def reporte_clientes_distritos():
     try:
@@ -666,7 +666,7 @@ def reporte_clientes_distritos():
         return f"Error de base de datos: {e}"
     except Exception as e:
         return f"Error inesperado: {e}"
-################################ ENVIOS_RANGO #################################
+################################ 4.ENVIOS_RANGO #################################
 @app.route('/reporte_porcentaje_faltantes')
 def reporte_porcentaje_faltantes():
     try:
@@ -709,7 +709,7 @@ def reporte_porcentaje_faltantes():
         return f"Error de base de datos: {e}", 500
     except Exception as e:
         return f"Error inesperado: {e}", 500
-################################ ENVIOS_FECHA #################################
+################################ 5.ENVIOS_FECHA #################################
 @app.route('/reporte_envios_fecha', methods=['GET'])
 def reporte_envios_fecha():
     try:
@@ -806,31 +806,31 @@ def reporte_envios_fecha():
 #     except Exception as e:
 #         return f"Error inesperado: {e}"
 ################################ ESTADO_ENVIOS ################################
-@app.route('/reporte_estado_envios')
-def reporte_estado_envios():
-    try:
-        conn = pyodbc.connect(conn_str)
-        cursor = conn.cursor()
+# @app.route('/reporte_estado_envios')
+# def reporte_estado_envios():
+#     try:
+#         conn = pyodbc.connect(conn_str)
+#         cursor = conn.cursor()
         
-        query = """
-        SELECT estado, COUNT(*) as cantidad
-        FROM manifiesto2
-        GROUP BY estado
-        """
-        cursor.execute(query)
-        results = cursor.fetchall()
+#         query = """
+#         SELECT estado, COUNT(*) as cantidad
+#         FROM manifiesto2
+#         GROUP BY estado
+#         """
+#         cursor.execute(query)
+#         results = cursor.fetchall()
         
-        estados = [row[0] for row in results]
-        cantidades = [row[1] for row in results]
+#         estados = [row[0] for row in results]
+#         cantidades = [row[1] for row in results]
         
-        cursor.close()
-        conn.close()
+#         cursor.close()
+#         conn.close()
         
-        return jsonify({"estados": estados, "cantidades": cantidades})
-    except pyodbc.Error as e:
-        return f"Error de base de datos: {e}"
-    except Exception as e:
-        return f"Error inesperado: {e}"
+#         return jsonify({"estados": estados, "cantidades": cantidades})
+#     except pyodbc.Error as e:
+#         return f"Error de base de datos: {e}"
+#     except Exception as e:
+#         return f"Error inesperado: {e}"
 
 if __name__ == '__main__':
     app.run(debug=True)
