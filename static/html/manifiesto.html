@@ -17,13 +17,21 @@
             font-size: 1.5rem;
             color: #333;
         }
+
         .fa-spinner {
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
         .progress-circle {
             width: 120px;
             height: 120px;
@@ -33,6 +41,7 @@
             animation: spin-progress 2s linear infinite;
             position: relative;
         }
+
         .progress-percentage {
             position: absolute;
             top: 50%;
@@ -41,17 +50,24 @@
             font-size: 1.2rem;
             color: #333;
         }
+
         @keyframes spin-progress {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
         #progressContainer {
             display: none;
             justify-content: center;
             align-items: center;
             margin-top: 20px;
         }
-    </style>    
+    </style>
     <script>
         async function convertToBase64() {
             // Muestra el ícono de carga
@@ -60,7 +76,7 @@
             const percentageText = document.getElementById('percentageText');
             const fileInput = document.getElementById('photo');
             const file = fileInput.files[0];
-    
+
             if (file) {
                 progressContainer.style.display = 'flex';
 
@@ -68,22 +84,22 @@
                 reader.onload = function (event) {
                     const base64Data = event.target.result;
                     const image = new Image();
-    
+
                     image.onload = async function () {
                         const canvas = document.createElement('canvas');
                         const context = canvas.getContext('2d');
-    
+
                         canvas.width = image.width;
                         canvas.height = image.height;
                         context.drawImage(image, 0, 0);
-    
+
                         const jpegData = canvas.toDataURL('image/jpeg', 0.8);
                         document.getElementById('base64Data').value = jpegData;
                         document.getElementById('uploadForm').submit();
                         let progress = 0;
                         let interval = setInterval(() => {
                             if (progress < 99) {
-                                progress += 0.5; 
+                                progress += 0.5;
                                 percentageText.innerText = Math.round(progress) + '%';
                             }
                         }, 1250);
@@ -96,7 +112,7 @@
                                 method: 'POST',
                                 body: formData
                             });
-                            
+
                             console.log(response);
                             if (response.ok) {
                                 clearInterval(interval);
@@ -125,17 +141,17 @@
                         }
 
                     };
-    
+
                     image.src = base64Data;
                 };
-    
+
                 reader.readAsDataURL(file);
             } else {
                 document.getElementById('loadingIcon').style.display = 'none';
                 alert("Por favor, selecciona un archivo primero.");
             }
         }
-    </script>   
+    </script>
 </head>
 
 <body>
