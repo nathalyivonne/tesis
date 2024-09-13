@@ -16,7 +16,8 @@ import secrets
 import os
 import database as db
 import pandas as pd
-from datetime import datetime
+import matplotlib.pyplot as plt
+from datetime import timedelta
 
 app = Flask(__name__)
        
@@ -318,6 +319,46 @@ def actualizar_hora_entrega():
     finally:
         cursor.close()
         conn.close()
+
+    # def seconds_to_human_readable(seconds):
+    #     if seconds < 60:
+    #         return f"{seconds}s"
+    #     elif seconds < 3600:
+    #         minutes = seconds // 60
+    #         return f"{minutes}m"
+    #     elif seconds < 86400:
+    #         hours = seconds // 3600
+    #         return f"{hours}h"
+    #     else:
+    #         days = seconds // 86400
+    #         return f"{days}d"
+
+    #     # Configuración de la conexión a la base de datos
+    #     conn = pyodbc.connect(conn_str)
+    #     cursor = conn.cursor()
+
+    #     # Crear una conexión a la base de datos
+    #     conn = pyodbc.connect(conn_str)
+
+    #     # Consulta SQL para extraer los datos
+    #     query = """
+    #     SELECT 
+    #         fecha_hora_subida,
+    #         fecha_hora_entrega,
+    #         DATEDIFF(SECOND, fecha_hora_subida, fecha_hora_entrega) AS diferencia_segundos
+    #     FROM 
+    #         manifiesto2
+    #     """
+
+    #     # Leer los datos en un DataFrame
+    #     data = pd.read_sql(query, conn)
+
+    #     # Cerrar la conexión
+    #     conn.close()
+
+    #     # Convertir la diferencia de segundos a un formato legible
+    #     data['cumplimiento'] = data['diferencia_segundos'].apply(seconds_to_human_readable)
+
 ################################ MANTENIMIENTOS ###############################
 #################################### CARGO ####################################
 @app.route('/cargo')
