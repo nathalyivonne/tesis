@@ -269,6 +269,7 @@
                             <th>SERVICIO</th>
                             <th>COMPLETADA</th>
                             <th>FECHA Y HORA</th>
+                            <th>CUMPLIMIENTO (MIN)</th>
                         </tr>
                     </thead>
                     <tbody id="direccion-items"></tbody>
@@ -454,7 +455,9 @@
                 // Añadir una celda vacía para la fecha y hora
                 var tdDateTime = document.createElement('td');
                 tr.appendChild(tdDateTime);
-
+                // Añadir una celda para el cumplimiento
+                var tdCumplimiento = document.createElement('td');
+                tr.appendChild(tdCumplimiento);
                 direccionItems.appendChild(tr);
             }
 
@@ -512,65 +515,120 @@
             });
         }
 
-            // Mostrar el modal de confirmación
-            document.getElementById('update-button').addEventListener('click', function() {
-                var items = [];
-                var rows = document.querySelectorAll('#direccion-items tr');
-            
-                rows.forEach(function(row) {
-                    var checkButton = row.querySelector('.check-btn');
-                    if (checkButton && checkButton.classList.contains('checked')) {
-                        var item = {
-                            item: row.querySelector('td:nth-child(1)').textContent,
-                            direccion: row.querySelector('td:nth-child(2)').textContent,
-                            servicio: row.querySelector('td:nth-child(3)').textContent,
-                            fecha_hora_entrega: row.querySelector('td:nth-child(5)').textContent
-                        };
-                        items.push(item);
-                    }
-                });
-
-                document.getElementById('confirm-modal').style.display = 'block';
-
-                document.getElementById('confirm-ok').addEventListener('click', function() {
-                    console.log(JSON.stringify({ items: items }));
-                    fetch('/actualizar_hora_entrega', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ items: items })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        var resultMessage = document.getElementById('result-message');
-                        var resultModal = document.getElementById('result-modal');
-            
-                        if (data.status === 'success') {
-                            resultMessage.textContent = 'Actualización exitosa';
-                        } else {
-                            resultMessage.textContent = 'Error al actualizar: ' + data.message;
+        // Mostrar el modal de confirmación
+        document.getElementById('update-button').addEventListener('click', function () {
+            var items = [];
+            var rows = document.querySelectorAll('#direccion-items tr');
+        
+            rows.forEach(function (row) {
+                var checkButton = row.querySelector('.check-btn');
+                if (checkButton && checkButton.classList.contains('checked')) {
+                    var item = {
+                        item: row.querySelector('td:nth-child(1)').textContent, // Columna 1: ID del item
+                        direccion: row.querySelector('td:nth-child(2)').textContent, // Columna 2: Dirección
+                        servicio: row.querySelector('td:nth-child(3)').textContent, // Columna 3: Servicio
+                        fecha_hora_entrega: row.querySelector('td:nth-child(5)').textContent, // Columna 5: Fecha y hora
+                        cumplimiento: row.querySelector('td:nth-child(6)').textContent // Columna 6: Cumplimiento (se va a actualizar)
+                    };
+                    items.push(item);
+                }
+            });
+        
+            document.getElementById('confirm-modal').style.display = 'block';
+        
+            document.getElementById('confirm-ok').addEventListener('click', function () {
+                console.log(JSON.stringify({ items: items }));
+                fetch('/actualizar_hora_entrega', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ items: items })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    var resultMessage = document.getElementById('result-message');
+                    var resultModal = document.getElementById('result-modal');
+        
+                    if (data.status === 'success') {
+                        resultMessage.textContent = 'Actualización exitosa';
+                    
+                        // Función para obtener la fecha actual y formatearla en 'YYYY-MM-DD HH:MM:SS'
+                        function getCurrentDateTime() {
+                            var now = new Date();
+                            var year = now.getFullYear();
+                            var month = String(now.getMonth() + 1).padStart(2, '0'); // Mes en formato 2 dígitos
+                            var day = String(now.getDate()).padStart(2, '0'); // Día en formato 2 dígitos
+                            var hours = String(now.getHours()).padStart(2, '0'); // Horas en formato 24 horas
+                            var minutes = String(now.getMinutes()).padStart(2, '0'); // Minutos en formato 2 dígitos
+                            var seconds = String(now.getSeconds()).padStart(2, '0'); // Segundos en formato 2 dígitos
+                            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
                         }
-            
-                        resultModal.style.display = 'block';
-                        // Cerrar el modal de confirmación
-                        document.getElementById('confirm-modal').style.display = 'none';
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        document.getElementById('result-message').textContent = 'Error al actualizar';
-                        document.getElementById('result-modal').style.display = 'block';
-                    });
-                });
-            
-                document.getElementById('confirm-cancel').addEventListener('click', function() {
+                    
+                        // Función para validar que una fecha tiene el formato correcto 'YYYY-MM-DD HH:MM:SS'
+                        function isValidDateTime(dateTimeString) {
+                            // Expresión regular para validar el formato correcto de fecha y hora
+                            var regex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+                            return regex.test(dateTimeString);
+                        }
+                    
+                        // Función para asegurar que todas las fechas están en el formato correcto o usar la fecha actual
+                        function formatDateTime(fechaHora) {
+                            if (fechaHora && isValidDateTime(fechaHora)) {
+                                return fechaHora;
+                            }
+                            // Si la fecha es inválida o no existe, usamos la fecha y hora actuales
+                            return getCurrentDateTime();
+                        }
+                    
+                        // Actualización de la columna de cumplimiento y fecha/hora en las filas correctas
+                        var rows = document.querySelectorAll('#direccion-items tr');
+                    
+                        // Recorremos cada fila y comparamos el ID del ítem con la respuesta del servidor
+                        rows.forEach(function (row) {
+                            var itemID = row.querySelector('td:nth-child(1)').textContent;  // Obtener el ID del ítem en la fila
+                    
+                            // Buscar el cumplimiento y fecha/hora para ese ítem en los datos recibidos del servidor
+                            var cumplimientoItem = data.cumplimiento.find(c => c.item == itemID);
+                    
+                            if (cumplimientoItem) {
+                                // Actualizamos la fecha y hora en la columna 5
+                                var fechaHoraCell = row.querySelector('td:nth-child(5)');
+                                if (fechaHoraCell) {
+                                    // Usamos la fecha y hora proporcionada por el servidor o la actual si no existe
+                                    fechaHoraCell.textContent = formatDateTime(cumplimientoItem.fecha_hora_entrega);
+                                }
+                    
+                                // Actualizamos el cumplimiento en la columna 6
+                                var cumplimientoCell = row.querySelector('td:nth-child(6)');
+                                if (cumplimientoCell) {
+                                    cumplimientoCell.textContent = cumplimientoItem.cumplimiento || '';  // Si no hay cumplimiento, dejamos vacío
+                                }
+                            }
+                        });
+                    } else {
+                        resultMessage.textContent = 'Error al actualizar: ' + data.message;
+                    }                                                       
+        
+                    resultModal.style.display = 'block';
+                    // Cerrar el modal de confirmación
                     document.getElementById('confirm-modal').style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('result-message').textContent = 'Error al actualizar';
+                    document.getElementById('result-modal').style.display = 'block';
                 });
             });
-            
-            document.getElementById('result-modal-close').addEventListener('click', function() {
-                document.getElementById('result-modal').style.display = 'none';
+        
+            document.getElementById('confirm-cancel').addEventListener('click', function () {
+                document.getElementById('confirm-modal').style.display = 'none';
             });
+        });
+        
+        document.getElementById('result-modal-close').addEventListener('click', function () {
+            document.getElementById('result-modal').style.display = 'none';
+        });      
         
     </script>
     <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAg-pHzpWI9Ik34rYvyPZYGU9s2aWWtFx4&callback=initMap"></script>

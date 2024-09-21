@@ -299,28 +299,88 @@ def ver_mapa():
 @app.route('/actualizar_hora_entrega', methods=['POST'])
 def actualizar_hora_entrega():
     data = request.json
-    print(data)  # Agrega esta línea para verificar los datos que llegan
+    print("Datos recibidos:", data)  # Para verificar que llegan los datos correctos
     try:
-        conn = pyodbc.connect(conn_str)
+        # Habilitar autocommit
+        conn = pyodbc.connect(conn_str, autocommit=False)
         cursor = conn.cursor()
 
+        # Actualización de cada ítem
         for item in data['items']:
-            sql = """
+            print(f"Actualizando item: {item['item']}")
+            
+            # Verificación de datos antes de actualizar
+            if not all(k in item for k in ['fecha_hora_entrega', 'servicio', 'direccion', 'item']):
+                raise ValueError(f"Faltan datos en el ítem: {item}")
+            
+            sql_update = """
                 UPDATE manifiesto2
                 SET fecha_hora_entrega = ?, servicio = ?, direccion = ?
                 WHERE item = ?
             """
-            cursor.execute(sql, (item['fecha_hora_entrega'], item['servicio'], item['direccion'], item['item']))
+            cursor.execute(sql_update, (item['fecha_hora_entrega'], item['servicio'], item['direccion'], item['item']))
         
+        print("Comenzando commit...")
         conn.commit()
-        return jsonify({"status": "success"}), 200
+        print("Commit realizado con éxito.")
+
+        # Query para calcular el cumplimiento
+        item_ids = [item['item'] for item in data['items']]
+        if not item_ids:
+            return jsonify({"status": "error", "message": "No hay ítems para actualizar."}), 400
+
+        placeholders = ', '.join(['?'] * len(item_ids))
+
+        # Query para calcular el cumplimiento
+        sql_select = f"""
+            SELECT 
+                item,  -- Asegúrate de obtener el ID del ítem para la actualización
+                fecha_hora_subida,
+                fecha_hora_entrega,
+                CASE 
+                    WHEN fecha_hora_entrega IS NULL THEN 'NULL'
+                    ELSE CAST(DATEDIFF(MINUTE, fecha_hora_subida, fecha_hora_entrega) AS VARCHAR)
+                END AS cumplimiento
+            FROM 
+                manifiesto2
+            WHERE item IN ({placeholders})
+        """
+        cursor.execute(sql_select, item_ids)
+        cumplimiento_data = cursor.fetchall()
+
+        cumplimiento_result = []
+        for row in cumplimiento_data:
+            item_id = row[0]
+            cumplimiento = row[3]
+
+            cumplimiento_result.append({
+                "item": item_id,
+                "fecha_hora_subida": row[1],
+                "fecha_hora_entrega": row[2],
+                "cumplimiento": cumplimiento
+            })
+
+            # Actualizar el cumplimiento en la base de datos
+            sql_update_cumplimiento = """
+                UPDATE manifiesto2
+                SET cumplimiento = ?
+                WHERE item = ?
+            """
+            cursor.execute(sql_update_cumplimiento, (cumplimiento, item_id))
+
+        print("Datos de cumplimiento obtenidos y actualizados:", cumplimiento_result)
+        conn.commit()  # Asegúrate de hacer commit de la actualización de cumplimiento
+
+        return jsonify({"status": "success", "cumplimiento": cumplimiento_result}), 200
+
     except Exception as e:
-        print(e)
+        print("Error durante la actualización:", e)
+        conn.rollback()  # Rollback en caso de error
         return jsonify({"status": "error", "message": str(e)}), 500
     finally:
         cursor.close()
         conn.close()
-            
+
 ################################ MANTENIMIENTOS ###############################
 #################################### CARGO ####################################
 @app.route('/cargo')
