@@ -286,7 +286,7 @@
             <span class="close-button">&times;</span>
             <h2>Confirmación</h2>
             <p>¿Está seguro de que desea actualizar?</p>
-            <button id="confirm-ok" class="modal-button">OK</button>
+            <button id="confirm-ok" class="modal-button">Aceptar</button>
             <button id="confirm-cancel" class="modal-button">Cancelar</button>
         </div>
     </div>
@@ -298,6 +298,16 @@
             <p id="result-message"></p>
         </div>
     </div>
+
+    <div id="update-confirm-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-update-confirm">&times;</span>
+            <p>La entrega ya tiene registrada la hora y fecha. ¿Deseas actualizar los datos?</p>
+            <button id="update-confirm-ok" class="modal-button">Sí</button>
+            <button id="update-confirm-cancel" class="modal-button">No</button>
+        </div>
+    </div>
+    
     <script>
 
         function showModal(title, message) {
@@ -398,25 +408,44 @@
                 checkButton.className = 'check-btn';
                 checkButton.innerHTML = '<i class="fa-solid fa-check"></i>';
                 checkButton.dataset.index = i; // Añadir índice como data attribute
-                checkButton.addEventListener('click', function() {
-                    // Verificar si el botón ya está marcado o deshabilitado
-                    if (this.classList.contains('checked') || this.classList.contains('disabled')) {
-                        return; // No hacer nada si ya está marcado o deshabilitado
-                    }
-                
+                checkButton.addEventListener('click', function() {             
                     var index = this.dataset.index;
-                    var formattedDate = getLocalDateTime();
-                
-                    this.classList.add('checked');
-                    this.classList.add('disabled'); // Añadir clase para deshabilitar el botón
+                    var formattedDate = getLocalDateTime();   
                     var dateCell = this.closest('tr').querySelector('td:nth-child(5)');
+                    if (dateCell && dateCell.textContent.trim() !== "") {
+                        // Show confirmation modal if date and time are already set
+                        document.getElementById('update-confirm-modal').style.display = 'block';
+
+                        document.getElementById('update-confirm-ok').onclick = () => {
+                            // Se confirma el cambio
+                            if (dateCell) {
+                                dateCell.textContent = formattedDate;
+                            }
+                            this.classList.add('checked');
+                
+                            // Opcional: Aquí puedes agregar código para enviar la fecha y hora al servidor si es necesario
+                            console.log(`Fecha y hora de completado para ítem ${index + 1}: ${formattedDate}`);
+                
+                            // Cerrar el modal
+                            document.getElementById('update-confirm-modal').style.display = 'none';
+                        };
+                        document.getElementById('update-confirm-cancel').onclick = () => {
+                            // Cerrar el modal sin hacer cambios
+                            document.getElementById('update-confirm-modal').style.display = 'none';
+                        };
+                        document.getElementById('close-update-confirm').onclick = () => {
+                            document.getElementById('update-confirm-modal').style.display = 'none';
+                        };
+                    }else{
+                    // Set the new date and time
+                    var formattedDate = getLocalDateTime();
                     if (dateCell) {
-                        // Actualizar la fecha y hora en la columna
                         dateCell.textContent = formattedDate;
                     }
-                
+                    this.classList.add('checked');
                     // Opcional: Aquí puedes agregar código para enviar la fecha y hora al servidor si es necesario
                     console.log(`Fecha y hora de completado para ítem ${index + 1}: ${formattedDate}`);
+                    }
                 });                              
 
                 tdCheck.appendChild(checkButton);
@@ -504,6 +533,7 @@
                 document.getElementById('confirm-modal').style.display = 'block';
 
                 document.getElementById('confirm-ok').addEventListener('click', function() {
+                    console.log(JSON.stringify({ items: items }));
                     fetch('/actualizar_hora_entrega', {
                         method: 'POST',
                         headers: {
