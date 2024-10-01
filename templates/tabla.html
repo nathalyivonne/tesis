@@ -170,8 +170,9 @@
                         <th onclick="sortTable(4)">Distrito</th>
                         <th onclick="sortTable(5)">Servicio</th>
                         <th onclick="sortTable(6)">Fecha y Hora de Subida</th>
-                        <th onclick="sortTable(7)">Estado</th>
+                        <th onclick="sortTable(7)">Fecha y Hora de Entrega</th>
                         <th onclick="sortTable(8)">Cumplimiento</th>
+                        <th onclick="sortTable(8)">Estado</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -182,6 +183,8 @@
                                 <td>{{ 'No entregado' if cell is none or cell == 'NULL' else cell }}</td>
                             {% elif loop.index0 == 8 %}
                                 <td>{{ 'Pendiente' if cell is none or cell == 'NULL' else cell }}</td>
+                            {% elif loop.index0 == 9 %}
+                                <td>{{ 'Pendiente' if cell == 0 else cell }}</td>
                             {% else %}
                                 <td>{{ cell }}</td>
                             {% endif %}

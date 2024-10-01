@@ -131,24 +131,11 @@
             color: white;
         }
         
-        .check-btn.checked i {
-            color: white; /* Color del ícono cuando está marcado */
-        }
-
-        .check-btn:focus {
-            outline: none;
-        }
-
         #totalItems {
             margin-top: 16px;
             text-align: right;
             font-size: 14px;
             color: #666;
-        }
-
-        .check-btn.disabled {
-            cursor: not-allowed;
-            color: #7dc7a6;
         }
         
         /* Estilos del Modal */
@@ -267,7 +254,7 @@
                             <th>ITEM</th>
                             <th>DIRECCIÓN</th>
                             <th>SERVICIO</th>
-                            <th>COMPLETADA</th>
+                            <th>ESTADO</th>
                             <th>FECHA Y HORA</th>
                             <th>CUMPLIMIENTO (MIN)</th>
                         </tr>
@@ -281,17 +268,6 @@
         </main>
     </div>
 
-    <!-- Modal de confirmación -->
-    <div id="confirm-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Confirmación</h2>
-            <p>¿Está seguro de que desea actualizar?</p>
-            <button id="confirm-ok" class="modal-button">Aceptar</button>
-            <button id="confirm-cancel" class="modal-button">Cancelar</button>
-        </div>
-    </div>
-
     <!-- Modal de Resultado -->
     <div id="result-modal" class="modal">
         <div class="modal-content">
@@ -303,9 +279,20 @@
     <div id="update-confirm-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" id="close-update-confirm">&times;</span>
-            <p>La entrega ya tiene registrada la hora y fecha. ¿Deseas actualizar los datos?</p>
+            <p>¿Desea eliminar la entrega?</p>
             <button id="update-confirm-ok" class="modal-button">Sí</button>
             <button id="update-confirm-cancel" class="modal-button">No</button>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Confirmación</h2>
+            <p>¿Está seguro de que desea actualizar?</p>
+            <button id="confirm-ok" class="modal-button">Aceptar</button>
+            <button id="confirm-cancel" class="modal-button">Cancelar</button>
         </div>
     </div>
     
@@ -413,6 +400,8 @@
                     var index = this.dataset.index;
                     var formattedDate = getLocalDateTime();   
                     var dateCell = this.closest('tr').querySelector('td:nth-child(5)');
+                    var cumplimientoCell = this.closest('tr').querySelector('td:nth-child(6)');
+                    var row = this.closest('tr');
                     if (dateCell && dateCell.textContent.trim() !== "") {
                         // Show confirmation modal if date and time are already set
                         document.getElementById('update-confirm-modal').style.display = 'block';
@@ -420,29 +409,53 @@
                         document.getElementById('update-confirm-ok').onclick = () => {
                             // Se confirma el cambio
                             if (dateCell) {
-                                dateCell.textContent = formattedDate;
+                                dateCell.textContent = "";
+                                 // Eliminar el contenido de la celda de la fecha
                             }
-                            this.classList.add('checked');
-                
-                            // Opcional: Aquí puedes agregar código para enviar la fecha y hora al servidor si es necesario
-                            console.log(`Fecha y hora de completado para ítem ${index + 1}: ${formattedDate}`);
+                            if (cumplimientoCell){
+                                cumplimientoCell.textContent="";
+                            }
+                            this.classList.remove('checked');
+                            // Enviar la acción de eliminación al servidor 
+                            const item = row.querySelector('td:nth-child(1)').textContent.trim(); // Columna 1: ID del item
+                            fetch('/eliminar_entrega', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Cache-Control': 'no-cache' // Desactiva el caché para la solicitud
+                                },
+                                body: JSON.stringify({
+                                    items: [
+                                        {
+                                            item: item,  // Cambiar según cómo esté estructurado tu índice
+                                            eliminar: true
+                                        }
+                                    ]
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === "success") {
+                                    console.log(`Fecha y cumplimiento eliminados correctamente para ítem ${index + 1}`);
+                                } else {
+                                    console.error(`Error al eliminar fecha y cumplimiento para ítem ${index + 1}: ${data.message}`);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error en la solicitud de eliminación:', error);
+                            });
                 
                             // Cerrar el modal
-                            document.getElementById('update-confirm-modal').style.display = 'none';
-                        };
-                        document.getElementById('update-confirm-cancel').onclick = () => {
-                            // Cerrar el modal sin hacer cambios
                             document.getElementById('update-confirm-modal').style.display = 'none';
                         };
                         document.getElementById('close-update-confirm').onclick = () => {
                             document.getElementById('update-confirm-modal').style.display = 'none';
                         };
-                    }else{
-                    // Set the new date and time
-                    var formattedDate = getLocalDateTime();
-                    if (dateCell) {
-                        dateCell.textContent = formattedDate;
-                    }
+                    } else {
+                        // Establecer la nueva fecha y hora
+                        if (dateCell) {
+                            dateCell.textContent = formattedDate;
+                        }
                     this.classList.add('checked');
                     // Opcional: Aquí puedes agregar código para enviar la fecha y hora al servidor si es necesario
                     console.log(`Fecha y hora de completado para ítem ${index + 1}: ${formattedDate}`);

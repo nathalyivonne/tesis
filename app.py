@@ -113,6 +113,16 @@ def upload():
         
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
+        sql_update_estado = """
+            UPDATE bdmanifiestos.dbo.Manifiesto2
+            set estado = case
+                WHEN fecha_hora_entrega IS NOT NULL AND fecha_hora_subida IS NOT NULL
+                THEN 1
+                ELSE 0 
+            END;
+        """
+        cursor.execute(sql_update_estado)  
+        conn.commit()          
         cursor.execute("SELECT * FROM manifiesto2")
         rows = cursor.fetchall()
         conn.close()
@@ -319,7 +329,17 @@ def actualizar_hora_entrega():
                 WHERE item = ?
             """
             cursor.execute(sql_update, (item['fecha_hora_entrega'], item['servicio'], item['direccion'], item['item']))
-        
+            
+            sql_update_estado = """
+            UPDATE bdmanifiestos.dbo.Manifiesto2
+            set estado = case
+                WHEN fecha_hora_entrega IS NOT NULL AND fecha_hora_subida IS NOT NULL
+                THEN 1
+                ELSE 0 
+                END;
+            """
+            cursor.execute(sql_update_estado)
+            
         print("Comenzando commit...")
         conn.commit()
         print("Commit realizado con éxito.")
@@ -330,7 +350,7 @@ def actualizar_hora_entrega():
             return jsonify({"status": "error", "message": "No hay ítems para actualizar."}), 400
 
         placeholders = ', '.join(['?'] * len(item_ids))
-
+        print(placeholders)
         # Query para calcular el cumplimiento
         sql_select = f"""
             SELECT 
@@ -378,6 +398,59 @@ def actualizar_hora_entrega():
         conn.rollback()  # Rollback en caso de error
         return jsonify({"status": "error", "message": str(e)}), 500
     finally:
+        cursor.close()
+        conn.close()
+        
+@app.route('/eliminar_entrega', methods=['POST'])
+def eliminar_entrega():
+    data = request.json
+    print("Datos recibidos:", data)  # Verificar los datos que llegan desde el frontend
+    
+    try:
+        # Conectar a la base de datos
+        conn = pyodbc.connect(conn_str, autocommit=False)
+        cursor = conn.cursor()
+
+        # Verificación de que lleguen ítems para eliminar
+        if 'items' not in data or not data['items']:
+            raise ValueError("No se han proporcionado ítems para eliminar")
+
+        # Iterar sobre cada ítem
+        for item in data['items']:
+            item_id = int(item['item'])  # Asegúrate de convertir a entero
+            print(f"Procesando item: {item_id}")
+            
+            if item.get('eliminar'):  # Solo si se especifica que se debe eliminar
+                # Preparar la consulta de eliminación
+                sql_delete = """
+                    UPDATE manifiesto2
+                    SET fecha_hora_entrega = NULL, cumplimiento = NULL, estado = 0
+                    WHERE item = ?
+                """
+                print(f"Ejecutando SQL: {sql_delete} para item {item_id}")
+                
+                # Ejecutar la consulta SQL para eliminar la fecha y el cumplimiento
+                result = cursor.execute(sql_delete, (item['item'],))
+                if result.rowcount == 0:
+                    print(f"No se encontró el ítem {item_id} para actualizar.")
+                else:
+                    print(f"Fecha y cumplimiento eliminados para el ítem {item_id}. Filas afectadas: {result.rowcount}")
+        
+        # Hacer commit de los cambios
+        print("Realizando commit de los cambios...")
+        conn.commit()
+        print("Cambios guardados exitosamente en la base de datos.")
+
+        return jsonify({"status": "success", "message": "Datos eliminados correctamente"}), 200
+
+    except Exception as e:
+        # En caso de error, realizar rollback para revertir los cambios
+        print(f"Error durante la eliminación: {e}")
+        conn.rollback()  # Rollback en caso de error
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+    finally:
+        # Cerrar la conexión a la base de datos
         cursor.close()
         conn.close()
 
