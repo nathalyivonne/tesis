@@ -407,17 +407,18 @@
                         document.getElementById('update-confirm-modal').style.display = 'block';
 
                         document.getElementById('update-confirm-ok').onclick = () => {
+                            const item = row.querySelector('td:nth-child(1)').textContent.trim(); // Columna 1: ID del item 
                             // Se confirma el cambio
-                            if (dateCell) {
-                                dateCell.textContent = "";
+                            //if (dateCell) {
+                            //    dateCell.textContent = "";
                                  // Eliminar el contenido de la celda de la fecha
-                            }
-                            if (cumplimientoCell){
-                                cumplimientoCell.textContent="";
-                            }
-                            this.classList.remove('checked');
+                            //}
+                            //if (cumplimientoCell){
+                            //    cumplimientoCell.textContent="";
+                            //}
+                            //this.classList.remove('checked');
                             // Enviar la acción de eliminación al servidor 
-                            const item = row.querySelector('td:nth-child(1)').textContent.trim(); // Columna 1: ID del item
+                            //const item = row.querySelector('td:nth-child(1)').textContent.trim(); // Columna 1: ID del item
                             fetch('/eliminar_entrega', {
                                 method: 'POST',
                                 headers: {
@@ -437,6 +438,11 @@
                             .then(data => {
                                 if (data.status === "success") {
                                     console.log(`Fecha y cumplimiento eliminados correctamente para ítem ${index + 1}`);
+                                    // Eliminar la fila visualmente del frontend
+                                    dateCell.textContent = "";
+                                    cumplimientoCell.textContent = "";
+                                    this.classList.remove('checked'); // Actualizar la clase del botón
+                                    //row.remove(); eliminar la fila visualmente de la tabla 
                                 } else {
                                     console.error(`Error al eliminar fecha y cumplimiento para ítem ${index + 1}: ${data.message}`);
                                 }
@@ -456,9 +462,9 @@
                         if (dateCell) {
                             dateCell.textContent = formattedDate;
                         }
-                    this.classList.add('checked');
-                    // Opcional: Aquí puedes agregar código para enviar la fecha y hora al servidor si es necesario
-                    console.log(`Fecha y hora de completado para ítem ${index + 1}: ${formattedDate}`);
+                        this.classList.add('checked');
+                        // Opcional: Aquí puedes agregar código para enviar la fecha y hora al servidor si es necesario
+                        //console.log(`Fecha y hora de completado para ítem ${index + 1}: ${formattedDate}`);
                     }
                 });                              
 
@@ -506,6 +512,13 @@
                 updateTotalItems(rows.length);
             });
 
+
+            // para que se elimine la linea azul y solo queden los puntos 
+            //Now initialize the MarkerClusterer to handle multiple markers efficiently
+            //var markerCluster = new MarkerClusterer(map, markers, { 
+            //    imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' 
+            //});
+
             var directionsService = new google.maps.DirectionsService();
             var directionsRenderer = new google.maps.DirectionsRenderer();
             directionsRenderer.setMap(map);
@@ -527,6 +540,33 @@
                 }
             });
         }
+        // Función para obtener la fecha actual y formatearla en 'YYYY-MM-DD HH:MM:SS'
+        function getCurrentDateTime() {
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0'); // Mes en formato 2 dígitos
+            var day = String(now.getDate()).padStart(2, '0'); // Día en formato 2 dígitos
+            var hours = String(now.getHours()).padStart(2, '0'); // Horas en formato 24 horas
+            var minutes = String(now.getMinutes()).padStart(2, '0'); // Minutos en formato 2 dígitos
+            var seconds = String(now.getSeconds()).padStart(2, '0'); // Segundos en formato 2 dígitos
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+    
+        // Función para validar que una fecha tiene el formato correcto 'YYYY-MM-DD HH:MM:SS'
+        function isValidDateTime(dateTimeString) {
+            // Expresión regular para validar el formato correcto de fecha y hora
+            var regex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+            return regex.test(dateTimeString);
+        }
+    
+        // Función para asegurar que todas las fechas están en el formato correcto o usar la fecha actual
+        function formatDateTime(fechaHora) {
+            if (fechaHora && isValidDateTime(fechaHora)) {
+                return fechaHora;
+            }
+            // Si la fecha es inválida o no existe, usamos la fecha y hora actuales
+            return getCurrentDateTime();
+        }
 
         // Mostrar el modal de confirmación
         document.getElementById('update-button').addEventListener('click', function () {
@@ -535,7 +575,8 @@
         
             rows.forEach(function (row) {
                 var checkButton = row.querySelector('.check-btn');
-                if (checkButton && checkButton.classList.contains('checked')) {
+
+                if (checkButton && checkButton.classList.contains('checked') && !row.classList.contains('updated')) {
                     var item = {
                         item: row.querySelector('td:nth-child(1)').textContent, // Columna 1: ID del item
                         direccion: row.querySelector('td:nth-child(2)').textContent, // Columna 2: Dirección
@@ -546,9 +587,18 @@
                     items.push(item);
                 }
             });
-        
+            
+            // Evitar enviar filas eliminadas
+            if (items.length === 0) {
+                console.log("No hay elementos seleccionados para actualizar.");
+                return;  // No se enviará nada si no hay ítems seleccionados
+            }
+            
             document.getElementById('confirm-modal').style.display = 'block';
-        
+
+            // Eliminar el evento 'click' previamente asignado para evitar múltiples ejecuciones
+            document.getElementById('confirm-ok').replaceWith(document.getElementById('confirm-ok').cloneNode(true));
+
             document.getElementById('confirm-ok').addEventListener('click', function () {
                 console.log(JSON.stringify({ items: items }));
                 fetch('/actualizar_hora_entrega', {
@@ -565,37 +615,9 @@
         
                     if (data.status === 'success') {
                         resultMessage.textContent = 'Actualización exitosa';
-                    
-                        // Función para obtener la fecha actual y formatearla en 'YYYY-MM-DD HH:MM:SS'
-                        function getCurrentDateTime() {
-                            var now = new Date();
-                            var year = now.getFullYear();
-                            var month = String(now.getMonth() + 1).padStart(2, '0'); // Mes en formato 2 dígitos
-                            var day = String(now.getDate()).padStart(2, '0'); // Día en formato 2 dígitos
-                            var hours = String(now.getHours()).padStart(2, '0'); // Horas en formato 24 horas
-                            var minutes = String(now.getMinutes()).padStart(2, '0'); // Minutos en formato 2 dígitos
-                            var seconds = String(now.getSeconds()).padStart(2, '0'); // Segundos en formato 2 dígitos
-                            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-                        }
-                    
-                        // Función para validar que una fecha tiene el formato correcto 'YYYY-MM-DD HH:MM:SS'
-                        function isValidDateTime(dateTimeString) {
-                            // Expresión regular para validar el formato correcto de fecha y hora
-                            var regex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
-                            return regex.test(dateTimeString);
-                        }
-                    
-                        // Función para asegurar que todas las fechas están en el formato correcto o usar la fecha actual
-                        function formatDateTime(fechaHora) {
-                            if (fechaHora && isValidDateTime(fechaHora)) {
-                                return fechaHora;
-                            }
-                            // Si la fecha es inválida o no existe, usamos la fecha y hora actuales
-                            return getCurrentDateTime();
-                        }
-                    
+                                        
                         // Actualización de la columna de cumplimiento y fecha/hora en las filas correctas
-                        var rows = document.querySelectorAll('#direccion-items tr');
+                        //var rows = document.querySelectorAll('#direccion-items tr');
                     
                         // Recorremos cada fila y comparamos el ID del ítem con la respuesta del servidor
                         rows.forEach(function (row) {
@@ -607,16 +629,19 @@
                             if (cumplimientoItem) {
                                 // Actualizamos la fecha y hora en la columna 5
                                 var fechaHoraCell = row.querySelector('td:nth-child(5)');
+                                var cumplimientoCell = row.querySelector('td:nth-child(6)');
                                 if (fechaHoraCell) {
                                     // Usamos la fecha y hora proporcionada por el servidor o la actual si no existe
-                                    fechaHoraCell.textContent = formatDateTime(cumplimientoItem.fecha_hora_entrega);
+                                    fechaHoraCell.textContent = cumplimientoItem.fecha_hora_entrega;
                                 }
                     
-                                // Actualizamos el cumplimiento en la columna 6
-                                var cumplimientoCell = row.querySelector('td:nth-child(6)');
+                                // Actualizar cumplimiento en la columna 6
                                 if (cumplimientoCell) {
-                                    cumplimientoCell.textContent = cumplimientoItem.cumplimiento || '';  // Si no hay cumplimiento, dejamos vacío
+                                    cumplimientoCell.textContent = cumplimientoItem.cumplimiento || '';
                                 }
+
+                                // Marcar la fila como actualizada
+                                row.classList.add('updated'); // Añadir la clase 'updated' para no volver a enviar esta fila
                             }
                         });
                     } else {
@@ -624,7 +649,6 @@
                     }                                                       
         
                     resultModal.style.display = 'block';
-                    // Cerrar el modal de confirmación
                     document.getElementById('confirm-modal').style.display = 'none';
                 })
                 .catch(error => {
