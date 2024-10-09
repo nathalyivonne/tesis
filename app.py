@@ -753,33 +753,60 @@ def editar_vehiculo(vehiculoid):
 
 ################################### REPORTES ##################################
 ################################## 1.DISTRITOS ##################################
-@app.route('/reporte_distritos')
+@app.route('/reporte_distritos', methods=['GET'])
 def reporte_distritos():
     try:
+        # Obtener las fechas de inicio y fin desde los parámetros de la URL
+        fecha_inicio = request.args.get('fecha_inicio', None)
+        fecha_fin = request.args.get('fecha_fin', None)
+
+        # Imprimir las fechas para verificar que se recibieron correctamente
+        print(f"Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")
+
         # Conectar a la base de datos SQL Server
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
-        
-        # Consulta para obtener los distritos y la cantidad de manifiestos por distrito
-        query = """
-        SELECT distrito, COUNT(*) as cantidad
-        FROM manifiesto2
-        GROUP BY distrito
-        """
-        cursor.execute(query)
+
+        # Si se proporcionan fechas de inicio y fin, filtrar por ese rango
+        if fecha_inicio and fecha_fin:
+            query = """
+            SELECT distrito, COUNT(*) as cantidad
+            FROM manifiesto2
+            WHERE CAST(fecha_hora_subida AS DATE) BETWEEN ? AND ?
+            GROUP BY distrito
+            """
+            print(f"Ejecutando la consulta: {query} con parámetros: {fecha_inicio}, {fecha_fin}")
+            cursor.execute(query, (fecha_inicio, fecha_fin))
+        else:
+            # Si no hay fechas seleccionadas, devolver todos los datos
+            query = """
+            SELECT distrito, COUNT(*) as cantidad
+            FROM manifiesto2
+            GROUP BY distrito
+            """
+            print("Ejecutando consulta sin filtro de fecha.")
+            cursor.execute(query)
+
+        # Obtener resultados de la consulta
         results = cursor.fetchall()
-        
+        print(f"Resultados de la consulta: {results}")  # Depuración para ver los resultados en el servidor
+
         # Preparar los datos para el gráfico
         distritos = [row[0] for row in results]
         cantidades = [row[1] for row in results]
-        
+
         cursor.close()
         conn.close()
-        
+
+        # Ver los datos que se van a enviar al frontend
+        print(f"Datos enviados al frontend: Distritos: {distritos}, Cantidades: {cantidades}")
+
         return jsonify({"distritos": distritos, "cantidades": cantidades})
     except pyodbc.Error as e:
+        print(f"Error de base de datos: {e}")
         return f"Error de base de datos: {e}"
     except Exception as e:
+        print(f"Error inesperado: {e}")
         return f"Error inesperado: {e}"
 ################################### 2.CLIENTE ###################################
 @app.route('/reporte_clientes')
