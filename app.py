@@ -305,7 +305,25 @@ def ver_mapa():
         return f"Error de base de datos: {e}"
     except Exception as e:
         return f"Error inesperado: {e}"
-    
+
+
+def format_date_time(date_time_str):
+    """
+    This function ensures the date is formatted as 'YYYY-MM-DD HH:MM:SS' before being passed to SQL Server.
+    If the format is incorrect, it uses the current time as a fallback.
+    """
+    try:
+        # Check if the date string is already in the correct format
+        return datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        # Handle cases where the format is different, for example if you get 'Tue, 08 Oct 2024 16:20:05 GMT'
+        try:
+            return datetime.strptime(date_time_str, '%a, %d %b %Y %H:%M:%S %Z').strftime('%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            # If the string cannot be parsed, use the current date and time as fallback
+            print(f"Invalid date format received: {date_time_str}. Using current time.")
+            return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
 @app.route('/actualizar_hora_entrega', methods=['POST'])
 def actualizar_hora_entrega():
     data = request.json
@@ -323,22 +341,37 @@ def actualizar_hora_entrega():
             if not all(k in item for k in ['fecha_hora_entrega', 'servicio', 'direccion', 'item']):
                 raise ValueError(f"Faltan datos en el ítem: {item}")
             
+            formatted_date = format_date_time(item['fecha_hora_entrega'])
+            print(f"Formatted date: {formatted_date}")
+            
             sql_update = """
                 UPDATE manifiesto2
                 SET fecha_hora_entrega = ?, servicio = ?, direccion = ?
                 WHERE item = ?
             """
-            cursor.execute(sql_update, (item['fecha_hora_entrega'], item['servicio'], item['direccion'], item['item']))
+            cursor.execute(sql_update, (formatted_date, item['servicio'], item['direccion'], item['item']))
             
+            # Update the 'estado' field for the specific item
             sql_update_estado = """
             UPDATE bdmanifiestos.dbo.Manifiesto2
-            set estado = case
+            SET estado = CASE
                 WHEN fecha_hora_entrega IS NOT NULL AND fecha_hora_subida IS NOT NULL
                 THEN 1
                 ELSE 0 
-                END;
+            END
+            WHERE item = ?
             """
-            cursor.execute(sql_update_estado)
+            cursor.execute(sql_update_estado, (item['item'],))  # Provide item ID as the argument
+
+            #sql_update_estado = """
+            #UPDATE bdmanifiestos.dbo.Manifiesto2
+            #set estado = case
+            #    WHEN fecha_hora_entrega IS NOT NULL AND fecha_hora_subida IS NOT NULL
+            #    THEN 1
+            #    ELSE 0 
+            #    END;
+            #"""
+            #cursor.execute(sql_update_estado)
             
         print("Comenzando commit...")
         conn.commit()

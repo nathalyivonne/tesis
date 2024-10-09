@@ -550,7 +550,7 @@
             var minutes = String(now.getMinutes()).padStart(2, '0'); // Minutos en formato 2 dígitos
             var seconds = String(now.getSeconds()).padStart(2, '0'); // Segundos en formato 2 dígitos
             return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-        }
+        }     
     
         // Función para validar que una fecha tiene el formato correcto 'YYYY-MM-DD HH:MM:SS'
         function isValidDateTime(dateTimeString) {
@@ -576,12 +576,13 @@
             rows.forEach(function (row) {
                 var checkButton = row.querySelector('.check-btn');
 
-                if (checkButton && checkButton.classList.contains('checked') && !row.classList.contains('updated')) {
+                //if (checkButton && checkButton.classList.contains('checked') && !row.classList.contains('updated')) {
+                if (checkButton && checkButton.classList.contains('checked')) {
                     var item = {
                         item: row.querySelector('td:nth-child(1)').textContent, // Columna 1: ID del item
                         direccion: row.querySelector('td:nth-child(2)').textContent, // Columna 2: Dirección
                         servicio: row.querySelector('td:nth-child(3)').textContent, // Columna 3: Servicio
-                        fecha_hora_entrega: row.querySelector('td:nth-child(5)').textContent, // Columna 5: Fecha y hora
+                        fecha_hora_entrega: row.querySelector('td:nth-child(5)').textContent, // Use current date if not set
                         cumplimiento: row.querySelector('td:nth-child(6)').textContent // Columna 6: Cumplimiento (se va a actualizar)
                     };
                     items.push(item);
@@ -593,7 +594,9 @@
                 console.log("No hay elementos seleccionados para actualizar.");
                 return;  // No se enviará nada si no hay ítems seleccionados
             }
-            
+
+            console.log("Sending selected items:", items);  // Debugging log to ensure correct rows are sent
+
             document.getElementById('confirm-modal').style.display = 'block';
 
             // Eliminar el evento 'click' previamente asignado para evitar múltiples ejecuciones
@@ -612,7 +615,7 @@
                 .then(data => {
                     var resultMessage = document.getElementById('result-message');
                     var resultModal = document.getElementById('result-modal');
-        
+                    console.log("Response received:", data);  
                     if (data.status === 'success') {
                         resultMessage.textContent = 'Actualización exitosa';
                                         
@@ -641,7 +644,7 @@
                                 }
 
                                 // Marcar la fila como actualizada
-                                row.classList.add('updated'); // Añadir la clase 'updated' para no volver a enviar esta fila
+                                //row.classList.add('updated'); // Añadir la clase 'updated' para no volver a enviar esta fila
                             }
                         });
                     } else {

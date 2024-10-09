@@ -106,6 +106,13 @@
         </header>
 
         <main>
+            <!-- Filtro de fecha -->
+            <div class="filter-container">
+                <label for="general-fecha-input">Selecciona una fecha:</label>
+                <input type="date" id="general-fecha-input">
+                <button id="btn-general-fecha">Actualizar Reportes</button>
+            </div>
+            
             <!-- Contenedor para los gráficos -->
             <div class="charts-container">
                 <!-- Gráfico de Distritos -->
@@ -140,15 +147,6 @@
 
                 <div class="chart-box">
                     <div class="chart-title">Reporte de Entregados por Fecha</div>
-                    
-                    <!-- Input de tipo fecha para seleccionar la fecha -->
-                    <label for="fecha-input">Selecciona una fecha:</label>
-                    <input type="date" id="fecha-input">
-                    
-                    <!-- Botón para generar el reporte -->
-                    <button id="btn-generar-reporte">Generar Reporte</button>
-                    
-                    <!-- Contenedor para el gráfico -->
                     <div id="chart-reporte-5" class="chart-container"></div>
                 </div>
 
@@ -161,11 +159,21 @@
         </main>
     </div>
 
+    
     {% block contenido %} {% endblock %}
 
     <script>
+        // Función para obtener la fecha seleccionada y actualizar los gráficos
+        function actualizarReportes() {
+            const fechaSeleccionada = document.getElementById("general-fecha-input").value;
+            if (!fechaSeleccionada) {
+                alert("Por favor selecciona una fecha.");
+                return;
+            }
+
         // Gráfico de Distritos
-        fetch('/reporte_distritos')
+        //fetch('/reporte_distritos')
+        fetch(`/reporte_distritos?fecha=${fechaSeleccionada}`)
             .then(response => response.json())
             .then(data => {
                 var optionsDistritos = {
@@ -187,7 +195,8 @@
             });
 
         // Gráfico de Clientes
-        fetch('/reporte_clientes')
+        //fetch('/reporte_clientes')
+        fetch(`/reporte_clientes?fecha=${fechaSeleccionada}`)
             .then(response => response.json())
             .then(data => {
                 var optionsClientes = {
@@ -215,7 +224,8 @@
             });
 
         // Gráfico de Barras Apiladas para Clientes por Distrito
-        fetch('/reporte_clientes_distritos')
+        //fetch('/reporte_clientes_distritos')
+        fetch(`/reporte_clientes_distritos?fecha=${fechaSeleccionada}`)
             .then(response => response.json())
             .then(data => {
                 // Procesar los datos
@@ -254,7 +264,8 @@
                 chartClientesDistritos.render();
             });
             // Gráfico circular para el porcentaje fatltantes
-            fetch('/reporte_porcentaje_faltantes')
+            //fetch('/reporte_porcentaje_faltantes')
+            fetch(`/reporte_porcentaje_faltantes?fecha=${fechaSeleccionada}`)
                 .then(response => response.json())
                 .then(data => {
                     // Total de items para calcular el porcentaje
@@ -305,58 +316,42 @@
                     chartFaltantesEntregados.render();
             });
             // Grafico de barras para el reporte de entregados por fecha
-            document.getElementById("btn-generar-reporte").addEventListener("click", function() {
-                const fechaSeleccionada = document.getElementById("fecha-input").value;  // Obtener el valor de la fecha
-                
-                if (!fechaSeleccionada) {
-                    alert("Por favor selecciona una fecha.");
-                    return;
-                }
-            
-                // Obtener los datos filtrados para la fecha seleccionada
-                fetch(`/reporte_envios_fecha?fecha=${fechaSeleccionada}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Datos recibidos:', data);  // <-- Añadir esto para verificar los datos recibidos
-            
-                        // Validar si hay datos para esa fecha
-                        if (data.cantidades.length === 0) {
-                            alert("No hay datos disponibles para la fecha seleccionada.");
-                            return;
-                        }
-            
-                        // Configurar el gráfico de ApexCharts
-                        const optionsReporte5 = {
-                            chart: {
-                                type: 'bar'
-                            },
-                            series: [{
-                                name: 'Cantidad de Entregados',
-                                data: data.cantidades // Datos filtrados
-                            }],
-                            xaxis: {
-                                categories: data.fechas // Fechas filtradas
-                            },
-                            title: {
-                                text: `Cantidad de Entregados para ${fechaSeleccionada}`,
-                                align: 'center'
-                            }
-                        };
-                        const chartDiv = document.querySelector("#chart-reporte-5");
+            fetch(`/reporte_envios_fecha?fecha=${fechaSeleccionada}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.cantidades.length === 0) {
+                        alert("No hay datos disponibles para la fecha seleccionada.");
+                        return;
+                    }
 
-                        // Si ya existe un gráfico en el contenedor, destrúyelo antes de crear uno nuevo
-                        if (chartDiv.innerHTML !== "") {
-                            ApexCharts.exec('chart-reporte-5', 'destroy');  // Destruir gráfico anterior si existe
-                            chartDiv.innerHTML = "";  // Limpiar el contenedor
+                    const optionsReporte5 = {
+                        chart: {
+                            type: 'bar'
+                        },
+                        series: [{
+                            name: 'Cantidad de Entregados',
+                            data: data.cantidades
+                        }],
+                        xaxis: {
+                            categories: data.fechas
+                        },
+                        title: {
+                            text: `Cantidad de Entregados para ${fechaSeleccionada}`,
+                            align: 'center'
                         }
-                        // Crear el nuevo gráfico
-                        const chartReporte5 = new ApexCharts(chartDiv, optionsReporte5);
-                        chartReporte5.render();
-                    })
-                    .catch(error => {
-                        console.error('Error al obtener los datos:', error);  // <-- Añadir esto para ver si hay algún error en la solicitud
-                    });
-        });            
+                    };
+
+                    const chartDiv = document.querySelector("#chart-reporte-5");
+                    if (chartDiv.innerHTML !== "") {
+                        ApexCharts.exec('chart-reporte-5', 'destroy');
+                        chartDiv.innerHTML = "";
+                    }
+
+                    const chartReporte5 = new ApexCharts(chartDiv, optionsReporte5);
+                    chartReporte5.render();
+                });
+        }
+    document.getElementById("btn-general-fecha").addEventListener("click", actualizarReportes);
     </script>
 </body>
 </html>
