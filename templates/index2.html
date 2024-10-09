@@ -205,7 +205,6 @@
                         categories: data.distritos // Distritos obtenidos de la base de datos
                     }
                 };
-
                 // Renderizar el gráfico
                 window.chartDistritos = new ApexCharts(document.querySelector("#chart-distritos"), optionsDistritos);
                 window.chartDistritos.render();
@@ -217,6 +216,11 @@
             .then(data => {
                 console.log("Datos recibidos del servidor (clientes):", data);  // Depuración
 
+                // Destruir el gráfico anterior si ya existe
+                if (window.chartClientes) {
+                    window.chartClientes.destroy();
+                }
+                
                 // Asegurarse de que los datos sean válidos y no estén vacíos
                 if (data.clientes.length === 0 || data.cantidades.length === 0) {
                     console.error("No hay datos suficientes para generar el gráfico de clientes.");
@@ -244,8 +248,11 @@
                 };
 
                 // Renderizar el gráfico
-                var chartClientes = new ApexCharts(document.querySelector("#chart-clientes"), optionsClientes);
-                chartClientes.render();
+                //var chartClientes = new ApexCharts(document.querySelector("#chart-clientes"), optionsClientes);
+                //chartClientes.render();
+                // Renderizar el gráfico
+                window.chartClientes = new ApexCharts(document.querySelector("#chart-clientes"), optionsClientes);
+                window.chartClientes.render();
             })
             .catch(error => console.error("Error en la solicitud de datos:", error));
         // Gráfico de Barras Apiladas para Clientes por Distrito
@@ -253,6 +260,11 @@
             .then(response => response.json())
             .then(data => {
                 console.log("Datos recibidos del servidor (clientes por distritos):", data);  // Depuración
+                
+                // Destruir el gráfico anterior si ya existe
+                if (window.chartClientesDistritos) {
+                    window.chartClientesDistritos.destroy();
+                }
 
                 // Procesar los datos
                 const distritos = [...new Set(data.clientes_distritos.map(item => item.distrito))];
@@ -285,12 +297,6 @@
                         position: 'top'
                     }
                 };
-
-                // Destruir el gráfico anterior si ya existe
-                if (window.chartClientesDistritos) {
-                    window.chartClientesDistritos.destroy();
-                }
-
                 // Renderizar el gráfico
                 window.chartClientesDistritos = new ApexCharts(document.querySelector("#chart-clientes-distritos"), optionsClientesDistritos);
                 window.chartClientesDistritos.render();
@@ -300,6 +306,13 @@
             fetch(`/reporte_porcentaje_faltantes${urlParams}`)
                 .then(response => response.json())
                 .then(data => {
+                    console.log("Datos recibidos del servidor (clientes por distritos):", data);  // Depuración
+                
+                    // Destruir el gráfico anterior si ya existe
+                    if (window.chartFaltantesEntregados) {
+                        window.chartFaltantesEntregados.destroy();
+                    }
+
                     // Total de items para calcular el porcentaje
                     const total = data.cantidades.reduce((acc, val) => acc + val, 0);
                     // Calcular porcentajes y redondear a dos decimales
@@ -343,10 +356,13 @@
                             }
                         }]
                     };
-
-                    var chartFaltantesEntregados = new ApexCharts(document.querySelector("#chart-faltantes-entregado"), optionsFaltantesEntregados);
-                    chartFaltantesEntregados.render();
+                    //var chartFaltantesEntregados = new ApexCharts(document.querySelector("#chart-faltantes-entregado"), optionsFaltantesEntregados);
+                    //chartFaltantesEntregados.render();
+                    // Renderizar el gráfico
+                    window.chartFaltantesEntregados = new ApexCharts(document.querySelector("#chart-faltantes-entregado"), optionsFaltantesEntregados);
+                    window.chartFaltantesEntregados.render();
             });
+            //.catch(error => console.error("Error en la solicitud de datos:", error));
         }
         window.onload = function() {
             actualizarReportes();  // Cargar el dashboard con datos completos
