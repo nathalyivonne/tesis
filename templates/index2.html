@@ -176,9 +176,6 @@
             }
 
         // Gráfico de Distritos
-        //fetch('/reporte_distritos')
-        //fetch(`/reporte_distritos?fecha=${fechaSeleccionada}`)
-        //fetch(`/reporte_distritos?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`)
         fetch(`/reporte_distritos${urlParams}`)
             .then(response => response.json())
             .then(data => {
@@ -214,14 +211,19 @@
                 window.chartDistritos.render();
             })
             .catch(error => console.error("Error en la solicitud de datos:", error));
-
         // Gráfico de Clientes
-        //fetch('/reporte_clientes')
-        //fetch(`/reporte_clientes?fecha=${fechaSeleccionada}`)
-        //fetch(`/reporte_clientes?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`)
         fetch(`/reporte_clientes${urlParams}`)
             .then(response => response.json())
             .then(data => {
+                console.log("Datos recibidos del servidor (clientes):", data);  // Depuración
+
+                // Asegurarse de que los datos sean válidos y no estén vacíos
+                if (data.clientes.length === 0 || data.cantidades.length === 0) {
+                    console.error("No hay datos suficientes para generar el gráfico de clientes.");
+                    return;
+                }
+
+                // Configurar los datos del gráfico
                 var optionsClientes = {
                     chart: {
                         type: 'pie'
@@ -244,15 +246,14 @@
                 // Renderizar el gráfico
                 var chartClientes = new ApexCharts(document.querySelector("#chart-clientes"), optionsClientes);
                 chartClientes.render();
-            });
-
+            })
+            .catch(error => console.error("Error en la solicitud de datos:", error));
         // Gráfico de Barras Apiladas para Clientes por Distrito
-        //fetch('/reporte_clientes_distritos')
-        //fetch(`/reporte_clientes_distritos?fecha=${fechaSeleccionada}`)
-        //fetch(`/reporte_clientes_distritos?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`)
         fetch(`/reporte_clientes_distritos${urlParams}`)
             .then(response => response.json())
             .then(data => {
+                console.log("Datos recibidos del servidor (clientes por distritos):", data);  // Depuración
+
                 // Procesar los datos
                 const distritos = [...new Set(data.clientes_distritos.map(item => item.distrito))];
                 const clientes = [...new Set(data.clientes_distritos.map(item => item.cliente))];
@@ -285,13 +286,17 @@
                     }
                 };
 
-                var chartClientesDistritos = new ApexCharts(document.querySelector("#chart-clientes-distritos"), optionsClientesDistritos);
-                chartClientesDistritos.render();
-            });
-            // Gráfico circular para el porcentaje fatltantes
-            //fetch('/reporte_porcentaje_faltantes')
-            //fetch(`/reporte_porcentaje_faltantes?fecha=${fechaSeleccionada}`)
-            //fetch(`/reporte_porcentaje_faltantes?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`)
+                // Destruir el gráfico anterior si ya existe
+                if (window.chartClientesDistritos) {
+                    window.chartClientesDistritos.destroy();
+                }
+
+                // Renderizar el gráfico
+                window.chartClientesDistritos = new ApexCharts(document.querySelector("#chart-clientes-distritos"), optionsClientesDistritos);
+                window.chartClientesDistritos.render();
+            })
+            .catch(error => console.error("Error en la solicitud de datos:", error));
+        // Gráfico circular para el porcentaje fatltantes
             fetch(`/reporte_porcentaje_faltantes${urlParams}`)
                 .then(response => response.json())
                 .then(data => {

@@ -809,85 +809,169 @@ def reporte_distritos():
         print(f"Error inesperado: {e}")
         return f"Error inesperado: {e}"
 ################################### 2.CLIENTE ###################################
-@app.route('/reporte_clientes')
+@app.route('/reporte_clientes', methods=['GET'])
 def reporte_clientes():
     try:
+        # Obtener las fechas de inicio y fin desde los parámetros de la URL
+        fecha_inicio = request.args.get('fecha_inicio', None)
+        fecha_fin = request.args.get('fecha_fin', None)
+
+        # Imprimir las fechas para verificar que se recibieron correctamente
+        print(f"Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")
+
         # Conectar a la base de datos SQL Server
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
-        
-        # Consulta para obtener los clientes y cantidad de envíos
-        query = """
-        SELECT cliente, COUNT(*) as cantidad
-        FROM manifiesto2
-        GROUP BY cliente
-        """
-        cursor.execute(query)
+
+        # Si se proporcionan fechas de inicio y fin, filtrar por ese rango
+        if fecha_inicio and fecha_fin:
+            query = """
+            SELECT cliente, COUNT(*) as cantidad
+            FROM manifiesto2
+            WHERE CAST(fecha_hora_subida AS DATE) BETWEEN ? AND ?
+            GROUP BY cliente
+            """
+            print(f"Ejecutando la consulta: {query} con parámetros: {fecha_inicio}, {fecha_fin}")
+            cursor.execute(query, (fecha_inicio, fecha_fin))
+        else:
+            # Si no hay fechas seleccionadas, devolver todos los datos
+            query = """
+            SELECT cliente, COUNT(*) as cantidad
+            FROM manifiesto2
+            GROUP BY cliente
+            """
+            print("Ejecutando consulta sin filtro de fecha.")
+            cursor.execute(query)
+
+        # Obtener resultados de la consulta
         results = cursor.fetchall()
-        
+        print(f"Resultados de la consulta: {results}")  # Depuración para ver los resultados en el servidor
+
         # Preparar los datos para el gráfico
         clientes = [row[0] for row in results]
         cantidades = [row[1] for row in results]
-        
+
         cursor.close()
         conn.close()
-        
+
+        # Ver los datos que se van a enviar al frontend
+        print(f"Datos enviados al frontend: Clientes: {clientes}, Cantidades: {cantidades}")
+
         return jsonify({"clientes": clientes, "cantidades": cantidades})
     except pyodbc.Error as e:
+        print(f"Error de base de datos: {e}")
         return f"Error de base de datos: {e}"
     except Exception as e:
+        print(f"Error inesperado: {e}")
         return f"Error inesperado: {e}"
 ############################## 3.CLIENTE_DISTRITOS ##############################
-@app.route('/reporte_clientes_distritos')
+@app.route('/reporte_clientes_distritos', methods=['GET'])
 def reporte_clientes_distritos():
     try:
+        # Obtener las fechas de inicio y fin desde los parámetros de la URL
+        fecha_inicio = request.args.get('fecha_inicio', None)
+        fecha_fin = request.args.get('fecha_fin', None)
+
+        # Imprimir las fechas para verificar que se recibieron correctamente
+        print(f"Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")
+
+        # Conectar a la base de datos SQL Server
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
-        
-        query = """
-        SELECT cliente, distrito, COUNT(*) as cantidad
-        FROM manifiesto2
-        GROUP BY cliente, distrito
-        """
-        cursor.execute(query)
+
+        # Si se proporcionan fechas de inicio y fin, filtrar por ese rango
+        if (fecha_inicio and fecha_fin):
+            query = """
+            SELECT cliente, distrito, COUNT(*) as cantidad
+            FROM manifiesto2
+            WHERE CAST(fecha_hora_subida AS DATE) BETWEEN ? AND ?
+            GROUP BY cliente, distrito
+            """
+            print(f"Ejecutando la consulta: {query} con parámetros: {fecha_inicio}, {fecha_fin}")
+            cursor.execute(query, (fecha_inicio, fecha_fin))
+        else:
+            # Si no hay fechas seleccionadas, devolver todos los datos
+            query = """
+            SELECT cliente, distrito, COUNT(*) as cantidad
+            FROM manifiesto2
+            GROUP BY cliente, distrito
+            """
+            print("Ejecutando consulta sin filtro de fecha.")
+            cursor.execute(query)
+
+        # Obtener resultados de la consulta
         results = cursor.fetchall()
-        
+
+        # Preparar los datos para el gráfico
         clientes_distritos = [{"cliente": row[0], "distrito": row[1], "cantidad": row[2]} for row in results]
-        
+
         cursor.close()
         conn.close()
-        
+
+        # Ver los datos que se van a enviar al frontend
+        print(f"Datos enviados al frontend: {clientes_distritos}")
+
         return jsonify({"clientes_distritos": clientes_distritos})
     except pyodbc.Error as e:
+        print(f"Error de base de datos: {e}")
         return f"Error de base de datos: {e}"
     except Exception as e:
+        print(f"Error inesperado: {e}")
         return f"Error inesperado: {e}"
 ################################ 4.ENVIOS_RANGO #################################
-@app.route('/reporte_porcentaje_faltantes')
+@app.route('/reporte_porcentaje_faltantes', methods=['GET'])
 def reporte_porcentaje_faltantes():
     try:
+        # Obtener las fechas de inicio y fin desde los parámetros de la URL
+        fecha_inicio = request.args.get('fecha_inicio', None)
+        fecha_fin = request.args.get('fecha_fin', None)
+
         # Conexión a la base de datos
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
 
-        # Consulta SQL que cuenta los items faltantes (sin fecha_hora_entrega) y entregados (con fecha_hora_entrega)
-        query = """
-        SELECT 
-            CASE 
-                WHEN fecha_hora_entrega IS NULL THEN 'Faltantes' 
-                ELSE 'Entregados' 
-            END AS estado,
-            COUNT(*) AS cantidad
-        FROM 
-            manifiesto2
-        GROUP BY 
-            CASE 
-                WHEN fecha_hora_entrega IS NULL THEN 'Faltantes' 
-                ELSE 'Entregados' 
-            END;
-        """
+        # Consulta SQL con filtrado por fechas si se proporcionan
+        if fecha_inicio and fecha_fin:
+            query = """
+            SELECT 
+                CASE 
+                    WHEN fecha_hora_entrega IS NULL THEN 'Faltantes' 
+                    ELSE 'Entregados' 
+                END AS estado,
+                COUNT(*) AS cantidad
+            FROM 
+                manifiesto2
+            WHERE 
+                CAST(fecha_hora_subida AS DATE) BETWEEN ? AND ?
+            GROUP BY 
+                CASE 
+                    WHEN fecha_hora_entrega IS NULL THEN 'Faltantes' 
+                    ELSE 'Entregados' 
+                END;
+            """
+            print(f"Ejecutando la consulta con parámetros: {fecha_inicio}, {fecha_fin}")
+            cursor.execute(query, (fecha_inicio, fecha_fin))
+        else:
+            # Si no se proporcionan fechas, ejecutar la consulta general
+            query = """
+            SELECT 
+                CASE 
+                    WHEN fecha_hora_entrega IS NULL THEN 'Faltantes' 
+                    ELSE 'Entregados' 
+                END AS estado,
+                COUNT(*) AS cantidad
+            FROM 
+                manifiesto2
+            GROUP BY 
+                CASE 
+                    WHEN fecha_hora_entrega IS NULL THEN 'Faltantes' 
+                    ELSE 'Entregados' 
+                END;
+            """
+            print("Ejecutando consulta sin filtro de fecha.")
+            cursor.execute(query)
+
         # Ejecutar la consulta y obtener los resultados
-        cursor.execute(query)
         results = cursor.fetchall()
 
         # Procesar los resultados para convertirlos en JSON
@@ -898,6 +982,9 @@ def reporte_porcentaje_faltantes():
         cursor.close()
         conn.close()
 
+        # Ver los datos que se enviarán al frontend
+        print(f"Datos enviados al frontend: Estados: {estados}, Cantidades: {cantidades}")
+
         # Devolver los datos en formato JSON
         return jsonify({"estados": estados, "cantidades": cantidades})
 
@@ -906,49 +993,49 @@ def reporte_porcentaje_faltantes():
     except Exception as e:
         return f"Error inesperado: {e}", 500
 ################################ 5.ENVIOS_FECHA #################################
-@app.route('/reporte_envios_fecha', methods=['GET'])
-def reporte_envios_fecha():
-    try:
-        fecha = request.args.get('fecha', None)  # Obtener la fecha desde los parámetros de la URL
-        print(f"Fecha seleccionada: {fecha}")
+# @app.route('/reporte_envios_fecha', methods=['GET'])
+# def reporte_envios_fecha():
+#     try:
+#         fecha = request.args.get('fecha', None)  # Obtener la fecha desde los parámetros de la URL
+#         print(f"Fecha seleccionada: {fecha}")
 
-        conn = pyodbc.connect(conn_str)
-        cursor = conn.cursor()
+#         conn = pyodbc.connect(conn_str)
+#         cursor = conn.cursor()
 
-        # Si hay una fecha seleccionada, no necesitas agrupar
-        if fecha:
-            query = """
-            SELECT COUNT(*) as cantidad
-            FROM manifiesto2
-            WHERE CAST(fecha_hora_entrega AS DATE) = ?
-            """
-            cursor.execute(query, fecha)
-            result = cursor.fetchone()
-            fechas = [fecha]  # Como solo es una fecha, devolvemos la misma
-            cantidades = [result[0]]  # La cantidad obtenida
-        else:
-            # Si no hay fecha seleccionada, se agrupan todas las fechas
-            query = """
-            SELECT CAST(fecha_hora_entrega AS DATE) AS fecha_hora_entrega, COUNT(*) as cantidad
-            FROM manifiesto2
-            GROUP BY CAST(fecha_hora_entrega AS DATE)
-            ORDER BY fecha_hora_entrega
-            """
-            cursor.execute(query)
-            results = cursor.fetchall()
-            fechas = [row[0].strftime('%Y-%m-%d') for row in results]
-            cantidades = [row[1] for row in results]
+#         # Si hay una fecha seleccionada, no necesitas agrupar
+#         if fecha:
+#             query = """
+#             SELECT COUNT(*) as cantidad
+#             FROM manifiesto2
+#             WHERE CAST(fecha_hora_entrega AS DATE) = ?
+#             """
+#             cursor.execute(query, fecha)
+#             result = cursor.fetchone()
+#             fechas = [fecha]  # Como solo es una fecha, devolvemos la misma
+#             cantidades = [result[0]]  # La cantidad obtenida
+#         else:
+#             # Si no hay fecha seleccionada, se agrupan todas las fechas
+#             query = """
+#             SELECT CAST(fecha_hora_entrega AS DATE) AS fecha_hora_entrega, COUNT(*) as cantidad
+#             FROM manifiesto2
+#             GROUP BY CAST(fecha_hora_entrega AS DATE)
+#             ORDER BY fecha_hora_entrega
+#             """
+#             cursor.execute(query)
+#             results = cursor.fetchall()
+#             fechas = [row[0].strftime('%Y-%m-%d') for row in results]
+#             cantidades = [row[1] for row in results]
 
-        cursor.close()
-        conn.close()
+#         cursor.close()
+#         conn.close()
 
-        return jsonify({"fechas": fechas, "cantidades": cantidades})
-    except pyodbc.Error as e:
-        print(f"Error de base de datos: {e}")
-        return f"Error de base de datos: {e}"
-    except Exception as e:
-        print(f"Error inesperado: {e}")
-        return f"Error inesperado: {e}"
+#         return jsonify({"fechas": fechas, "cantidades": cantidades})
+#     except pyodbc.Error as e:
+#         print(f"Error de base de datos: {e}")
+#         return f"Error de base de datos: {e}"
+#     except Exception as e:
+#         print(f"Error inesperado: {e}")
+#         return f"Error inesperado: {e}"
 ############################### ENVIOS_SERVICIO ###############################
 # @app.route('/reporte_envios_servicio')
 # def reporte_envios_servicio():
