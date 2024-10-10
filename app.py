@@ -6,7 +6,7 @@ from io import BytesIO
 import subprocess
 import csv
 import pyodbc 
-from datetime import datetime
+from datetime import datetime,timedelta
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.datafactory import DataFactoryManagementClient
 import googlemaps
@@ -17,7 +17,6 @@ import os
 import database as db
 import pandas as pd
 ##import matplotlib.pyplot as plt
-##from datetime import timedelta
 
 app = Flask(__name__)
        
