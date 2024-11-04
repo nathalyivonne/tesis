@@ -272,7 +272,7 @@
                             <th>ESTADO</th>
                             <th>FECHA Y HORA</th>
                             <th>CUMPLIMIENTO (MIN)</th>
-                            <th>SERVICIO (MIN)</th>
+                            <th>CUMPLIMIENTO</th>
                         </tr>
                     </thead>
                     <tbody id="direccion-items"></tbody>
@@ -527,14 +527,21 @@
                 // Añadir una celda vacía para la fecha y hora
                 var tdDateTime = document.createElement('td');
                 tr.appendChild(tdDateTime);
+                
                 // Añadir una celda para el cumplimiento
                 var tdCumplimiento = document.createElement('td');
                 tr.appendChild(tdCumplimiento);
-                
-                // Aquí se inserta el valor del servicio (en minutos)
-                var tdServicioUpdate = document.createElement('td');
-                tdServicioUpdate.textContent = direccion.servicio_update || 'N/A'; // Servicio Update (en minutos)
-                tr.appendChild(tdServicioUpdate);
+
+                // Columna SERVICIO UPDATE
+                //var tdServicioUpdate = document.createElement('td');
+                //tdServicioUpdate.textContent = direccion.servicio_update || ''; // Mostrar servicio_update si existe
+                //tr.appendChild(tdServicioUpdate);
+
+                // Añadir una celda para el cumplimiento formateado
+                var tdCumplimientoFormateado = document.createElement('td');
+                tdCumplimientoFormateado.textContent = direccion.cumplimiento_formateado || ''; // Mostrar cumplimiento_formateado si existe
+                tr.appendChild(tdCumplimientoFormateado);
+
 
                 direccionItems.appendChild(tr);
             }
