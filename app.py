@@ -395,7 +395,6 @@ def actualizar_hora_entrega():
             item_id = row[0]
             cumplimiento = row[3]
             
-            # Aplicar la lógica de formateo directamente en Python
             if cumplimiento != 'NULL' and cumplimiento is not None:
                 if cumplimiento < 60:
                     cumplimiento_formateado = f"{cumplimiento} MINUTOS"
@@ -435,7 +434,6 @@ def actualizar_hora_entrega():
     finally:
         cursor.close()
         conn.close()
-
         
 @app.route('/eliminar_entrega', methods=['POST'])
 def eliminar_entrega():
