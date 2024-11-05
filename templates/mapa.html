@@ -271,7 +271,6 @@
                             <th>SERVICIO</th>
                             <th>ESTADO</th>
                             <th>FECHA Y HORA</th>
-                            <th>CUMPLIMIENTO (MIN)</th>
                             <th>CUMPLIMIENTO</th>
                         </tr>
                     </thead>
@@ -453,7 +452,7 @@
                     var index = this.dataset.index;
                     var formattedDate = getLocalDateTime();   
                     var dateCell = this.closest('tr').querySelector('td:nth-child(5)');
-                    var cumplimientoCell = this.closest('tr').querySelector('td:nth-child(6)');
+                    var cumplimientoFormateadoCell = this.closest('tr').querySelector('td:nth-child(6)');
                     var row = this.closest('tr');
                     if (dateCell && dateCell.textContent.trim() !== "") {
                         // Show confirmation modal if date and time are already set
@@ -466,8 +465,8 @@
                             //    dateCell.textContent = "";
                                  // Eliminar el contenido de la celda de la fecha
                             //}
-                            //if (cumplimientoCell){
-                            //    cumplimientoCell.textContent="";
+                            //if (cumplimientoFormateadoCell){
+                            //    cumplimientoFormateadoCell.textContent="";
                             //}
                             //this.classList.remove('checked');
                             // Enviar la acción de eliminación al servidor 
@@ -493,7 +492,7 @@
                                     console.log(`Fecha y cumplimiento eliminados correctamente para ítem ${index + 1}`);
                                     // Eliminar la fila visualmente del frontend
                                     dateCell.textContent = "";
-                                    cumplimientoCell.textContent = "";
+                                    cumplimientoFormateadoCell.textContent = "";
                                     this.classList.remove('checked'); // Actualizar la clase del botón
                                     //row.remove(); eliminar la fila visualmente de la tabla 
                                 } else {
@@ -529,8 +528,8 @@
                 tr.appendChild(tdDateTime);
                 
                 // Añadir una celda para el cumplimiento
-                var tdCumplimiento = document.createElement('td');
-                tr.appendChild(tdCumplimiento);
+                //var tdCumplimiento = document.createElement('td');
+                //tr.appendChild(tdCumplimiento);
 
                 // Columna SERVICIO UPDATE
                 //var tdServicioUpdate = document.createElement('td');
@@ -635,41 +634,44 @@
         }
 
         // Mostrar el modal de confirmación
+        // Evento para el botón de actualizar
         document.getElementById('update-button').addEventListener('click', function () {
             var items = [];
             var rows = document.querySelectorAll('#direccion-items tr');
-        
+            
+            // Recopilar los elementos seleccionados para actualizar
             rows.forEach(function (row) {
                 var checkButton = row.querySelector('.check-btn');
 
-                //if (checkButton && checkButton.classList.contains('checked') && !row.classList.contains('updated')) {
                 if (checkButton && checkButton.classList.contains('checked')) {
                     var item = {
                         item: row.querySelector('td:nth-child(1)').textContent, // Columna 1: ID del item
                         direccion: row.querySelector('td:nth-child(2)').textContent, // Columna 2: Dirección
                         servicio: row.querySelector('td:nth-child(3)').textContent, // Columna 3: Servicio
-                        fecha_hora_entrega: row.querySelector('td:nth-child(5)').textContent, // Use current date if not set
-                        cumplimiento: row.querySelector('td:nth-child(6)').textContent // Columna 6: Cumplimiento (se va a actualizar)
+                        fecha_hora_entrega: row.querySelector('td:nth-child(5)').textContent, // Columna 5: Fecha y Hora
+                        cumplimiento_formateado: row.querySelector('td:nth-child(6)').textContent // Columna 6: Cumplimiento
                     };
                     items.push(item);
                 }
             });
             
-            // Evitar enviar filas eliminadas
             if (items.length === 0) {
                 console.log("No hay elementos seleccionados para actualizar.");
-                return;  // No se enviará nada si no hay ítems seleccionados
+                return;
             }
 
-            console.log("Sending selected items:", items);  // Debugging log to ensure correct rows are sent
-
+            // Mostrar el modal de confirmación antes de enviar los datos al servidor
             document.getElementById('confirm-modal').style.display = 'block';
 
-            // Eliminar el evento 'click' previamente asignado para evitar múltiples ejecuciones
+            // Eliminar cualquier evento anterior para evitar duplicados
             document.getElementById('confirm-ok').replaceWith(document.getElementById('confirm-ok').cloneNode(true));
 
+            // Añadir evento para el botón de confirmación en el modal
             document.getElementById('confirm-ok').addEventListener('click', function () {
-                console.log(JSON.stringify({ items: items }));
+                // Cerrar el modal de confirmación
+                document.getElementById('confirm-modal').style.display = 'none';
+
+                // Enviar los datos al servidor
                 fetch('/actualizar_hora_entrega', {
                     method: 'POST',
                     headers: {
@@ -681,61 +683,58 @@
                 .then(data => {
                     var resultMessage = document.getElementById('result-message');
                     var resultModal = document.getElementById('result-modal');
-                    console.log("Response received:", data);  
+
                     if (data.status === 'success') {
                         resultMessage.textContent = 'Actualización exitosa';
-                                        
-                        // Actualización de la columna de cumplimiento y fecha/hora en las filas correctas
-                        //var rows = document.querySelectorAll('#direccion-items tr');
-                    
-                        // Recorremos cada fila y comparamos el ID del ítem con la respuesta del servidor
+
+                        // Actualizar las columnas de FECHA Y HORA y CUMPLIMIENTO en la tabla antes de mostrar el modal de resultado
                         rows.forEach(function (row) {
-                            var itemID = row.querySelector('td:nth-child(1)').textContent;  // Obtener el ID del ítem en la fila
-                    
-                            // Buscar el cumplimiento y fecha/hora para ese ítem en los datos recibidos del servidor
+                            var itemID = row.querySelector('td:nth-child(1)').textContent;
+
+                            // Encontrar el cumplimiento y fecha/hora para este ítem en los datos recibidos
                             var cumplimientoItem = data.cumplimiento.find(c => c.item == itemID);
-                    
+
                             if (cumplimientoItem) {
-                                // Actualizamos la fecha y hora en la columna 5
                                 var fechaHoraCell = row.querySelector('td:nth-child(5)');
                                 var cumplimientoCell = row.querySelector('td:nth-child(6)');
+                                
+                                // Actualizar la fecha y hora
                                 if (fechaHoraCell) {
-                                    // Usamos la fecha y hora proporcionada por el servidor o la actual si no existe
-                                    fechaHoraCell.textContent = cumplimientoItem.fecha_hora_entrega;
-                                }
-                    
-                                // Actualizar cumplimiento en la columna 6
-                                if (cumplimientoCell) {
-                                    cumplimientoCell.textContent = cumplimientoItem.cumplimiento || '';
+                                    fechaHoraCell.textContent = cumplimientoItem.fecha_hora_entrega || '';
                                 }
 
-                                // Marcar la fila como actualizada
-                                //row.classList.add('updated'); // Añadir la clase 'updated' para no volver a enviar esta fila
+                                // Actualizar el cumplimiento formateado
+                                if (cumplimientoCell) {
+                                    cumplimientoCell.textContent = cumplimientoItem.cumplimiento_formateado || '';
+                                }
                             }
                         });
+
+                        // Mostrar el modal de resultado con el mensaje de éxito después de actualizar la tabla
+                        resultModal.style.display = 'block';
                     } else {
                         resultMessage.textContent = 'Error al actualizar: ' + data.message;
-                    }                                                       
-        
-                    resultModal.style.display = 'block';
-                    document.getElementById('confirm-modal').style.display = 'none';
+                        resultModal.style.display = 'block';
+                    }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('result-message').textContent = 'Error al actualizar';
+                    console.error('Error en la solicitud de actualización:', error);
+                    document.getElementById('result-message').textContent = 'Error en la solicitud de actualización';
                     document.getElementById('result-modal').style.display = 'block';
                 });
             });
-        
+
+            // Cerrar el modal de confirmación si se hace clic en el botón de cancelar
             document.getElementById('confirm-cancel').addEventListener('click', function () {
                 document.getElementById('confirm-modal').style.display = 'none';
             });
         });
-        
+
+        // Cerrar el modal de resultado cuando se hace clic en el botón de cerrar
         document.getElementById('result-modal-close').addEventListener('click', function () {
             document.getElementById('result-modal').style.display = 'none';
-        });      
-        
+        });
+
     </script>
     <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAg-pHzpWI9Ik34rYvyPZYGU9s2aWWtFx4&callback=initMap"></script>
 </body>

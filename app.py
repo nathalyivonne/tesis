@@ -361,20 +361,10 @@ def actualizar_hora_entrega():
             WHERE item = ?
             """
             cursor.execute(sql_update_estado, (item['item'],))  # Provide item ID as the argument
-
-            #sql_update_estado = """
-            #UPDATE bdmanifiestos.dbo.Manifiesto2
-            #set estado = case
-            #    WHEN fecha_hora_entrega IS NOT NULL AND fecha_hora_subida IS NOT NULL
-            #    THEN 1
-            #    ELSE 0 
-            #    END;
-            #"""
-            #cursor.execute(sql_update_estado)
             
         print("Comenzando commit...")
         conn.commit()
-        print("Commit realizado con éxito.")
+        print("Commit realizado con éxito para las actualizaciones de items.")
 
         # Query para calcular el cumplimiento
         item_ids = [item['item'] for item in data['items']]
@@ -386,12 +376,12 @@ def actualizar_hora_entrega():
         # Query para calcular el cumplimiento
         sql_select = f"""
             SELECT 
-                item,  -- Asegúrate de obtener el ID del ítem para la actualización
+                item,  
                 fecha_hora_subida,
                 fecha_hora_entrega,
                 CASE 
                     WHEN fecha_hora_entrega IS NULL THEN 'NULL'
-                    ELSE CAST(DATEDIFF(MINUTE, fecha_hora_subida, fecha_hora_entrega) AS VARCHAR)
+                    ELSE DATEDIFF(MINUTE, fecha_hora_subida, fecha_hora_entrega)
                 END AS cumplimiento
             FROM 
                 manifiesto2
@@ -404,25 +394,38 @@ def actualizar_hora_entrega():
         for row in cumplimiento_data:
             item_id = row[0]
             cumplimiento = row[3]
+            
+            # Aplicar la lógica de formateo directamente en Python
+            if cumplimiento != 'NULL' and cumplimiento is not None:
+                if cumplimiento < 60:
+                    cumplimiento_formateado = f"{cumplimiento} MINUTOS"
+                else:
+                    horas = cumplimiento // 60
+                    minutos = cumplimiento % 60
+                    cumplimiento_formateado = f"{horas} HORAS {minutos} MINUTOS"
+            else:
+                cumplimiento_formateado = None
 
             cumplimiento_result.append({
                 "item": item_id,
                 "fecha_hora_subida": row[1],
                 "fecha_hora_entrega": row[2],
-                "cumplimiento": cumplimiento
+                "cumplimiento": cumplimiento,
+                "cumplimiento_formateado": cumplimiento_formateado
             })
 
-            # Actualizar el cumplimiento en la base de datos
+            # Actualizar el cumplimiento y cumplimiento_formateado en la base de datos
             sql_update_cumplimiento = """
                 UPDATE manifiesto2
-                SET cumplimiento = ?
+                SET cumplimiento = ?,
+                    cumplimiento_formateado = ?
                 WHERE item = ?
             """
-            cursor.execute(sql_update_cumplimiento, (cumplimiento, item_id))
-
-        print("Datos de cumplimiento obtenidos y actualizados:", cumplimiento_result)
-        conn.commit()  # Asegúrate de hacer commit de la actualización de cumplimiento
-
+            cursor.execute(sql_update_cumplimiento, (cumplimiento, cumplimiento_formateado, item_id))
+      
+        # Asegúrate de hacer commit de la actualización de cumplimiento
+        conn.commit()
+        print("Commit realizado para actualizaciones de cumplimiento.")
         return jsonify({"status": "success", "cumplimiento": cumplimiento_result}), 200
 
     except Exception as e:
@@ -432,6 +435,7 @@ def actualizar_hora_entrega():
     finally:
         cursor.close()
         conn.close()
+
         
 @app.route('/eliminar_entrega', methods=['POST'])
 def eliminar_entrega():
@@ -456,7 +460,7 @@ def eliminar_entrega():
                 # Preparar la consulta de eliminación
                 sql_delete = """
                     UPDATE manifiesto2
-                    SET fecha_hora_entrega = NULL, cumplimiento = NULL, estado = 0
+                    SET fecha_hora_entrega = NULL, cumplimiento = NULL, estado = 0, cumplimiento_formateado = NULL
                     WHERE item = ?
                 """
                 print(f"Ejecutando SQL: {sql_delete} para item {item_id}")
