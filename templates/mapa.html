@@ -194,20 +194,58 @@
         }
 
         .verde {
-            background-color: #bbf0af; /* Verde */
+            background-color: #bbf0af; 
             color: white;
         }
         
         .amarillo {
-            background-color: #f5f7a3; /* Amarillo */
+            background-color: #f5f7a3; 
             color: black;
         }
         
         .rojo {
-            background-color: #f78686; /* Rojo */
+            background-color: #f78686; 
             color: white;
         }
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;  
+        }
         
+        .btn-exit {
+            display: inline-flex;  
+            justify-content: center; 
+            align-items: center;  
+            padding: 5px 15px;  
+            border-radius: 4px;
+            text-decoration: none; 
+            font-size: 14px;
+            color: white;
+            text-align: center;  
+        }
+        
+        .btn-inicio {
+            background-color: #28a745; 
+        }
+        
+        .btn-exit-red {
+            background-color: #dc3545; 
+        }
+        
+        .btn-inicio:hover {
+            background-color: #218838; 
+        }
+        
+        .btn-exit-red:hover {
+            background-color: #c82333;
+        }
+        
+        #fecha-hora-sistema {
+            font-size: 14px;
+            color: #333;
+            font-weight: bold;  
+        }
     </style>
 </head>
 
@@ -235,16 +273,22 @@
         </div>
     </div>
     <div class="main-content">
-        <header>
-            <h2>
+        <header style="display: flex; justify-content: space-between; padding: 5px; background-color: #f0f0f0; align-items: center;">
+            <!-- Contenedor izquierdo: Ícono de menú y Título -->
+            <div style="display: flex; align-items: center; gap: 10px;">
                 <label for="nav-toggle">
                     <span class="fa fa-bars"></span>
                 </label>
-                MANTENIMIENTO MANIFIESTO
-            </h2>
-            <a href="/admin" class="btn-exit">INICIO</a>
-            <a href="/" class="btn-exit">EXIT</a>
-        </header>
+                <h2 style="margin: 0;">MANTENIMIENTO MANIFIESTO</h2>
+            </div>
+        
+            <!-- Contenedor derecho: Fecha y hora, Botones de INICIO y EXIT -->
+            <div class="header-buttons" style="display: flex; align-items: center; gap: 10px;">
+                <div id="fecha-hora-sistema" style="font-size: 14px; color: #333;"></div>
+                <a href="/admin" class="btn-exit btn-inicio">INICIO</a>
+                <a href="/" class="btn-exit btn-exit-red">EXIT</a>
+            </div>
+        </header>                                                                  
         <main>
             <h1>Mapa de Ruta</h1>
             <div id="map"></div>
@@ -313,6 +357,25 @@
     
     <script>
 
+        document.addEventListener('DOMContentLoaded', function() {
+            // Función para actualizar la fecha y hora en tiempo real
+            function actualizarFechaHora() {
+                const fechaHoraSistema = document.getElementById('fecha-hora-sistema');
+                if (fechaHoraSistema) {
+                    const ahora = new Date();
+                    const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }; // Incluye el día de la semana
+                    const opcionesHora = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        
+                    // Formatear fecha y hora en español
+                    const fecha = ahora.toLocaleDateString('es-ES', opcionesFecha);
+                    const hora = ahora.toLocaleTimeString('es-ES', opcionesHora);
+        
+                    fechaHoraSistema.textContent = `${fecha} ${hora}`;
+                }
+            }
+            setInterval(actualizarFechaHora, 1000); // Actualiza cada segundo
+        });        
+        
         function showModal(title, message) {
             var modal = document.getElementById('update-modal');
             var modalTitle = document.getElementById('modal-title');
@@ -503,10 +566,15 @@
                                 console.error('Error en la solicitud de eliminación:', error);
                             });
                 
-                            // Cerrar el modal
+                            // Cerrar el modal después de confirmar
                             document.getElementById('update-confirm-modal').style.display = 'none';
                         };
                         document.getElementById('close-update-confirm').onclick = () => {
+                            document.getElementById('update-confirm-modal').style.display = 'none';
+                        };
+
+                        // Manejador de clic para el botón "No" para cancelar la eliminación
+                        document.getElementById('update-confirm-cancel').onclick = () => {
                             document.getElementById('update-confirm-modal').style.display = 'none';
                         };
                     } else {
@@ -527,15 +595,6 @@
                 var tdDateTime = document.createElement('td');
                 tr.appendChild(tdDateTime);
                 
-                // Añadir una celda para el cumplimiento
-                //var tdCumplimiento = document.createElement('td');
-                //tr.appendChild(tdCumplimiento);
-
-                // Columna SERVICIO UPDATE
-                //var tdServicioUpdate = document.createElement('td');
-                //tdServicioUpdate.textContent = direccion.servicio_update || ''; // Mostrar servicio_update si existe
-                //tr.appendChild(tdServicioUpdate);
-
                 // Añadir una celda para el cumplimiento formateado
                 var tdCumplimientoFormateado = document.createElement('td');
                 tdCumplimientoFormateado.textContent = direccion.cumplimiento_formateado || ''; // Mostrar cumplimiento_formateado si existe
