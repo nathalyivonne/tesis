@@ -39,13 +39,18 @@
         </div>
     </div>
     <div class="main-content">
-        <header>
-            <h2>
+        <header style="display: flex; justify-content: space-between; padding: 5px; background-color: #f0f0f0; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
                 <label for="nav-toggle">
                     <span class="fa fa-bars"></span>
                 </label>
-                MANTENIMIENTO TIPO DOCUMENTO
-            </h2>
+                <h2 style="margin: 0;"> MANTENIMIENTO TIPO DOCUMENTO</h2>
+            </div>
+            <div class="header-buttons" style="display: flex; align-items: center; gap: 10px;">
+                <div id="fecha-hora-sistema" style="font-size: 14px; color: #333;"></div>
+                <a href="/admin" class="btn-exit btn-inicio">INICIO</a>
+                <a href="/" class="btn-exit btn-exit-red">EXIT</a>
+            </div>
         </header>
         <main>
             <h1 class="text-center mt-5 mb-5 text-primary">TIPO DOCUMENTO</h1>
@@ -74,7 +79,6 @@
                                 </div>
                             </div>
                         </form>
-                        <!-- Tabla -->
                         <div class="table-responsive">
                             <table class="table table-bordered">
                                 <thead>
@@ -105,7 +109,6 @@
                                                 class="btn btn-danger btn-sm">Eliminar</a>
                                         </td>
                                     </tr>
-                                    <!-- modal -->
                                     <div class="modal fade" id="modal{{d.TipodocumentoID}}" tabindex="-1"
                                         aria-labelledby="exampleModalLabel" aria-hidden="true">
                                         <div class="modal-dialog">
@@ -137,9 +140,7 @@
                                                             <button type="submit" class="btn btn-primary">Guardar cambios</button>
                                                         </div>
                                                     </form>
-                                                    <!-- Cierre del form -->
                                                 </div>
-                                                <!-- Cierre del modal-body -->
                                             </div>
                                         </div>
                                     </div>
@@ -153,5 +154,20 @@
         </main>
     </div>
 </body>
-
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function actualizarFechaHora() {
+            const fechaHoraSistema = document.getElementById('fecha-hora-sistema');
+            if (fechaHoraSistema) {
+                const ahora = new Date();
+                const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }; 
+                const opcionesHora = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                const fecha = ahora.toLocaleDateString('es-ES', opcionesFecha);
+                const hora = ahora.toLocaleTimeString('es-ES', opcionesHora);
+                fechaHoraSistema.textContent = `${fecha} ${hora}`;
+            }
+        }
+        setInterval(actualizarFechaHora, 1000);
+    }); 
+</script> 
 </html>

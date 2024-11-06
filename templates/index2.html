@@ -9,9 +9,7 @@
         href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
     <script src="https://kit.fontawesome.com/325f4c844a.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/pagina.css') }}">
-    <!-- Importando ApexCharts -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <!-- Importando Google Maps API -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAg-pHzpWI9Ik34rYvyPZYGU9s2aWWtFx4&libraries=visualization"></script>
     <style>
         .charts-container {
@@ -95,18 +93,20 @@
     </div>
 
     <div class="main-content">
-        <header>
-            <h2>
+        <header style="display: flex; justify-content: space-between; padding: 5px; background-color: #f0f0f0; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
                 <label for="nav-toggle">
-                    <span class="fa-solid fa-bars"></span>
+                    <span class="fa fa-bars"></span>
                 </label>
-                PÁGINA PRINCIPAL
-            </h2>
-            <a href="/" class="btn-exit">EXIT</a>
+                <h2 style="margin: 0;"> PÁGINA PRINCIPAL</h2>
+            </div>
+            <div class="header-buttons" style="display: flex; align-items: center; gap: 10px;">
+                <div id="fecha-hora-sistema" style="font-size: 14px; color: #333;"></div>
+                <a href="/" class="btn-exit btn-exit-red">EXIT</a>
+            </div>
         </header>
 
         <main>
-            <!-- Filtro de fecha -->
             <div class="filter-container">
                 <label for="fecha-inicio-input">Fecha de inicio:</label>
                 <input type="date" id="fecha-inicio-input">
@@ -114,22 +114,17 @@
                 <input type="date" id="fecha-fin-input">
                 <button id="btn-actualizar-fechas">Actualizar Reportes</button>
             </div>
-            
-            <!-- Contenedor para los gráficos -->
             <div class="charts-container">
-                <!-- Gráfico de Distritos -->
                 <div class="chart-box">
                     <div class="chart-title">Reporte Manifiestos por Distrito</div>
                     <div id="chart-distritos" class="chart-container"></div>
                 </div>
 
-                <!-- Gráfico de Clientes -->
                 <div class="chart-box">
                     <div class="chart-title">Reporte Manifiestos por Cliente</div>
                     <div id="chart-clientes" class="chart-container"></div>
                 </div>
 
-                <!-- Gráfico de Clientes por Distrito -->
                 <div class="chart-box">
                     <div class="chart-title">Reporte Clientes por Distrito</div>
                     <div id="chart-clientes-distritos" class="chart-container"></div>
@@ -137,13 +132,11 @@
 
                 <div class="chart-box">
                     <div class="chart-title">Reporte de Items Faltantes y Entregados</div>
-                    <!-- Contenedor para mostrar las guías, entregadas y faltantes -->
                     <div id="info-guias" class="info-guias-box">
                         <p><strong>Total de Guías:</strong> <span id="total-guias" class="info-number"></span></p>
                         <p><strong>Faltantes:</strong> <span id="faltantes-guias" class="info-number"></span></p>
                         <p><strong>Entregados:</strong> <span id="entregadas-guias" class="info-number"></span></p>
                     </div>
-                    <!-- Contenedor para el gráfico -->
                     <div id="chart-faltantes-entregado" class="chart-container"></div>
                 </div>
 
@@ -165,6 +158,21 @@
     {% block contenido %} {% endblock %}
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            function actualizarFechaHora() {
+                const fechaHoraSistema = document.getElementById('fecha-hora-sistema');
+                if (fechaHoraSistema) {
+                    const ahora = new Date();
+                    const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    const opcionesHora = { hour: '2-digit', minute: '2-digit', second: '2-digit' };        
+                    const fecha = ahora.toLocaleDateString('es-ES', opcionesFecha);
+                    const hora = ahora.toLocaleTimeString('es-ES', opcionesHora);
+                    fechaHoraSistema.textContent = `${fecha} ${hora}`;
+                }
+            }
+            setInterval(actualizarFechaHora, 1000); 
+        }); 
+
         // Función para obtener la fecha seleccionada y actualizar los gráficos
         function actualizarReportes() {
             const fechaInicio = document.getElementById("fecha-inicio-input").value;
@@ -179,7 +187,7 @@
         fetch(`/reporte_distritos${urlParams}`)
             .then(response => response.json())
             .then(data => {
-                console.log("Datos recibidos del servidor:", data);  // Imprimir los datos en la consola
+                console.log("Datos recibidos del servidor:", data);  
 
                 // Destruir el gráfico anterior si ya existe
                 if (window.chartDistritos) {
@@ -297,7 +305,6 @@
                         position: 'top'
                     }
                 };
-                // Renderizar el gráfico
                 window.chartClientesDistritos = new ApexCharts(document.querySelector("#chart-clientes-distritos"), optionsClientesDistritos);
                 window.chartClientesDistritos.render();
             })
@@ -356,9 +363,6 @@
                             }
                         }]
                     };
-                    //var chartFaltantesEntregados = new ApexCharts(document.querySelector("#chart-faltantes-entregado"), optionsFaltantesEntregados);
-                    //chartFaltantesEntregados.render();
-                    // Renderizar el gráfico
                     window.chartFaltantesEntregados = new ApexCharts(document.querySelector("#chart-faltantes-entregado"), optionsFaltantesEntregados);
                     window.chartFaltantesEntregados.render();
             });

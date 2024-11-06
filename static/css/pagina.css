@@ -356,7 +356,42 @@ header h2 {
     color: var(--main-color);
 }
 
+.header-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;  
+}
+
+.btn-exit {
+    display: inline-flex;  
+    justify-content: center; 
+    align-items: center;  
+    padding: 5px 15px;  
+    border-radius: 4px;
+    text-decoration: none; 
+    font-size: 14px;
+    color: white;
+    text-align: center;  
+}
+
+.btn-inicio {
+    background-color: #28a745; 
+}
+
+.btn-exit-red {
+    background-color: #dc3545; 
+}
+
+.btn-inicio:hover {
+    background-color: #218838; 
+}
+
+.btn-exit-red:hover {
+    background-color: #c82333;
+}
+
 #fecha-hora-sistema {
-    font-size: 1rem;
-    color: var(--text-grey);
+    font-size: 14px;
+    color: #333;
+    font-weight: bold;  
 }
