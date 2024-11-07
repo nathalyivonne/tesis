@@ -235,13 +235,14 @@ def ver_mapa():
     try:
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
-        cursor.execute("SELECT direccion, distrito, servicio FROM manifiesto2")
+        cursor.execute("SELECT direccion, distrito, servicio, fecha_hora_subida FROM manifiesto2")
         rows = cursor.fetchall()
         conn.close()
         
         direcciones = [f"{row.direccion.strip()}, {row.distrito.strip()}" for row in rows]
         servicios = [row.servicio.strip() for row in rows]
         servicios_unicos = sorted(set(servicios))  # Obtener servicios únicos y ordenarlos
+        fecha_hora_subidas = [row.fecha_hora_subida for row in rows] 
         
         # Ejecutar el algoritmo genético para optimizar las direcciones
         pop_size = 10  # Tamaño de la población inicial
@@ -265,7 +266,8 @@ def ver_mapa():
                         'address': direccion,
                         'latitude': latitud,
                         'longitude': longitud,
-                        'servicio': servicios[i]  # Usar el servicio correspondiente al índice
+                        'servicio': servicios[i],  # Usar el servicio correspondiente al índice
+                        'fecha_hora_subida': fecha_hora_subidas[i].strftime('%Y-%m-%d %H:%M:%S') if fecha_hora_subidas[i] else None
                     })
                 else:
                     print(f"No se encontraron resultados para la dirección: {direccion}")
@@ -282,7 +284,11 @@ def ver_mapa():
                 seen_addresses.add(coordinates)
             else:
                 print(f"Dirección duplicada encontrada: {address['address']} (Lat: {address['latitude']}, Lng: {address['longitude']})")
-        
+        def custom_serializer(obj):
+            if isinstance(obj, datetime):
+                return obj.strftime('%Y-%m-%d %H:%M:%S')
+            raise TypeError(f"Type {type(obj)} not serializable")
+
         # Geocodificar y agregar la dirección de inicio
         start_address = "CALLE LOS SAUCES 568 URBANIZACION SANTA VICTORIA, CHICLAYO"
         geocode_result = gmaps.geocode(start_address)
@@ -293,12 +299,12 @@ def ver_mapa():
                 'address': start_address,
                 'latitude': location['lat'],
                 'longitude': location['lng'],
-                'servicio': 'Punto de inicio'
+                'servicio': 'Punto Final'
             })
         else:
             print(f"No se encontraron resultados para la dirección de inicio: {start_address}")
         
-        json_data = json.dumps(unique_geocoded_addresses, indent=4)
+        json_data = json.dumps(unique_geocoded_addresses, default=custom_serializer, indent=4)
         return render_template('mapa.html', direcciones_geocodificadas=json_data, servicios_unicos= servicios_unicos)   
     except pyodbc.Error as e:
         return f"Error de base de datos: {e}"

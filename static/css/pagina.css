@@ -395,3 +395,33 @@ header h2 {
     color: #333;
     font-weight: bold;  
 }
+
+.rojo {
+    background-color: rgba(255, 179, 179, 0.7) !important; /* Rojo pastel */
+    color: rgb(0, 0, 0) !important;
+}
+
+.amarillo {
+    background-color: rgba(255, 255, 153, 0.7) !important; /* Amarillo pastel */
+    color: black !important;
+}
+
+.verde {
+    background-color: rgba(144, 238, 144, 0.7) !important; /* Verde pastel */
+    color: rgb(0, 0, 0) !important;
+}
+
+#color-legend span {
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f7f7f7;
+}
+
+.legend-box {
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    text-align: center;
+}

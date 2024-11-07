@@ -52,7 +52,9 @@
             padding: 5px 10px;
             font-size: 1em;
             cursor: pointer;
-        }
+            width: 140px; 
+            height: 38px; 
+        }        
 
         #search-button {
             background-color: #007bff;
@@ -65,6 +67,8 @@
             color: white;
             border: none;
             margin-left: 10px;
+            height: 38px;
+            padding: 5px 10px; 
         }
 
         .direccion-list-container {
@@ -193,20 +197,6 @@
             color: white;
         }
 
-        .verde {
-            background-color: #bbf0af; 
-            color: white;
-        }
-        
-        .amarillo {
-            background-color: #f5f7a3; 
-            color: black;
-        }
-        
-        .rojo {
-            background-color: #f78686; 
-            color: white;
-        }
     </style>
 </head>
 
@@ -250,16 +240,23 @@
         <main>
             <h1>Mapa de Ruta</h1>
             <div id="map"></div>
-            <div class="search-container">
-                <select id="search-service">
-                    <option value="">Seleccionar Servicio</option>
-                    {% for servicio in servicios_unicos %}
-                    <option value="{{ servicio }}">{{ servicio }}</option>
-                    {% endfor %}
-                </select>
-                <button id="search-button">Buscar Servicio</button>
-                <button id="update-button">Actualizar</button>
-            </div>
+            <div class="search-container" style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="search-service">
+                        <option value="">Seleccionar Servicio</option>
+                        {% for servicio in servicios_unicos %}
+                        <option value="{{ servicio }}">{{ servicio }}</option>
+                        {% endfor %}
+                    </select>
+                    <button id="search-button" style="width: 140px; height: 38px;">Buscar Servicio</button>
+                    <button id="update-button" style="width: 140px; height: 38px;">Actualizar</button>
+                </div>
+                <div id="color-legend" style="margin-left: 20px; display: flex; gap: 10px; align-items: center;">
+                    <span id="total-rojos" class="legend-box">Rojos (Fuera de tiempo): 0</span>
+                    <span id="total-amarillos" class="legend-box">Amarillos (12H o menos para entregar): 0</span>
+                    <span id="total-verdes" class="legend-box">Verdes (Más de 12H para entregar): 0</span>
+                </div>
+            </div>                                   
 
             <div class="direccion-list-container">
                 <table class="direccion-list">
@@ -270,8 +267,9 @@
                             <th>DIRECCIÓN</th>
                             <th>SERVICIO</th>
                             <th>ESTADO</th>
-                            <th>FECHA Y HORA</th>
+                            <th>FECHA Y HORA DE ENTREGA</th>
                             <th>CUMPLIMIENTO</th>
+                            <th>FECHA Y HORA DE SUBIDA</th>
                         </tr>
                     </thead>
                     <tbody id="direccion-items"></tbody>
@@ -383,41 +381,93 @@
             var seconds = String(now.getSeconds()).padStart(2, '0');
             return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
         }
-
-        function updateRowColors() {
-            var rows = document.querySelectorAll('#direccion-items tr');
+    
+        function actualizarColoresFilas() {
+            var filas = document.querySelectorAll('#direccion-items tr');
+            var ahora = new Date();
         
-            rows.forEach(function(row) {
-                var fechaSubida = row.querySelector('td:nth-child(7)').textContent; 
-                var servicioUpdate = parseInt(row.querySelector('td:nth-child(11)').textContent);
-                var fechaHoraSubida = new Date(fechaSubida); 
-                var now = new Date(); 
+            filas.forEach(function (fila, index) {
+                // Seleccionar celdas para fecha_hora_subida y servicio
+                var celdaFechaSubida = fila.querySelector('td:nth-child(7)');
+                var celdaServicio = fila.querySelector('td:nth-child(3)');
         
-                // Calcular los minutos transcurridos desde la fecha_hora_subida
-                var timeDifference = Math.floor((now - fechaHoraSubida) / (1000 * 60)); 
+                if (!celdaFechaSubida || !celdaServicio) {
+                    console.warn(`Fila ${index + 1}: No se encontraron celdas para fecha y hora de subida o servicio.`);
+                    console.log(`Contenido de la fila ${index + 1}:`, fila.innerHTML);
+                    return;
+                }
         
-                // Buscar la celda donde se va a cambiar el color de fondo
-                var statusCell = row.querySelector('td:nth-child(3)');
+                var fechaSubidaTexto = celdaFechaSubida.textContent.trim();
+                var servicioTexto = celdaServicio.textContent.trim();
         
-                // Regla para cambiar de color
-                if (timeDifference >= servicioUpdate) {
-                    // Si el tiempo transcurrido es mayor o igual que el servicio_update -> Rojo
-                    row.classList.add('rojo');
-                    row.classList.remove('verde', 'amarillo');
-                } else if (servicioUpdate - timeDifference <= 90) {
-                    // Si quedan 90 minutos o menos para cumplir -> Amarillo
-                    row.classList.add('amarillo');
-                    row.classList.remove('verde', 'rojo');
+                console.log(`Fila ${index + 1}: Fecha de subida: "${fechaSubidaTexto}", Servicio: "${servicioTexto}"`);
+        
+                if (!fechaSubidaTexto || !servicioTexto) {
+                    console.warn(`Fila ${index + 1}: Datos faltantes. Fecha de subida: "${fechaSubidaTexto}", Servicio: "${servicioTexto}".`);
+                    return;
+                }
+        
+                // Convertir fecha_hora_subida a un objeto Date
+                var fechaSubida = convertirFecha(fechaSubidaTexto);
+                if (isNaN(fechaSubida.getTime())) {
+                    console.warn(`Fila ${index + 1}: Formato de fecha inválido: "${fechaSubidaTexto}".`);
+                    return;
+                }
+        
+                console.log(`Fecha Subida convertida: ${fechaSubida}`);
+        
+                // Extraer las horas del servicio (ejemplo: "48 HORAS")
+                var horasServicio = parseInt(servicioTexto.split(' ')[0], 10);
+                if (isNaN(horasServicio)) {
+                    console.warn(`Fila ${index + 1}: Formato de servicio inválido: "${servicioTexto}".`);
+                    return;
+                }
+        
+                var tiempoServicioMs = horasServicio * 60 * 60 * 1000;
+                var fechaLimite = new Date(fechaSubida.getTime() + tiempoServicioMs);
+        
+                console.log(`Fecha Límite: ${fechaLimite}, Hora Actual: ${ahora}`);
+                var diferenciaHoras = (fechaLimite - ahora) / (1000 * 60 * 60);
+        
+                console.log(`Diferencia Horas: ${diferenciaHoras}`);
+        
+                fila.classList.remove('rojo', 'amarillo', 'verde');
+                if (diferenciaHoras < 0) {
+                    fila.classList.add('rojo');
+                    console.log(`Fila ${index + 1} se pintó de rojo`);
+                } else if (diferenciaHoras <= 12) {
+                    fila.classList.add('amarillo');
+                    console.log(`Fila ${index + 1} se pintó de amarillo`);
                 } else {
-                    // Si no se han cumplido los minutos -> Verde
-                    row.classList.add('verde');
-                    row.classList.remove('amarillo', 'rojo');
+                    fila.classList.add('verde');
+                    console.log(`Fila ${index + 1} se pintó de verde`);
                 }
             });
         }
         
-        document.getElementById('update-button').addEventListener('click', function() {
-            updateRowColors();
+        function convertirFecha(fechaTexto) {
+            // Convierte la fecha de `YYYY-MM-DD HH:MM:SS` a un objeto Date de manera segura
+            return new Date(fechaTexto.replace(' ', 'T'));
+        }
+    
+        document.addEventListener('DOMContentLoaded', function () {
+            actualizarColoresFilas();
+        });
+
+        function actualizarContadoresColores() {
+            var totalRojos = document.querySelectorAll('.rojo').length;
+            var totalAmarillos = document.querySelectorAll('.amarillo').length;
+            var totalVerdes = document.querySelectorAll('.verde').length;
+        
+            document.getElementById('total-rojos').textContent = `Rojos (Fuera de tiempo): ${totalRojos}`;
+            document.getElementById('total-amarillos').textContent = `Amarillos (12H o menos para entregar): ${totalAmarillos}`;
+            document.getElementById('total-verdes').textContent = `Verdes (Más de 12H para entregar): ${totalVerdes}`;
+        }
+        
+        // Llama a la función para actualizar los contadores después de que se actualicen los colores de las filas
+        document.addEventListener('DOMContentLoaded', function () {
+            actualizarColoresFilas();
+            actualizarContadoresColores();
         });        
 
         function initMap() {
@@ -526,6 +576,9 @@
                 tdCumplimientoFormateado.textContent = direccion.cumplimiento_formateado || ''; 
                 tr.appendChild(tdCumplimientoFormateado);
 
+                var tdDateTimeSubida = document.createElement('td');
+                tdDateTimeSubida.textContent = direccion.fecha_hora_subida || ''; // Asumimos que `fecha_hora_subida` está en los datos de `direcciones`
+                tr.appendChild(tdDateTimeSubida);
 
                 direccionItems.appendChild(tr);
             }
@@ -631,7 +684,8 @@
                         direccion: row.querySelector('td:nth-child(2)').textContent, 
                         servicio: row.querySelector('td:nth-child(3)').textContent, 
                         fecha_hora_entrega: row.querySelector('td:nth-child(5)').textContent, 
-                        cumplimiento_formateado: row.querySelector('td:nth-child(6)').textContent 
+                        cumplimiento_formateado: row.querySelector('td:nth-child(6)').textContent,
+                        fecha_hora_subida: row.querySelector('td:nth-child(7)').textContent
                     };
                     items.push(item);
                 }
