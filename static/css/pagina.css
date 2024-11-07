@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css?family=Open+Sans&display=swap');
 
-:root{
+:root {
     --main-color: #184a30;
     --color-dark: #1d3127;
     --text-grey: #8390A2;
@@ -25,18 +25,19 @@
     z-index: 100;
     transition: width 300ms
 }
+
 .sidebar-brand {
     height: 90px;
     padding: 1rem 0rem 1rem 2rem;
     color: #fff;
 }
 
-.sidebar-brand span{
+.sidebar-brand span {
     display: inline-block;
     padding-right: 1rem;
 }
 
-.sidebar-menu li{
+.sidebar-menu li {
     width: 100%;
     margin-bottom: 1.7rem;
     padding-left: 1rem;
@@ -45,48 +46,51 @@
 .sidebar-menu {
     margin-top: 1rem;
 }
-.sidebar-menu a{
+
+.sidebar-menu a {
     padding-left: 1rem;
     display: block;
     color: #fff;
     font-size: 1.1rem;
 }
-.sidebar-menu a.active{
+
+.sidebar-menu a.active {
     background: #fff;
     padding-top: 1rem;
     padding-bottom: 1rem;
     color: var(--main-color);
     border-radius: 30px 0px 0px 30px;
 }
-.sidebar-menu a span{
+
+.sidebar-menu a span {
     font-size: 1.5rem;
     padding-right: 1rem;
 }
 
-#nav-toggle:checked + .sidebar{
+#nav-toggle:checked+.sidebar {
     width: 70px;
 }
 
-#nav-toggle:checked + .sidebar .sidebar-brand,
-#nav-toggle:checked + .sidebar li a {
+#nav-toggle:checked+.sidebar .sidebar-brand,
+#nav-toggle:checked+.sidebar li a {
     padding-left: 1rem;
     text-align: center;
 }
 
-#nav-toggle:checked + .sidebar li a {
+#nav-toggle:checked+.sidebar li a {
     padding-left: 0rem;
 }
 
-#nav-toggle:checked + .sidebar .sidebar-brand h2 span:last-child,
-#nav-toggle:checked + .sidebar li a span:last-child{
+#nav-toggle:checked+.sidebar .sidebar-brand h2 span:last-child,
+#nav-toggle:checked+.sidebar li a span:last-child {
     display: none;
 }
 
-#nav-toggle:checked ~ .main-content{
+#nav-toggle:checked~.main-content {
     margin-left: 70px;
 }
 
-#nav-toggle:checked ~ .main-content{
+#nav-toggle:checked~.main-content {
     width: calc(100% -70px);
     left: 70px;
 }
@@ -122,6 +126,7 @@ header label span {
     font-size: 1.7rem;
     padding-right: 1rem;
 }
+
 main {
     margin-top: 70px;
     padding: 2rem 1.5rem;
@@ -134,7 +139,7 @@ main {
     grid-template-columns: repeat(5, 1fr);
     grid-gap: 2rem;
     margin-top: 0.3rem;
-} 
+}
 
 .card-single {
     display: flex;
@@ -144,12 +149,12 @@ main {
     border-radius: 2px;
 }
 
-.card-single div:last-child span{
+.card-single div:last-child span {
     font-size: 3rem;
     color: var(--main-color);
 }
 
-.card-single div:first-child span{
+.card-single div:first-child span {
     color: var(--text-grey);
 }
 
@@ -162,25 +167,10 @@ main {
 .card-single:last-child div:last-child span {
     color: #fff;
 }
- 
+
 table {
     border-collapse: collapse;
 }
-
-/* thead tr {
-    border: 1px solid #f0f0f0;
-    border-bottom: 2px solid #f0f0f0;
-}
-
-thead td{
-    font-weight: 700;
-}
-
-td {
-    padding: .5rem 1rem;
-    font-size: .9rem;
-    color: #222;
-} */
 
 .recent-grid {
     margin-top: 3.5rem;
@@ -194,57 +184,60 @@ td {
     overflow: auto;
 } */
 
-@media only screen and (max-width:1200){
-    .sidebar{
+@media only screen and (max-width:1200) {
+    .sidebar {
         width: 70px;
     }
-    
+
     .sidebar .sidebar-brand,
     .sidebar li a {
         padding-left: 1rem;
         text-align: center;
     }
-    
+
     .sidebar li a {
         padding-left: 0rem;
     }
-    
+
     .sidebar .sidebar-brand h2 span:last-child,
-    .sidebar li a span:last-child{
+    .sidebar li a span:last-child {
         display: none;
     }
-    
-    .main-content{
+
+    .main-content {
         margin-left: 70px;
     }
-    
-    .main-content header{
+
+    .main-content header {
         width: calc(100% -70px);
         left: 70px;
     }
 }
 
-@media only screen and (max-width: 960px){
-    .cards{
-        grid-template-columns: repeat(3,lfr);
+@media only screen and (max-width: 960px) {
+    .cards {
+        grid-template-columns: repeat(3, lfr);
     }
-    .recent-grid{
+
+    .recent-grid {
         grid-template-columns: 60% 40%;
     }
 }
 
-@media only screen and (max-width: 768px){
-    .cards{
-        grid-template-columns: repeat(2,lfr);
+@media only screen and (max-width: 768px) {
+    .cards {
+        grid-template-columns: repeat(2, lfr);
     }
-    .recent-grid{
+
+    .recent-grid {
         grid-template-columns: 100%;
     }
-    .search-wrapper{
+
+    .search-wrapper {
         display: none;
     }
 
-    .sidebar{
+    .sidebar {
         left: -100% !important;
     }
 
@@ -253,7 +246,7 @@ td {
         align-items: center;
     }
 
-    header h2 label{
+    header h2 label {
         display: inline-block;
         text-align: center;
         background: var(--main-color);
@@ -268,52 +261,53 @@ td {
         justify-content: center !important;
     }
 
-    header h2 span{
+    header h2 span {
         text-align: center;
         padding-right: 0rem;
     }
 
-    header h2{
+    header h2 {
         font-size: 1.1rem;
     }
 
-    .main-content{
+    .main-content {
         width: 100%;
         margin-left: 0rem;
     }
-    
+
     header {
-        width:100% !important;
+        width: 100% !important;
         left: 0 !important;
     }
-    #nav-toggle:checked + .sidebar{
+
+    #nav-toggle:checked+.sidebar {
         left: 0 !important;
         z-index: 100;
         width: 345px;
     }
-   
-    #nav-toggle:checked + .sidebar .sidebar-brand,
-    #nav-toggle:checked + .sidebar li {
+
+    #nav-toggle:checked+.sidebar .sidebar-brand,
+    #nav-toggle:checked+.sidebar li {
         padding-left: 2rem;
         text-align: left;
     }
-    
-    #nav-toggle:checked + .sidebar li a {
-        padding-left: 1rem; 
+
+    #nav-toggle:checked+.sidebar li a {
+        padding-left: 1rem;
     }
-    
-    #nav-toggle:checked + .sidebar .sidebar-brand h2 span:last-child,
-    #nav-toggle:checked + .sidebar li a span:last-child{
+
+    #nav-toggle:checked+.sidebar .sidebar-brand h2 span:last-child,
+    #nav-toggle:checked+.sidebar li a span:last-child {
         display: inline;
     }
 
-    #nav-toggle:checked ~ .main-content{
+    #nav-toggle:checked~.main-content {
         margin-left: 0rem !important;
     }
 }
 
-@media only screen and (max-width: 560px){
-    .cards{
+@media only screen and (max-width: 560px) {
+    .cards {
         grid-template-columns: 100%;
     }
 }
@@ -322,7 +316,7 @@ td {
     display: inline-block;
     padding: 10px 20px;
     margin: 10px;
-    background-color: #f44336; 
+    background-color: #f44336;
     color: white;
     text-decoration: none;
     border-radius: 5px;
@@ -330,7 +324,7 @@ td {
 }
 
 .btn-exit:hover {
-    background-color: #d32f2f; 
+    background-color: #d32f2f;
 }
 
 /* Estilo para la fecha y hora */
@@ -359,31 +353,31 @@ header h2 {
 .header-buttons {
     display: flex;
     gap: 10px;
-    align-items: center;  
+    align-items: center;
 }
 
 .btn-exit {
-    display: inline-flex;  
-    justify-content: center; 
-    align-items: center;  
-    padding: 5px 15px;  
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 15px;
     border-radius: 4px;
-    text-decoration: none; 
+    text-decoration: none;
     font-size: 14px;
     color: white;
-    text-align: center;  
+    text-align: center;
 }
 
 .btn-inicio {
-    background-color: #28a745; 
+    background-color: #28a745;
 }
 
 .btn-exit-red {
-    background-color: #dc3545; 
+    background-color: #dc3545;
 }
 
 .btn-inicio:hover {
-    background-color: #218838; 
+    background-color: #218838;
 }
 
 .btn-exit-red:hover {
@@ -393,21 +387,24 @@ header h2 {
 #fecha-hora-sistema {
     font-size: 14px;
     color: #333;
-    font-weight: bold;  
+    font-weight: bold;
 }
 
 .rojo {
-    background-color: rgba(255, 179, 179, 0.7) !important; /* Rojo pastel */
+    background-color: rgba(255, 179, 179, 0.7) !important;
+    /* Rojo pastel */
     color: rgb(0, 0, 0) !important;
 }
 
 .amarillo {
-    background-color: rgba(255, 255, 153, 0.7) !important; /* Amarillo pastel */
+    background-color: rgba(255, 255, 153, 0.7) !important;
+    /* Amarillo pastel */
     color: black !important;
 }
 
 .verde {
-    background-color: rgba(144, 238, 144, 0.7) !important; /* Verde pastel */
+    background-color: rgba(144, 238, 144, 0.7) !important;
+    /* Verde pastel */
     color: rgb(0, 0, 0) !important;
 }
 

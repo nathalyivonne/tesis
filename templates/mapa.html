@@ -125,13 +125,13 @@
             align-items: center;
             height: 100%;
             width: 100%;
-            text-align: center; /* Centrar el texto dentro del botón */
-            border-radius: 4px; /* Opcional: añadir bordes redondeados */
+            text-align: center; 
+            border-radius: 4px; 
         }
 
         .check-btn.checked {
-            border-color: #28a745; /* Borde verde cuando está marcado */
-            background-color: #28a745; /* Fondo verde cuando está marcado */
+            border-color: #28a745; 
+            background-color: #28a745;
             color: white;
         }
         
@@ -142,7 +142,6 @@
             color: #666;
         }
         
-        /* Estilos del Modal */
         .modal {
             display: none;
             position: fixed;
@@ -383,10 +382,12 @@
         }
     
         function actualizarColoresFilas() {
+            console.log("Iniciando la función para actualizar los colores de las filas.");
             var filas = document.querySelectorAll('#direccion-items tr');
             var ahora = new Date();
         
             filas.forEach(function (fila, index) {
+                console.log(`Procesando la fila ${index + 1}`);
                 // Seleccionar celdas para fecha_hora_subida y servicio
                 var celdaFechaSubida = fila.querySelector('td:nth-child(7)');
                 var celdaServicio = fila.querySelector('td:nth-child(3)');
@@ -449,10 +450,6 @@
             // Convierte la fecha de `YYYY-MM-DD HH:MM:SS` a un objeto Date de manera segura
             return new Date(fechaTexto.replace(' ', 'T'));
         }
-    
-        document.addEventListener('DOMContentLoaded', function () {
-            actualizarColoresFilas();
-        });
 
         function actualizarContadoresColores() {
             var totalRojos = document.querySelectorAll('.rojo').length;
@@ -463,12 +460,13 @@
             document.getElementById('total-amarillos').textContent = `Amarillos (12H o menos para entregar): ${totalAmarillos}`;
             document.getElementById('total-verdes').textContent = `Verdes (Más de 12H para entregar): ${totalVerdes}`;
         }
-        
-        // Llama a la función para actualizar los contadores después de que se actualicen los colores de las filas
-        document.addEventListener('DOMContentLoaded', function () {
+
+        // Se ejecuta después de la carga de todo el contenido para que el color se actualice después de cargar los datos
+        window.onload = function () {
+            console.log("Ejecutando actualización de colores después de la carga completa del contenido.");
             actualizarColoresFilas();
             actualizarContadoresColores();
-        });        
+        };       
 
         function initMap() {
             var map = new google.maps.Map(document.getElementById('map'), {
