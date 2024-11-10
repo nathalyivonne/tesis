@@ -257,6 +257,13 @@
                 </div>
             </div>                                   
 
+            <div id="dateFilterContainer" style="margin: 20px 0;">
+                <form id="dateFilterForm" method="GET" action="/ver_mapa">
+                    <label for="dateFilter">Seleccionar Fecha de Subida:</label>
+                    <input type="date" id="dateFilter" name="fecha" onchange="this.form.submit()">
+                </form>
+            </div>
+
             <div class="direccion-list-container">
                 <table class="direccion-list">
                     <caption>Direcciones (Total: <span id="total-direcciones"></span>)</caption>
@@ -304,6 +311,31 @@
     </div>
     
     <script>
+
+        function filterByDate() {
+            var inputDate = document.getElementById("dateFilter").value;
+            var table = document.getElementById("direccion-items"); // Cambia esto si tu tabla es diferente
+            var rows = table.getElementsByTagName("tr");
+            console.log("Filtrando por fecha...");
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName("td");
+                var fechaCell = cells[6]; // Ajusta este índice si la columna de Fecha y Hora de Subida está en otra posición
+                if (fechaCell) {
+                    var fechaText = fechaCell.textContent || fechaCell.innerText;
+                    var fechaParts = fechaText.split(' '); // Asume que la fecha y hora están separadas por un espacio
+                    var fecha = fechaParts[0]; // Obtener solo la parte de la fecha
+        
+                    // Opcional: convertir fecha a formato comparable
+                    var formattedFecha = fecha.split('-').reverse().join('-'); // Cambiar formato si es necesario
+        
+                    if (inputDate === "" || inputDate === fecha) {
+                        rows[i].style.display = "";
+                    } else {
+                        rows[i].style.display = "none";
+                    }
+                }
+            }
+        }        
 
         document.addEventListener('DOMContentLoaded', function() {
             function actualizarFechaHora() {

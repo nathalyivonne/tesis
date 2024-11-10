@@ -142,6 +142,23 @@ def upload():
     except Exception as e:
         return f"Error: {e}"
 
+@app.route('/ver_tabla', methods=['GET', 'POST'])
+def ver_tabla():
+    try:
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM manifiesto2")
+        rows = cursor.fetchall()
+        conn.close()
+        
+         # Preparar los datos para pasar a la plantilla
+        data = [list(row) for row in rows]
+
+        return render_template('tabla.html', data=data)  
+    except pyodbc.Error as e:
+        return f"Error de base de datos: {e}"
+    except Exception as e:
+        return f"Error: {e}"
 def fitness(solution):
     # Sumar las longitudes de las direcciones como medida de distancia total
     total_distance = sum(len(direccion) for direccion in solution)
@@ -230,13 +247,32 @@ def genetic_algorithm(pop_size, direcciones, max_generations):
     best_solution = min(population, key=fitness)
     return best_solution
 
-@app.route('/ver_mapa')
+@app.route('/ver_mapa', methods=['GET'])
 def ver_mapa():
     try:
+        fecha_filtro = request.args.get('fecha', None)
+        
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
-        cursor.execute("SELECT direccion, distrito, servicio, fecha_hora_subida FROM manifiesto2")
+        #cursor.execute("SELECT direccion, distrito, servicio, fecha_hora_subida FROM manifiesto2")
+        #rows = cursor.fetchall()
+        #conn.close()
+        
+        # Consulta para seleccionar direcciones y filtrar por fecha si se proporciona
+        if fecha_filtro:
+            cursor.execute("""
+                SELECT direccion, distrito, servicio, fecha_hora_subida 
+                FROM manifiesto2 
+                WHERE CAST(fecha_hora_subida AS DATE) = ?
+            """, (fecha_filtro,))
+        else:
+            cursor.execute("""
+                SELECT direccion, distrito, servicio, fecha_hora_subida 
+                FROM manifiesto2
+            """)
+        
         rows = cursor.fetchall()
+        print(f"Filtrado por fecha {fecha_filtro}: {rows}")
         conn.close()
         
         direcciones = [f"{row.direccion.strip()}, {row.distrito.strip()}" for row in rows]
@@ -303,7 +339,7 @@ def ver_mapa():
             })
         else:
             print(f"No se encontraron resultados para la dirección de inicio: {start_address}")
-        
+ 
         json_data = json.dumps(unique_geocoded_addresses, default=custom_serializer, indent=4)
         return render_template('mapa.html', direcciones_geocodificadas=json_data, servicios_unicos= servicios_unicos)   
     except pyodbc.Error as e:

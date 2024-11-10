@@ -153,7 +153,6 @@
                     <option value="150">150</option>
                     <option value="100">200</option>
                     <option value="150">300</option>
-                    <option value="100">350</option>
                     <option value="150">400</option>
                 </select>
             </div>
@@ -161,6 +160,11 @@
             <div id="searchContainer">
                 <input type="text" id="search" placeholder="Buscar...">
                 <button onclick="searchTable()">Buscar</button>
+            </div>
+
+            <div id="dateFilterContainer">
+                <label for="dateFilter">Seleccionar Fecha de Subida:</label>
+                <input type="date" id="dateFilter" onchange="filterByDate()">
             </div>
 
             <table id="dataTable">
@@ -208,6 +212,29 @@
     </div>
 
     <script>
+
+        function filterByDate() {
+            var inputDate = document.getElementById("dateFilter").value;
+            var table = document.getElementById("dataTable");
+            var rows = table.getElementsByTagName("tr");
+        
+            for (var i = 1; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName("td");
+                var fechaCell = cells[6]; // Columna de 'Fecha y Hora de Subida', ajusta si el índice es diferente
+                if (fechaCell) {
+                    var fechaText = fechaCell.textContent || fechaCell.innerText;
+                    var fechaParts = fechaText.split(' '); // Asume que la fecha y hora están separadas por un espacio
+                    var fecha = fechaParts[0]; // Obtener solo la parte de la fecha
+                    if (inputDate === "" || fecha === inputDate) {
+                        rows[i].style.display = "";
+                    } else {
+                        rows[i].style.display = "none";
+                    }
+                }
+            }
+        
+            updateTotalItems();
+        }        
 
         document.addEventListener('DOMContentLoaded', function() {
             function actualizarFechaHora() {

@@ -15,8 +15,13 @@ conn = pyodbc.connect(conn_str)
 # Obtener la fecha y hora actual
 now = datetime.now()
 seconds = round(now.second / 5) * 5  # Redondear segundos a múltiplos de 5
-rounded_time = now.replace(second=seconds, microsecond=0)
 
+# Asegurar que `seconds` esté en el rango de 0..59
+if seconds >= 60:
+    seconds = 0
+    now = now.replace(minute=now.minute + 1)
+rounded_time = now.replace(second=seconds, microsecond=0)
+print(rounded_time)
 # Actualizar la columna fecha_subida en la tabla Manifiesto2
 cursor = conn.cursor()
 cursor.execute("""
