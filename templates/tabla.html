@@ -6,11 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>Check Service Cargo</title>
     <link rel="stylesheet" href="/static/css/pagina.css">
-    <link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+    <link rel="stylesheet"
+        href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
     <script src="https://kit.fontawesome.com/325f4c844a.js" crossorigin="anonymous"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Poppins, sans-serif;
             background-color: #f0f0f0;
         }
 
@@ -29,7 +30,8 @@
             margin-top: 20px;
         }
 
-        th, td {
+        th,
+        td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #ddd;
@@ -85,13 +87,13 @@
             background-color: #45a049;
         }
 
-        #filterContainer {
-            margin-bottom: 16px;
+        .container {
+            padding: 20px;
+            max-width: 100%;
+            margin: 0 auto;
         }
 
-        #searchContainer {
-            margin-bottom: 16px;
-        }
+
 
         #search {
             width: 200px;
@@ -103,248 +105,269 @@
             font-size: 14px;
             color: #666;
         }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 10px;
+            }
+
+            th,
+            td {
+                padding: 8px;
+            }
+        }
+
+        .main-content {
+            padding: 20px;
+            overflow-x: auto;
+        }
     </style>
 </head>
 
 <body>
-    <input type="checkbox" id="nav-toggle">
-    <div class="sidebar">
-        <div class="sidebar-brand">
-            <h2><span class="la la-truck"></span><span>Check Service Cargo</span></h2>
+    <div class="container">
+        <input type="checkbox" id="nav-toggle">
+        <div class="sidebar">
+            <div class="sidebar-brand">
+                <h2><span class="la la-truck"></span><span>Check Service Cargo</span></h2>
+            </div>
+            <div class="sidebar-menu">
+                <ul>
+                    <li>
+                        <a href="" class="active"><span class="fa-solid fa-table-columns"></span>
+                            <span> DASHBOARD </span></a>
+                    </li>
+                    <li class=""><a class="fa-solid fa-id-card" href="{{ url_for('cargo')}}">Cargo</a></li>
+                    <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a>
+                    </li>
+                    <li class=""><a class="fa-solid fa-users" href="{{ url_for('roles')}}">Roles</a></li>
+                    <li class=""><a class="fa-solid fa-file" href="{{ url_for('tipoDocumento')}}">Tipo Documento</a>
+                    </li>
+                    <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehiculo</a></li>
+                    <li class=""><a class="fa-solid fa-user" href="{{ url_for('usuario')}}">Usuario</a></li>
+                </ul>
+            </div>
         </div>
-        <div class="sidebar-menu">
-            <ul>
-                <li>
-                    <a href="" class="active"><span class="fa-solid fa-table-columns"></span>
-                        <span> DASHBOARD </span></a>
-                </li>
-                <li class=""><a class="fa-solid fa-id-card" href="{{ url_for('cargo')}}">Cargo</a></li>
-                <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a></li>
-                <li class=""><a class="fa-solid fa-users" href="{{ url_for('roles')}}">Roles</a></li>
-                <li class=""><a class="fa-solid fa-file" href="{{ url_for('tipoDocumento')}}">Tipo Documento</a></li>
-                <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehiculo</a></li>
-                <li class=""><a class="fa-solid fa-user" href="{{ url_for('usuario')}}">Usuario</a></li>
-            </ul>
-        </div>
-    </div>
-    <div class="main-content">
-        <header style="display: flex; justify-content: space-between; padding: 5px; background-color: #f0f0f0; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <label for="nav-toggle">
-                    <span class="fa fa-bars"></span>
-                </label>
-                <h2 style="margin: 0;"> MANTENIMIENTO MANIFIESTO</h2>
-            </div>
-            <div class="header-buttons" style="display: flex; align-items: center; gap: 10px;">
-                <div id="fecha-hora-sistema" style="font-size: 14px; color: #333;"></div>
-                <a href="/admin" class="btn-exit btn-inicio">INICIO</a>
-                <a href="/" class="btn-exit btn-exit-red">EXIT</a>
-            </div>
-        </header> 
-        <main>
-            <h1>Hoja de Ruta</h1>
-            
-            <div id="filterContainer">
-                <label for="filter">Filtro:</label>
-                <select id="filter">
-                    <option value="10">10</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                    <option value="150">150</option>
-                    <option value="100">200</option>
-                    <option value="150">300</option>
-                    <option value="150">400</option>
-                </select>
-            </div>
+        <div class="main-content">
+            <header
+                style="display: flex; justify-content: space-between; padding: 5px; background-color: #f0f0f0; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label for="nav-toggle">
+                        <span class="fa fa-bars"></span>
+                    </label>
+                    <h2 style="margin: 0;"> MANTENIMIENTO MANIFIESTO</h2>
+                </div>
+                <div class="header-buttons" style="display: flex; align-items: center; gap: 10px;">
+                    <div id="fecha-hora-sistema" style="font-size: 14px; color: #333;"></div>
+                    <a href="/admin" class="btn-exit btn-inicio">INICIO</a>
+                    <a href="/" class="btn-exit btn-exit-red">EXIT</a>
+                </div>
+            </header>
+            <main>
+                <h1>HOJA DE RUTA</h1>
+                <div id="controlContainer">
+                    <div id="filterContainer">
+                        <label for="filter">Filtro:</label>
+                        <select id="filter">
+                            <option value="10">10</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="150">150</option>
+                            <option value="100">200</option>
+                            <option value="150">300</option>
+                            <option value="150">400</option>
+                        </select>
+                    </div>
+                  
+                    <div id="searchContainer">
+                        <input type="text" id="search" placeholder="Buscar...">
+                        <button onclick="searchTable()">Buscar</button>
+                    </div>
 
-            <div id="searchContainer">
-                <input type="text" id="search" placeholder="Buscar...">
-                <button onclick="searchTable()">Buscar</button>
-            </div>
-
-            <div id="dateFilterContainer">
-                <label for="dateFilter">Seleccionar Fecha de Subida:</label>
-                <input type="date" id="dateFilter" onchange="filterByDate()">
-            </div>
-
-            <table id="dataTable">
-                <thead>
-                    <tr>
-                        <th onclick="sortTable(0)">Item</th>
-                        <th onclick="sortTable(1)">Codigo</th>
-                        <th onclick="sortTable(2)">Cliente</th>
-                        <th onclick="sortTable(3)">Direccion</th>
-                        <th onclick="sortTable(4)">Distrito</th>
-                        <th onclick="sortTable(5)">Servicio</th>
-                        <th onclick="sortTable(6)">Fecha y Hora de Subida</th>
-                        <th onclick="sortTable(7)">Fecha y Hora de Entrega</th>
-                        <th onclick="sortTable(8)">Cumplimiento</th>
-                        <th onclick="sortTable(9)">Estado</th>
-                        <th onclick="sortTable(10)">Cumplimiento Formateado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in data %}
-                    <tr>
-                        {% for cell in row %}
-                            {% if loop.index0 == 7 %}
+                    <div id="dateFilterContainer">
+                        <label for="dateFilter">Seleccionar Fecha de Subida:</label>
+                        <input type="date" id="dateFilter" onchange="filterByDate()">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="dataTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(0)">Item</th>
+                                <th onclick="sortTable(1)">Codigo</th>
+                                <th onclick="sortTable(2)">Cliente</th>
+                                <th onclick="sortTable(3)">Direccion</th>
+                                <th onclick="sortTable(4)">Distrito</th>
+                                <th onclick="sortTable(5)">Servicio</th>
+                                <th onclick="sortTable(6)">Fecha y Hora de Subida</th>
+                                <th onclick="sortTable(7)">Fecha y Hora de Entrega</th>
+                                <th onclick="sortTable(8)">Cumplimiento</th>
+                                <th onclick="sortTable(9)">Estado</th>
+                                <th onclick="sortTable(10)">Cumplimiento Formateado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data %}
+                            <tr>
+                                {% for cell in row %}
+                                {% if loop.index0 == 7 %}
                                 <td>{{ 'No entregado' if cell is none or cell == 'NULL' else cell }}</td>
-                            {% elif loop.index0 == 8 %}
+                                {% elif loop.index0 == 8 %}
                                 <td>{{ 'Pendiente' if cell is none or cell == 'NULL' else cell }}</td>
-                            {% elif loop.index0 == 9 %}
-                                <td>{{ 'Pendiente' if cell == 0 else cell }}</td>
-                            {% elif loop.index0 == 10 %}
+                                {% elif loop.index0 == 9 %}
+                                <td>{{ 'Entregado' if cell == true else 'Pendiente' }}</td>
+                                {% elif loop.index0 == 10 %}
                                 <td>{{ 'Pendiente' if cell is none or cell == 'NULL' else cell }}</td>
-                            {% else %}
+                                {% else %}
                                 <td>{{ cell }}</td>
-                            {% endif %}
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>                               
-            </table>
+                                {% endif %}
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div id="totalItems"></div>
 
-            <div id="totalItems"></div>
-            
-            <button onclick="window.location.href='/ver_mapa'">Ver Mapa</button>
-            <button onclick="window.location.href='/'">Atrás</button>
-        </main>
-    </div>
+                <button onclick="window.location.href='/ver_mapa'">Ver Mapa</button>
+                <button onclick="window.location.href='/'">Atrás</button>
+            </main>
+        </div>
 
-    <script>
+        <script>
 
-        function filterByDate() {
-            var inputDate = document.getElementById("dateFilter").value;
-            var table = document.getElementById("dataTable");
-            var rows = table.getElementsByTagName("tr");
-        
-            for (var i = 1; i < rows.length; i++) {
-                var cells = rows[i].getElementsByTagName("td");
-                var fechaCell = cells[6]; // Columna de 'Fecha y Hora de Subida', ajusta si el índice es diferente
-                if (fechaCell) {
-                    var fechaText = fechaCell.textContent || fechaCell.innerText;
-                    var fechaParts = fechaText.split(' '); // Asume que la fecha y hora están separadas por un espacio
-                    var fecha = fechaParts[0]; // Obtener solo la parte de la fecha
-                    if (inputDate === "" || fecha === inputDate) {
+            function filterByDate() {
+                var inputDate = document.getElementById("dateFilter").value;
+                var table = document.getElementById("dataTable");
+                var rows = table.getElementsByTagName("tr");
+
+                for (var i = 1; i < rows.length; i++) {
+                    var cells = rows[i].getElementsByTagName("td");
+                    var fechaCell = cells[6]; // Columna de 'Fecha y Hora de Subida', ajusta si el índice es diferente
+                    if (fechaCell) {
+                        var fechaText = fechaCell.textContent || fechaCell.innerText;
+                        var fechaParts = fechaText.split(' '); // Asume que la fecha y hora están separadas por un espacio
+                        var fecha = fechaParts[0]; // Obtener solo la parte de la fecha
+                        if (inputDate === "" || fecha === inputDate) {
+                            rows[i].style.display = "";
+                        } else {
+                            rows[i].style.display = "none";
+                        }
+                    }
+                }
+
+                updateTotalItems();
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                function actualizarFechaHora() {
+                    const fechaHoraSistema = document.getElementById('fecha-hora-sistema');
+                    if (fechaHoraSistema) {
+                        const ahora = new Date();
+                        const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                        const opcionesHora = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                        const fecha = ahora.toLocaleDateString('es-ES', opcionesFecha);
+                        const hora = ahora.toLocaleTimeString('es-ES', opcionesHora);
+
+                        fechaHoraSistema.textContent = `${fecha} ${hora}`;
+                    }
+                }
+                setInterval(actualizarFechaHora, 1000);
+            });
+
+            function filterTable() {
+                var filter = document.getElementById("filter").value;
+                var table = document.getElementById("dataTable");
+                var rows = table.getElementsByTagName("tr");
+
+                for (var i = 1; i < rows.length; i++) {
+                    var row = rows[i];
+                    if (i <= filter) {
+                        row.style.display = "";
+                    } else {
+                        row.style.display = "none";
+                    }
+                }
+
+                updateTotalItems();
+            }
+
+            function searchTable() {
+                var input = document.getElementById("search").value.toUpperCase();
+                var table = document.getElementById("dataTable");
+                var rows = table.getElementsByTagName("tr");
+
+                for (var i = 1; i < rows.length; i++) {
+                    var cells = rows[i].getElementsByTagName("td");
+                    var found = false;
+                    for (var j = 0; j < cells.length; j++) {
+                        var cell = cells[j];
+                        if (cell) {
+                            var textValue = cell.textContent || cell.innerText;
+                            if (textValue.toUpperCase().indexOf(input) > -1) {
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (found) {
                         rows[i].style.display = "";
                     } else {
                         rows[i].style.display = "none";
                     }
                 }
-            }
-        
-            updateTotalItems();
-        }        
 
-        document.addEventListener('DOMContentLoaded', function() {
-            function actualizarFechaHora() {
-                const fechaHoraSistema = document.getElementById('fecha-hora-sistema');
-                if (fechaHoraSistema) {
-                    const ahora = new Date();
-                    const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                    const opcionesHora = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
-                    const fecha = ahora.toLocaleDateString('es-ES', opcionesFecha);
-                    const hora = ahora.toLocaleTimeString('es-ES', opcionesHora);
-        
-                    fechaHoraSistema.textContent = `${fecha} ${hora}`;
+                updateTotalItems();
+            }
+
+            function updateTotalItems() {
+                var table = document.getElementById("dataTable");
+                var rows = table.getElementsByTagName("tr");
+                var filteredRows = 0;
+
+                for (var i = 1; i < rows.length; i++) {
+                    if (rows[i].style.display !== "none") {
+                        filteredRows++;
+                    }
                 }
-            }
-            setInterval(actualizarFechaHora, 1000); 
-        }); 
-        
-        function filterTable() {
-            var filter = document.getElementById("filter").value;
-            var table = document.getElementById("dataTable");
-            var rows = table.getElementsByTagName("tr");
 
-            for (var i = 1; i < rows.length; i++) {
-                var row = rows[i];
-                if (i <= filter) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
+                document.getElementById("totalItems").textContent = "Total de items filtrados: " + filteredRows;
             }
 
-            updateTotalItems();
-        }
-
-        function searchTable() {
-            var input = document.getElementById("search").value.toUpperCase();
-            var table = document.getElementById("dataTable");
-            var rows = table.getElementsByTagName("tr");
-
-            for (var i = 1; i < rows.length; i++) {
-                var cells = rows[i].getElementsByTagName("td");
-                var found = false;
-                for (var j = 0; j < cells.length; j++) {
-                    var cell = cells[j];
-                    if (cell) {
-                        var textValue = cell.textContent || cell.innerText;
-                        if (textValue.toUpperCase().indexOf(input) > -1) {
-                            found = true;
+            function sortTable(column) {
+                var table, rows, switching, i, x, y, shouldSwitch;
+                table = document.getElementById("dataTable");
+                switching = true;
+                while (switching) {
+                    switching = false;
+                    rows = table.rows;
+                    for (i = 1; i < (rows.length - 1); i++) {
+                        shouldSwitch = false;
+                        x = rows[i].getElementsByTagName("TD")[column];
+                        y = rows[i + 1].getElementsByTagName("TD")[column];
+                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
                             break;
                         }
                     }
-                }
-                if (found) {
-                    rows[i].style.display = "";
-                } else {
-                    rows[i].style.display = "none";
-                }
-            }
-
-            updateTotalItems();
-        }
-
-        function updateTotalItems() {
-            var table = document.getElementById("dataTable");
-            var rows = table.getElementsByTagName("tr");
-            var filteredRows = 0;
-
-            for (var i = 1; i < rows.length; i++) {
-                if (rows[i].style.display !== "none") {
-                    filteredRows++;
-                }
-            }
-
-            document.getElementById("totalItems").textContent = "Total de items filtrados: " + filteredRows;
-        }
-
-        function sortTable(column) {
-            var table, rows, switching, i, x, y, shouldSwitch;
-            table = document.getElementById("dataTable");
-            switching = true;
-            while (switching) {
-                switching = false;
-                rows = table.rows;
-                for (i = 1; i < (rows.length - 1); i++) {
-                    shouldSwitch = false;
-                    x = rows[i].getElementsByTagName("TD")[column];
-                    y = rows[i + 1].getElementsByTagName("TD")[column];
-                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                        shouldSwitch = true;
-                        break;
+                    if (shouldSwitch) {
+                        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                        switching = true;
                     }
                 }
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
+
+                var headers = document.getElementsByTagName("th");
+                for (var j = 0; j < headers.length; j++) {
+                    headers[j].classList.remove("active");
                 }
+                headers[column].classList.add("active");
             }
 
-            var headers = document.getElementsByTagName("th");
-            for (var j = 0; j < headers.length; j++) {
-                headers[j].classList.remove("active");
-            }
-            headers[column].classList.add("active");
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            filterTable();
-            document.getElementById("filter").addEventListener("change", filterTable);
-        });
-    </script>
+            document.addEventListener("DOMContentLoaded", function () {
+                filterTable();
+                document.getElementById("filter").addEventListener("change", filterTable);
+            });
+        </script>
 
 </body>
 
