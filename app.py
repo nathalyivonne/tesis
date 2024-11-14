@@ -16,7 +16,6 @@ import secrets
 import os
 import database as db
 import pandas as pd
-##import matplotlib.pyplot as plt
 
 app = Flask(__name__)
        
@@ -88,6 +87,9 @@ def login():
 def upload():
     base64_data = request.form['base64Data']
     try:
+        if not base64_data.startswith(("data:image/jpeg", "data:image/jpg", "data:image/png")):
+            return "Error: Solo se admiten imágenes en formato JPEG, JPG o PNG"
+
         base64_data_cleaned = base64_data.split(',')[1]
         image_data = base64.b64decode(base64_data_cleaned)
         image = Image.open(BytesIO(image_data))
@@ -280,6 +282,10 @@ def ver_mapa():
         servicios_unicos = sorted(set(servicios))  # Obtener servicios únicos y ordenarlos
         fecha_hora_subidas = [row.fecha_hora_subida for row in rows] 
         
+        # Verificar si no hay direcciones y mostrar mensaje
+        if not direcciones:
+            return render_template('mapa.html', mensaje="No se encontraron direcciones para mostrar")
+        
         # Ejecutar el algoritmo genético para optimizar las direcciones
         pop_size = 10  # Tamaño de la población inicial
         max_generations = 50  # Número máximo de generaciones
@@ -309,6 +315,10 @@ def ver_mapa():
                     print(f"No se encontraron resultados para la dirección: {direccion}")
             except googlemaps.exceptions.ApiError as ex:
                 print(f"Error de API al geocodificar {direccion}: {ex}")
+        
+        # Verificar si hay direcciones geocodificadas
+        if not geocoded_addresses:
+            return render_template('mapa.html', mensaje="No se encontraron direcciones geocodificadas para mostrar")
         
         # Filtrar duplicados por coordenadas después de geocodificar
         unique_geocoded_addresses = []

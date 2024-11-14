@@ -169,8 +169,19 @@
             const percentageText = document.getElementById('percentageText');
             const fileInput = document.getElementById('photo');
             const file = fileInput.files[0];
+            const errorMessage = document.getElementById('errorMessage');
 
             if (file) {
+
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                if (!validTypes.includes(file.type)) {
+                    errorMessage.textContent = "Formato de archivo incorrecto, solo se acepta formato jpeg, jpg y png.";
+                    errorMessage.style.display = "block"; // Mostrar el mensaje
+                    return;
+                }
+
+                errorMessage.style.display = "none";
+                
                 progressContainer.style.display = 'flex';
 
                 const reader = new FileReader();
@@ -286,6 +297,7 @@
                 <input type="file" id="photo" accept="image/*">
                 <input type="hidden" id="base64Data" name="base64Data">
                 <button type="button" class="btn btn-primary" onclick="convertToBase64()">Subir</button>
+                <div id="errorMessage" style="display: none; color: red; margin-top: 10px;"></div>
             </form>
             <div class="buttons-container">
                 <form action="/ver_tabla" method="post">
@@ -300,7 +312,6 @@
                     <div class="progress-percentage" id="percentageText">0%</div>
                 </div>
             </div>
-        </div>
 </body>
 <script>
 
