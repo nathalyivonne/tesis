@@ -18,29 +18,14 @@ import database as db
 import pandas as pd
 
 app = Flask(__name__)
-       
-# Parámetros de Azure
-subscription_id = 'cbe95d56-10d1-4e9a-a0b7-b99aaabe8a67'
-resource_group_name = 'datafactory-rg749'
-data_factory_name = 'nathalypupuche-df'
-pipeline_name = 'pipeline2'  # Reemplaza con el nombre de tu pipeline
 
-# Crear credenciales y cliente de Azure Data Factory
-credentials = DefaultAzureCredential()
-adf_client = DataFactoryManagementClient(credentials, subscription_id)
+adf_client = db.adf_client
+gmaps = db.gmaps
+conn_str = db.connection_string
+resourcegroupname = db.resourcegroupname
+datafactoryname = db.datafactoryname
+pipelinename = db.pipelinename
 
-# Configuración de la base de datos SQL Server
-server = 'servidormanifiesto.database.windows.net'
-database = 'bdmanifiestos'
-username = 'serveradmin'
-password = '!admin123'
-driver = '{ODBC Driver 17 for SQL Server}'
-
-conn_str = f'DRIVER={driver};SERVER={server};PORT=1433;DATABASE={database};UID={username};PWD={password}'
-
-# Configuración del cliente de Google Maps
-google_maps_api_key = 'AIzaSyAg-pHzpWI9Ik34rYvyPZYGU9s2aWWtFx4'  # Reemplazar con tu propia clave API
-gmaps = googlemaps.Client(key=google_maps_api_key)
 
 @app.route('/')
 def home():
@@ -57,15 +42,12 @@ def login():
         _contrasena = request.form['txtContrasena']
 
         try:
-            # Conectar a la base de datos SQL Server
-            conn = pyodbc.connect(conn_str)
-            cursor = conn.cursor()
+            cursor = db.conn.cursor()
             cursor.execute('SELECT usuarioid, rolid FROM usuario WHERE email = ? AND contrasena = ?', (_email, _contrasena))
             account = cursor.fetchone()
-            conn.close()
+            cursor.close()
 
             if account:
-                # Autenticación exitosa
                 usuarioid, rolid = account[0], account[1]
                 
                 if rolid in (3,1):
@@ -101,19 +83,16 @@ def upload():
 
         subprocess.run(['python', 'csv_to_database.py'], check=True)
 
-        response = adf_client.pipelines.create_run(resource_group_name, data_factory_name, pipeline_name)
+        response = adf_client.pipelines.create_run(resourcegroupname, datafactoryname, pipelinename)
         print(f'Pipeline run ID: {response.run_id}')
 
-        # Esperar la finalización del pipeline
-        pipeline_run = adf_client.pipeline_runs.get(resource_group_name, data_factory_name, response.run_id)
+        pipeline_run = adf_client.pipeline_runs.get(resourcegroupname, datafactoryname, response.run_id)
         while pipeline_run.status in ['InProgress', 'Queued']:
-            pipeline_run = adf_client.pipeline_runs.get(resource_group_name, data_factory_name, response.run_id)
+            pipeline_run = adf_client.pipeline_runs.get(resourcegroupname, datafactoryname, response.run_id)
 
-        # Ejecutar el script para actualizar la fecha y hora en la tabla manifiesto2
         subprocess.run(['python', 'update_fecha_subida.py'], check=True)
         
-        conn = pyodbc.connect(conn_str)
-        cursor = conn.cursor()
+        cursor = db.conn.cursor()
         sql_update_estado = """
             UPDATE bdmanifiestos.dbo.Manifiesto2
             set estado = case
@@ -123,12 +102,11 @@ def upload():
             END;
         """
         cursor.execute(sql_update_estado)  
-        conn.commit()          
+        db.conn.commit()           
         cursor.execute("SELECT * FROM manifiesto2")
         rows = cursor.fetchall()
-        conn.close()
+        cursor.close()
         
-         # Preparar los datos para pasar a la plantilla
         data = [list(row) for row in rows]
 
         return render_template('tabla.html', data=data)
@@ -147,13 +125,11 @@ def upload():
 @app.route('/ver_tabla', methods=['GET', 'POST'])
 def ver_tabla():
     try:
-        conn = pyodbc.connect(conn_str)
-        cursor = conn.cursor()
+        cursor = db.conn.cursor()
         cursor.execute("SELECT * FROM manifiesto2")
         rows = cursor.fetchall()
-        conn.close()
+        cursor.close()
         
-         # Preparar los datos para pasar a la plantilla
         data = [list(row) for row in rows]
 
         return render_template('tabla.html', data=data)  
@@ -261,13 +237,8 @@ def ver_mapa():
     try:
         fecha_filtro = request.args.get('fecha', None)
         
-        conn = pyodbc.connect(conn_str)
-        cursor = conn.cursor()
-        #cursor.execute("SELECT direccion, distrito, servicio, fecha_hora_subida FROM manifiesto2")
-        #rows = cursor.fetchall()
-        #conn.close()
-        
-        # Consulta para seleccionar direcciones y filtrar por fecha si se proporciona
+        cursor = db.conn.cursor()
+
         if fecha_filtro:
             cursor.execute("""
                 SELECT direccion, distrito, servicio, fecha_hora_subida 
@@ -282,7 +253,7 @@ def ver_mapa():
         
         rows = cursor.fetchall()
         print(f"Filtrado por fecha {fecha_filtro}: {rows}")
-        conn.close()
+        cursor.close()
         
         direcciones = [f"{row.direccion.strip()}, {row.distrito.strip()}" for row in rows]
         servicios = [row.servicio.strip() for row in rows]
@@ -371,31 +342,24 @@ def format_date_time(date_time_str):
     If the format is incorrect, it uses the current time as a fallback.
     """
     try:
-        # Check if the date string is already in the correct format
         return datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
     except ValueError:
-        # Handle cases where the format is different, for example if you get 'Tue, 08 Oct 2024 16:20:05 GMT'
         try:
             return datetime.strptime(date_time_str, '%a, %d %b %Y %H:%M:%S %Z').strftime('%Y-%m-%d %H:%M:%S')
         except ValueError:
-            # If the string cannot be parsed, use the current date and time as fallback
             print(f"Invalid date format received: {date_time_str}. Using current time.")
             return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 @app.route('/actualizar_hora_entrega', methods=['POST'])
 def actualizar_hora_entrega():
     data = request.json
-    print("Datos recibidos:", data)  # Para verificar que llegan los datos correctos
+    print("Datos recibidos:", data) 
     try:
-        # Habilitar autocommit
-        conn = pyodbc.connect(conn_str, autocommit=False)
-        cursor = conn.cursor()
+        cursor = db.conn.cursor()
 
-        # Actualización de cada ítem
         for item in data['items']:
             print(f"Actualizando item: {item['item']}")
             
-            # Verificación de datos antes de actualizar
             if not all(k in item for k in ['fecha_hora_entrega', 'servicio', 'direccion', 'item']):
                 raise ValueError(f"Faltan datos en el ítem: {item}")
             
@@ -409,7 +373,6 @@ def actualizar_hora_entrega():
             """
             cursor.execute(sql_update, (formatted_date, item['servicio'], item['direccion'], item['item']))
             
-            # Update the 'estado' field for the specific item
             sql_update_estado = """
             UPDATE bdmanifiestos.dbo.Manifiesto2
             SET estado = CASE
@@ -419,20 +382,18 @@ def actualizar_hora_entrega():
             END
             WHERE item = ?
             """
-            cursor.execute(sql_update_estado, (item['item'],))  # Provide item ID as the argument
+            cursor.execute(sql_update_estado, (item['item'],)) 
             
         print("Comenzando commit...")
-        conn.commit()
+        db.conn.commit()
         print("Commit realizado con éxito para las actualizaciones de items.")
 
-        # Query para calcular el cumplimiento
         item_ids = [item['item'] for item in data['items']]
         if not item_ids:
             return jsonify({"status": "error", "message": "No hay ítems para actualizar."}), 400
 
         placeholders = ', '.join(['?'] * len(item_ids))
         print(placeholders)
-        # Query para calcular el cumplimiento
         sql_select = f"""
             SELECT 
                 item,  
@@ -472,7 +433,6 @@ def actualizar_hora_entrega():
                 "cumplimiento_formateado": cumplimiento_formateado
             })
 
-            # Actualizar el cumplimiento y cumplimiento_formateado en la base de datos
             sql_update_cumplimiento = """
                 UPDATE manifiesto2
                 SET cumplimiento = ?,
@@ -481,40 +441,33 @@ def actualizar_hora_entrega():
             """
             cursor.execute(sql_update_cumplimiento, (cumplimiento, cumplimiento_formateado, item_id))
       
-        # Asegúrate de hacer commit de la actualización de cumplimiento
-        conn.commit()
+        db.conn.commit()
         print("Commit realizado para actualizaciones de cumplimiento.")
         return jsonify({"status": "success", "cumplimiento": cumplimiento_result}), 200
 
     except Exception as e:
         print("Error durante la actualización:", e)
-        conn.rollback()  # Rollback en caso de error
+        conn.rollback() 
         return jsonify({"status": "error", "message": str(e)}), 500
     finally:
         cursor.close()
-        conn.close()
         
 @app.route('/eliminar_entrega', methods=['POST'])
 def eliminar_entrega():
     data = request.json
-    print("Datos recibidos:", data)  # Verificar los datos que llegan desde el frontend
+    print("Datos recibidos:", data) 
     
     try:
-        # Conectar a la base de datos
-        conn = pyodbc.connect(conn_str, autocommit=False)
-        cursor = conn.cursor()
+        cursor = db.conn.cursor()
 
-        # Verificación de que lleguen ítems para eliminar
         if 'items' not in data or not data['items']:
             raise ValueError("No se han proporcionado ítems para eliminar")
 
-        # Iterar sobre cada ítem
         for item in data['items']:
-            item_id = int(item['item'])  # Asegúrate de convertir a entero
+            item_id = int(item['item'])  
             print(f"Procesando item: {item_id}")
             
-            if item.get('eliminar'):  # Solo si se especifica que se debe eliminar
-                # Preparar la consulta de eliminación
+            if item.get('eliminar'): 
                 sql_delete = """
                     UPDATE manifiesto2
                     SET fecha_hora_entrega = NULL, cumplimiento = NULL, estado = 0, cumplimiento_formateado = NULL
@@ -522,30 +475,25 @@ def eliminar_entrega():
                 """
                 print(f"Ejecutando SQL: {sql_delete} para item {item_id}")
                 
-                # Ejecutar la consulta SQL para eliminar la fecha y el cumplimiento
                 result = cursor.execute(sql_delete, (item['item'],))
                 if result.rowcount == 0:
                     print(f"No se encontró el ítem {item_id} para actualizar.")
                 else:
                     print(f"Fecha y cumplimiento eliminados para el ítem {item_id}. Filas afectadas: {result.rowcount}")
         
-        # Hacer commit de los cambios
         print("Realizando commit de los cambios...")
-        conn.commit()
+        db.conn.commit()
         print("Cambios guardados exitosamente en la base de datos.")
 
         return jsonify({"status": "success", "message": "Datos eliminados correctamente"}), 200
 
     except Exception as e:
-        # En caso de error, realizar rollback para revertir los cambios
         print(f"Error durante la eliminación: {e}")
-        conn.rollback()  # Rollback en caso de error
+        conn.rollback() 
         return jsonify({"status": "error", "message": str(e)}), 500
 
     finally:
-        # Cerrar la conexión a la base de datos
         cursor.close()
-        conn.close()
 
 ################################ MANTENIMIENTOS ###############################
 #################################### CARGO ####################################
@@ -554,7 +502,6 @@ def cargo():
     cursor = db.conn.cursor()
     cursor.execute("SELECT * FROM cargo")
     myresult = cursor.fetchall()
-    # Convertir los datos a diccionario
     insertObject = []
     columnNames = [column[0] for column in cursor.description]
     for record in myresult:
@@ -602,7 +549,6 @@ def roles():
     cursor = db.conn.cursor()
     cursor.execute("SELECT * FROM roles")
     myresult = cursor.fetchall()
-    # Convertir los datos a diccionario
     insertObject = []
     columnNames = [column[0] for column in cursor.description]
     for record in myresult:
@@ -613,7 +559,7 @@ def roles():
 @app.route('/agregar_roles', methods=['POST'])
 def agregar_roles():
     descripcion = request.form['descripcion']
-    estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
+    estado = 1 if 'estado' in request.form else 0  
     if descripcion:
         cursor = db.conn.cursor()
         sql = "INSERT INTO roles (descripcion, estado) VALUES (?, ?)"
@@ -654,7 +600,6 @@ def tipoDocumento():
     cursor = db.conn.cursor()
     cursor.execute("SELECT * FROM TipoDocumento")
     myresult = cursor.fetchall()
-    # Convertir los datos a diccionario
     insertObject = []
     columnNames = [column[0] for column in cursor.description]
     for record in myresult:
@@ -667,7 +612,7 @@ def agregar_tipodocumento():
     try:
         Acronimo = request.form['Acronimo']
         Descripcion = request.form['Descripcion']
-        estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
+        estado = 1 if 'estado' in request.form else 0  
         
         if Acronimo and Descripcion:
             cursor = db.conn.cursor()
@@ -705,7 +650,6 @@ def editar_tipodocumento(TipodocumentoID):
 ################################ USUARIO ###############################
 @app.route('/usuario')
 def usuario():
-    # Consulta para obtener los usuarios con sus relaciones con TipoDocumento, Cargo y Roles
     cursor = db.conn.cursor()
     query = """
         SELECT u.*, d.Acronimo, c.titulo, r.descripcion
@@ -717,35 +661,30 @@ def usuario():
     cursor.execute(query)
     myresult = cursor.fetchall()
 
-    # Convertir los datos de los usuarios a una lista de diccionarios
     insertObject = []
     columnNames = [column[0] for column in cursor.description]
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
 
-    # Consulta para obtener los tipos de documento activos
     cursor = db.conn.cursor()
     cursor.execute("SELECT TipodocumentoID, Acronimo FROM TipoDocumento WHERE estado = 1")
     tipodocumentos_activos = cursor.fetchall()
     tipodocumentos = [{'TipodocumentoID': row[0], 'Acronimo': row[1]} for row in tipodocumentos_activos]
     cursor.close()
 
-    # Consulta para obtener los cargos activos
     cursor = db.conn.cursor()
     cursor.execute("SELECT cargoid, titulo FROM Cargo WHERE estado = 1")
     cargos_activos = cursor.fetchall()
     cargos = [{'cargoid': row[0], 'titulo': row[1]} for row in cargos_activos]
     cursor.close()
 
-    # Consulta para obtener los roles activos
     cursor = db.conn.cursor()
     cursor.execute("SELECT rolid, descripcion FROM Roles WHERE estado = 1")
     roles_activos = cursor.fetchall()
     roles = [{'rolid': row[0], 'descripcion': row[1]} for row in roles_activos]
     cursor.close()
 
-    # Pasar `insertObject` (usuarios), `tipodocumentos`, `cargos` y `roles` a la plantilla
     return render_template('usuario.html', data=insertObject, tipodocumentos=tipodocumentos, cargos=cargos, roles=roles)
 
 @app.route('/agregar_usuario', methods=['POST'])
@@ -759,7 +698,7 @@ def agregar_usuario():
     apellidos = request.form['apellidos']
     telefono = request.form['telefono']
     direccion = request.form['direccion']
-    estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
+    estado = 1 if 'estado' in request.form else 0  
     cargoid = request.form['cargoid']
     rolid = request.form['rolid']
     if email and nombreusuario and contrasena and tipodocumento and documento and nombres and apellidos and telefono and direccion and cargoid and rolid:
@@ -795,12 +734,10 @@ def editar_usuario(usuarioid):
         cargoid = request.form.get('cargoid')
         rolid = request.form.get('rolid')
 
-        # Verificación para asegurar que tipodocumento no sea nulo
         if not tipodocumento:
             print("Error: tipodocumento no puede ser nulo.")
             return "Error: tipodocumento es obligatorio y no puede ser nulo", 400
 
-        # Verificación de campos obligatorios
         if email and nombreusuario and contrasena and documento and nombres and apellidos and telefono and direccion and cargoid and rolid:
             cursor = db.conn.cursor()
             sql = """
@@ -813,7 +750,6 @@ def editar_usuario(usuarioid):
             db.conn.commit()
             cursor.close()
         else:
-            # Manejo de error en caso de que los campos obligatorios falten
             print("Campos obligatorios faltantes")
             return "Error: Campos obligatorios faltantes", 400
 
@@ -825,7 +761,6 @@ def editar_usuario(usuarioid):
 ################################ VEHICULO ##############################
 @app.route('/vehiculo')
 def vehiculo():
-    # Consulta para obtener los vehículos
     cursor = db.conn.cursor()
     query = """
         SELECT v.*, u.nombres, u.apellidos 
@@ -835,7 +770,6 @@ def vehiculo():
     cursor.execute(query)
     myresult = cursor.fetchall()
 
-    # Convertir los datos de los vehículos a una lista de diccionarios
     insertObject = []
     columnNames = [column[0] for column in cursor.description]
     for record in myresult:
@@ -845,17 +779,10 @@ def vehiculo():
     cursor = db.conn.cursor()
     cursor.execute("SELECT usuarioid, nombres, apellidos FROM Usuario WHERE estado = 1")
     usuarios_activos = cursor.fetchall()
-
-    # Opcional: imprime para verificar si los usuarios activos están cargando correctamente
     print(usuarios_activos)
 
-    # Convertir los usuarios a una lista de diccionarios
     usuarios = [{'usuarioid': row[0], 'nombres': row[1], 'apellidos': row[2]} for row in usuarios_activos]
-    
-    # Cerrar el cursor
     cursor.close()
-
-    # Pasar ambos `insertObject` (vehículos) y `usuarios` a la plantilla
     return render_template('vehiculo.html', data=insertObject, usuarios=usuarios)
 
 @app.route('/agregar_vehiculo', methods=['POST'])
@@ -864,7 +791,7 @@ def agregar_vehiculo():
     modelo = request.form['modelo']
     placa = request.form['placa']
     usuarioid = request.form['usuarioid']
-    estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
+    estado = 1 if 'estado' in request.form else 0  
     if marca and modelo and placa and usuarioid:
         cursor = db.conn.cursor()
         sql = "INSERT INTO vehiculo (marca, modelo, placa, usuarioid, estado) VALUES (?, ?, ?, ?, ?)"
@@ -898,22 +825,18 @@ def editar_vehiculo(vehiculoid):
     return redirect(url_for('vehiculo'))
 
 ################################### REPORTES ##################################
+def get_db_connection():
+    return pyodbc.connect(db.connection_string)
 ################################## 1.DISTRITOS ##################################
 @app.route('/reporte_distritos', methods=['GET'])
 def reporte_distritos():
+    conn = db.conn 
     try:
-        # Obtener las fechas de inicio y fin desde los parámetros de la URL
         fecha_inicio = request.args.get('fecha_inicio', None)
         fecha_fin = request.args.get('fecha_fin', None)
 
-        # Imprimir las fechas para verificar que se recibieron correctamente
-        print(f"Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")
+        cursor = db.conn.cursor()
 
-        # Conectar a la base de datos SQL Server
-        conn = pyodbc.connect(conn_str)
-        cursor = conn.cursor()
-
-        # Si se proporcionan fechas de inicio y fin, filtrar por ese rango
         if fecha_inicio and fecha_fin:
             query = """
             SELECT distrito, COUNT(*) as cantidad
@@ -921,55 +844,39 @@ def reporte_distritos():
             WHERE CAST(fecha_hora_subida AS DATE) BETWEEN ? AND ?
             GROUP BY distrito
             """
-            print(f"Ejecutando la consulta: {query} con parámetros: {fecha_inicio}, {fecha_fin}")
             cursor.execute(query, (fecha_inicio, fecha_fin))
         else:
-            # Si no hay fechas seleccionadas, devolver todos los datos
             query = """
             SELECT distrito, COUNT(*) as cantidad
             FROM manifiesto2
             GROUP BY distrito
             """
-            print("Ejecutando consulta sin filtro de fecha.")
             cursor.execute(query)
 
-        # Obtener resultados de la consulta
         results = cursor.fetchall()
-        print(f"Resultados de la consulta: {results}")  # Depuración para ver los resultados en el servidor
-
-        # Preparar los datos para el gráfico
         distritos = [row[0] for row in results]
         cantidades = [row[1] for row in results]
-
-        cursor.close()
-        conn.close()
-
-        # Ver los datos que se van a enviar al frontend
-        print(f"Datos enviados al frontend: Distritos: {distritos}, Cantidades: {cantidades}")
 
         return jsonify({"distritos": distritos, "cantidades": cantidades})
     except pyodbc.Error as e:
         print(f"Error de base de datos: {e}")
-        return f"Error de base de datos: {e}"
+        return f"Error de base de datos: {e}", 500
     except Exception as e:
         print(f"Error inesperado: {e}")
-        return f"Error inesperado: {e}"
+        return f"Error inesperado: {e}", 500
 ################################### 2.CLIENTE ###################################
 @app.route('/reporte_clientes', methods=['GET'])
 def reporte_clientes():
+    conn = get_db_connection() 
     try:
-        # Obtener las fechas de inicio y fin desde los parámetros de la URL
         fecha_inicio = request.args.get('fecha_inicio', None)
         fecha_fin = request.args.get('fecha_fin', None)
 
-        # Imprimir las fechas para verificar que se recibieron correctamente
         print(f"Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")
 
-        # Conectar a la base de datos SQL Server
-        conn = pyodbc.connect(conn_str)
+        conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Si se proporcionan fechas de inicio y fin, filtrar por ese rango
         if fecha_inicio and fecha_fin:
             query = """
             SELECT cliente, COUNT(*) as cantidad
@@ -980,7 +887,7 @@ def reporte_clientes():
             print(f"Ejecutando la consulta: {query} con parámetros: {fecha_inicio}, {fecha_fin}")
             cursor.execute(query, (fecha_inicio, fecha_fin))
         else:
-            # Si no hay fechas seleccionadas, devolver todos los datos
+
             query = """
             SELECT cliente, COUNT(*) as cantidad
             FROM manifiesto2
@@ -989,18 +896,11 @@ def reporte_clientes():
             print("Ejecutando consulta sin filtro de fecha.")
             cursor.execute(query)
 
-        # Obtener resultados de la consulta
         results = cursor.fetchall()
-        print(f"Resultados de la consulta: {results}")  # Depuración para ver los resultados en el servidor
+        print(f"Resultados de la consulta: {results}") 
 
-        # Preparar los datos para el gráfico
         clientes = [row[0] for row in results]
         cantidades = [row[1] for row in results]
-
-        cursor.close()
-        conn.close()
-
-        # Ver los datos que se van a enviar al frontend
         print(f"Datos enviados al frontend: Clientes: {clientes}, Cantidades: {cantidades}")
 
         return jsonify({"clientes": clientes, "cantidades": cantidades})
@@ -1013,19 +913,16 @@ def reporte_clientes():
 ############################## 3.CLIENTE_DISTRITOS ##############################
 @app.route('/reporte_clientes_distritos', methods=['GET'])
 def reporte_clientes_distritos():
+    conn = get_db_connection()
     try:
-        # Obtener las fechas de inicio y fin desde los parámetros de la URL
         fecha_inicio = request.args.get('fecha_inicio', None)
         fecha_fin = request.args.get('fecha_fin', None)
 
-        # Imprimir las fechas para verificar que se recibieron correctamente
         print(f"Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")
 
-        # Conectar a la base de datos SQL Server
-        conn = pyodbc.connect(conn_str)
+        conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Si se proporcionan fechas de inicio y fin, filtrar por ese rango
         if (fecha_inicio and fecha_fin):
             query = """
             SELECT cliente, distrito, COUNT(*) as cantidad
@@ -1036,7 +933,6 @@ def reporte_clientes_distritos():
             print(f"Ejecutando la consulta: {query} con parámetros: {fecha_inicio}, {fecha_fin}")
             cursor.execute(query, (fecha_inicio, fecha_fin))
         else:
-            # Si no hay fechas seleccionadas, devolver todos los datos
             query = """
             SELECT cliente, distrito, COUNT(*) as cantidad
             FROM manifiesto2
@@ -1045,16 +941,9 @@ def reporte_clientes_distritos():
             print("Ejecutando consulta sin filtro de fecha.")
             cursor.execute(query)
 
-        # Obtener resultados de la consulta
         results = cursor.fetchall()
-
-        # Preparar los datos para el gráfico
+        
         clientes_distritos = [{"cliente": row[0], "distrito": row[1], "cantidad": row[2]} for row in results]
-
-        cursor.close()
-        conn.close()
-
-        # Ver los datos que se van a enviar al frontend
         print(f"Datos enviados al frontend: {clientes_distritos}")
 
         return jsonify({"clientes_distritos": clientes_distritos})
@@ -1067,16 +956,14 @@ def reporte_clientes_distritos():
 ################################ 4.ENVIOS_RANGO #################################
 @app.route('/reporte_porcentaje_faltantes', methods=['GET'])
 def reporte_porcentaje_faltantes():
+    conn = get_db_connection()
     try:
-        # Obtener las fechas de inicio y fin desde los parámetros de la URL
         fecha_inicio = request.args.get('fecha_inicio', None)
         fecha_fin = request.args.get('fecha_fin', None)
 
-        # Conexión a la base de datos
-        conn = pyodbc.connect(conn_str)
+        conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Consulta SQL con filtrado por fechas si se proporcionan
         if fecha_inicio and fecha_fin:
             query = """
             SELECT 
@@ -1095,10 +982,8 @@ def reporte_porcentaje_faltantes():
                     ELSE 'Entregados' 
                 END;
             """
-            print(f"Ejecutando la consulta con parámetros: {fecha_inicio}, {fecha_fin}")
             cursor.execute(query, (fecha_inicio, fecha_fin))
         else:
-            # Si no se proporcionan fechas, ejecutar la consulta general
             query = """
             SELECT 
                 CASE 
@@ -1114,30 +999,22 @@ def reporte_porcentaje_faltantes():
                     ELSE 'Entregados' 
                 END;
             """
-            print("Ejecutando consulta sin filtro de fecha.")
             cursor.execute(query)
 
-        # Ejecutar la consulta y obtener los resultados
         results = cursor.fetchall()
-
-        # Procesar los resultados para convertirlos en JSON
-        estados = [row[0] for row in results]  # 'Faltantes' o 'Entregados'
-        cantidades = [row[1] for row in results]  # Cantidad de items en cada estado
         
-        # Cerrar conexión a la base de datos
-        cursor.close()
-        conn.close()
+        estados = [row[0] for row in results] 
+        cantidades = [row[1] for row in results]  
 
-        # Ver los datos que se enviarán al frontend
-        print(f"Datos enviados al frontend: Estados: {estados}, Cantidades: {cantidades}")
-
-        # Devolver los datos en formato JSON
         return jsonify({"estados": estados, "cantidades": cantidades})
-
     except pyodbc.Error as e:
+        print(f"Error de base de datos: {e}")
         return f"Error de base de datos: {e}", 500
     except Exception as e:
+        print(f"Error inesperado: {e}")
         return f"Error inesperado: {e}", 500
-
+    finally:
+        cursor.close()  
+                
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,28 +1,18 @@
 import pyodbc
 from datetime import datetime, timedelta
+import database as db 
 
-# Configurar la conexión a la base de datos
-server = 'servidormanifiesto.database.windows.net'
-database = 'bdmanifiestos'
-username = 'serveradmin'
-password = '!admin123'
-driver = '{ODBC Driver 17 for SQL Server}'
+conn = db.conn 
 
-# Establecer la cadena de conexión
-conn_str = f'DRIVER={driver};SERVER={server};PORT=1433;DATABASE={database};UID={username};PWD={password}'
-conn = pyodbc.connect(conn_str)
-
-# Obtener la fecha y hora actual
 now = datetime.now()
 seconds = round(now.second / 5) * 5  # Redondear segundos a múltiplos de 5
 
-# Asegurar que `seconds` esté en el rango de 0..59
 if seconds >= 60:
     seconds = 0
     now = now.replace(minute=now.minute + 1)
 rounded_time = now.replace(second=seconds, microsecond=0)
 print(rounded_time)
-# Actualizar la columna fecha_subida en la tabla Manifiesto2
+
 cursor = conn.cursor()
 cursor.execute("""
     UPDATE bdmanifiestos.dbo.Manifiesto2
@@ -31,5 +21,4 @@ cursor.execute("""
 """, rounded_time)
 conn.commit()
 
-# Cerrar la conexión a la base de datos
-conn.close()
+cursor.close()

@@ -1,16 +1,5 @@
 import csv
-import pyodbc
-
-# Configurar la conexión a la base de datos
-server = 'servidormanifiesto.database.windows.net'
-database = 'bdmanifiestos'
-username = 'serveradmin'
-password = '!admin123'
-driver = '{ODBC Driver 17 for SQL Server}'
-
-# Establecer la cadena de conexión
-conn_str = 'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + password
-conn = pyodbc.connect(conn_str)
+from database import conn 
 
 # Abrir el archivo CSV y leer los datos
 with open('archivo.csv', mode='r', encoding='utf-8') as file:
@@ -25,10 +14,10 @@ with open('archivo.csv', mode='r', encoding='utf-8') as file:
                 item, codigo, cliente, direccion, distrito, servicio = row
 
                 # Ejecutar la consulta SQL para insertar los datos en la tabla
-                cursor = conn.cursor()
-                cursor.execute("INSERT INTO Manifiesto (codigo, cliente, direccion, distrito, servicio) VALUES (?, ?, ?, ?, ?)",
-                               codigo, cliente, direccion, distrito, servicio)
-                conn.commit()
+                with conn.cursor() as cursor:
+                    cursor.execute("INSERT INTO Manifiesto (codigo, cliente, direccion, distrito, servicio) VALUES (?, ?, ?, ?, ?)",
+                                codigo, cliente, direccion, distrito, servicio)
+                    conn.commit()
             else:
                 print("La fila no tiene el número esperado de valores:", row)
         else:

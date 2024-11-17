@@ -3,25 +3,33 @@ from azure.ai.formrecognizer import DocumentAnalysisClient, DocumentField
 import json
 import csv
 from io import BytesIO
+import database as db
 
 def recognize_invoices(imagen):
-    endpoint = "https://tesisocr.cognitiveservices.azure.com/"
-    key = "71cfd9d5b6374193aa1dad8f7a5efb53"
-    model_id = "modelotesis"
+    endpoint = db.endpoint
+    keyocr = db.keyocr
+    modelid = db.modelid
+    
     formFile = imagen
 
     document_analysis_client = DocumentAnalysisClient(
-        endpoint=endpoint, credential=AzureKeyCredential(key)
+        endpoint=endpoint, credential=AzureKeyCredential(keyocr)
     )
-
-    # Convertir la imagen de PIL a bytes utilizando BytesIO
-    image_bytes = BytesIO()
-    imagen.save(image_bytes, format='JPEG')
-    image_bytes.seek(0)
-
-    poller = document_analysis_client.begin_analyze_document(model_id, image_bytes.read())
-    result = poller.result()
-
+    try:
+        image_bytes = BytesIO()
+        imagen.save(image_bytes, format='JPEG')
+        image_bytes.seek(0)
+    except Exception as e:
+        print(f"Error al procesar la imagen: {e}")
+        return []
+    
+    try:
+        poller = document_analysis_client.begin_analyze_document(modelid, image_bytes.read())
+        result = poller.result()
+    except Exception as e:
+        print(f"Error al analizar el documento: {e}")
+        return []
+    
     tabla_datos = []
 
     for table in result.tables:
@@ -43,13 +51,19 @@ def recognize_invoices(imagen):
     return tabla_datos
 
 def guardararchivocsv(jsonarc):
-    with open(jsonarc, 'r') as file:
-        data = json.load(file)
+    try:
+        with open(jsonarc, 'r') as file:
+            data = json.load(file)
+    except Exception as e:
+        print(f"Error al leer el archivo JSON: {e}")
+        return
+    
+    try:
+        with open("archivo.csv", mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file, delimiter=';')
 
-    with open("archivo.csv", mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file, delimiter=';')
-
-        # Recorrer los datos y escribir cada fila en el archivo CSV
-        for i, row in enumerate(data):
-            writer.writerow(row)
-
+            # Recorrer los datos y escribir cada fila en el archivo CSV
+            for i, row in enumerate(data):
+                writer.writerow(row)
+    except Exception as e:
+        print(f"Error al escribir el archivo CSV: {e}")
