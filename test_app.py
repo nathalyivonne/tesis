@@ -157,3 +157,26 @@ def test_mapa_sin_direcciones(client, mocker):
     assert response.status_code == 200
     response_text = response.data.decode('utf-8')
     assert "No se encontraron direcciones para mostrar" in response_text
+
+def test_genetic_algorithm_negativo():
+    """Prueba negativa para el algoritmo genético con casos límite y entradas no válidas."""
+    import random
+    random.seed(42)  
+    
+    direcciones_vacias = []
+    pop_size = 4
+    max_generations = 10
+
+    try:
+        resultado = genetic_algorithm(pop_size, direcciones_vacias, max_generations)
+        assert False, "El algoritmo debería haber fallado con una lista vacía de direcciones."
+    except ValueError as e:
+        assert str(e) == "La lista de direcciones no puede estar vacía.", "El mensaje de error esperado no coincide."
+
+def test_genetic_algorithm_invalid_direciones():
+    direcciones = [123, None, "Calle válida"]
+    try:
+        resultado = genetic_algorithm(pop_size=4, direcciones=direcciones, max_generations=10)
+        assert False, "El algoritmo debería haber fallado con direcciones no válidas."
+    except TypeError as e:
+        assert "Cada dirección debe ser una cadena de texto." in str(e)

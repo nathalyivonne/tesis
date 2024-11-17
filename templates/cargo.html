@@ -32,7 +32,7 @@
                     <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a></li>
                     <li class=""><a class="fa-solid fa-users" href="{{ url_for('roles')}}">Roles</a></li>
                     <li class=""><a class="fa-solid fa-file" href="{{ url_for('tipoDocumento')}}">Tipo Documento</a></li>
-                    <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehiculo</a></li>
+                    <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehículo</a></li>
                     <li class=""><a class="fa-solid fa-user" href="{{ url_for('usuario')}}">Usuario</a></li>
                 </li>
             </ul>
@@ -41,6 +41,7 @@
     <div class="main-content">
         <header style="display: flex; justify-content: space-between; padding: 5px; background-color: #f0f0f0; align-items: center;">
             <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="nav-toggle" style="visibility: hidden;">
                 <label for="nav-toggle">
                     <span class="fa fa-bars"></span>
                 </label>
@@ -59,20 +60,20 @@
                     <div class="card-body">
                         <form action="{{ url_for('agregar_cargo') }}" method="POST">
                             <div class="row mb-3">
-                                <div class="col">
-                                    <label>Título</label>
-                                    <input type="text" class="form-control mb-3" name="titulo" />
+                                <div class="col">                                    
+                                    <label>Título
+                                        <input type="text" class="form-control mb-3" name="titulo" placeholder="Ingrese el título del cargo" />
+                                    </label>
                                 </div>
                                 <div class="col">
-                                    <label>Descripción</label>
-                                    <input type="text" class="form-control mb-3" name="descripcion" />
+                                    <label>Descripción
+                                        <input type="text" class="form-control mb-3" name="descripcion" placeholder="Ingrese la descripción" />
+                                    </label>
                                 </div>
                                 <div class="col">
-                                    <label>Estado</label>
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="estado" id="estado" />
-                                        <label class="form-check-label" for="estado">Activo</label>
-                                    </div>
+                                    <label>Estado
+                                        <input type="checkbox" class="form-check-input" name="estado">
+                                    </label>
                                 </div>
                                 <div class="col">
                                     <button class="btn btn-primary mb-3 mt-4" type="submit">Guardar</button>
@@ -97,7 +98,7 @@
                                         <td>{{c.cargoid}}</td>
                                         <td>{{c.titulo}}</td>
                                         <td>{{c.descripcion}}</td>
-                                        <td>{{c.estado}}</td>
+                                        <td>{{ 'Activo' if c.estado else 'No activo' }}</td>
                                         <td>
                                             <button class="btn btn-primary btn-sm" id="btn-edit{{c.cargoid}}"
                                                 data-bs-toggle="modal" data-bs-target="#modal{{c.cargoid}}">
@@ -105,46 +106,139 @@
                                             </button>
                                         </td>
                                         <td>
-                                            <a href="{{url_for('eliminar_cargo', cargoid=c.cargoid)}}"
-                                                class="btn btn-danger btn-sm">Eliminar</a>
+                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalEliminar{{ c.cargoid }}">
+                                                Eliminar
+                                            </button>
                                         </td>
                                     </tr>
-                                    <div class="modal fade" id="modal{{c.cargoid}}" tabindex="-1"
-                                        aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog">
+                                    <div class="modal fade" id="modal{{c.cargoid}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content">
                                                 <div class="modal-header">
-                                                    <h1 class="modal-title fs-5" id="exampleModalLabel">{{c.titulo}}
-                                                    </h1>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
+                                                    <h1 class="modal-title fs-5" id="exampleModalLabel"> Editar Cargo - {{c.titulo}}</h1>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <form action="{{ url_for('editar_cargo', cargoid=c.cargoid) }}"
-                                                        method="post">
-                                                        <label>Título</label>
-                                                        <input type="text" class="form-control mb-3" name="titulo"
-                                                            value="{{c.titulo}}" />
-                                                        <label>Descripción</label>
-                                                        <input type="text" class="form-control mb-3" name="descripcion"
-                                                            value="{{c.descripcion}}" />
-                                                        <label>Estado</label>
-                                                        <div class="form-check">
-                                                            <input type="checkbox" class="form-check-input"
-                                                                name="estado" id="estado{{c.cargoid}}" {% if c.estado
-                                                                %}checked{% endif %} />
-                                                            <label class="form-check-label"
-                                                                for="estado{{c.cargoid}}">Activo</label>
+                                                    <form action="{{ url_for('editar_cargo', cargoid=c.cargoid) }}" method="post">
+                                                        <div class="col">
+                                                            <label for="titulo">Título
+                                                                <input type="text" id="titulo" class="form-control mb-3" name="titulo" value="{{ c.titulo }}">
+                                                            </label>    
+                                                        </div> 
+                                                        
+                                                        <div class="col">
+                                                            <label for="descripcion">Descripción
+                                                                <input type="text" id="descripcion" class="form-control mb-3" name="descripcion" value="{{ c.descripcion }}">
+                                                            </label>    
                                                         </div>
-                                                        <div class="modal-footer">
-                                                            <button type="submit" class="btn btn-primary">Guardar
-                                                                cambios</button>
+
+                                                        <label>Estado
+                                                            <input type="checkbox" class="form-check-input" name="estado" id="estado_{{c.cargoid}}" {% if c.estado %}checked{% endif %}>
+                                                        </label> 
+                                                        
+                                                        <div class="modal-footer d-flex justify-content-center">
+                                                            <button type="submit" class="btn btn-primary">Guardar cambios</button>
                                                         </div>
                                                     </form>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- Modal de Confirmación de Eliminación -->
+                                    <div class="modal fade" id="modalEliminar{{c.cargoid}}" tabindex="-1" aria-labelledby="modalEliminarLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="modalEliminarLabel">Confirmar Eliminación</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    ¿Estás seguro de que deseas eliminar el cargo <strong>{{c.titulo}}</strong>?
+                                                </div>
+                                                <div class="modal-footer d-flex justify-content-center">
+                                                    <!-- Aquí colocas el nuevo botón de aceptación -->
+                                                    <a href="{{ url_for('eliminar_cargo', cargoid=c.cargoid) }}" 
+                                                    class="btn btn-success btn-confirm-delete" 
+                                                    data-id="{{c.cargoid}}">
+                                                    Aceptar
+                                                    </a>
+                                                    <!-- Botón de cancelación -->
+                                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Modal de Éxito -->
+                                    <div class="modal fade" id="modalExito" tabindex="-1" aria-labelledby="modalExitoLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="modalExitoLabel">Eliminación Exitosa</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    El cargo se ha eliminado correctamente.
+                                                </div>
+                                                <div class="modal-footer d-flex justify-content-center">
+                                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Modal de Éxito para Edición -->
+                                    <div class="modal fade" id="modalExitoEditar" tabindex="-1" aria-labelledby="modalExitoEditarLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="modalExitoEditarLabel">Edición Exitosa</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    El cargo se ha editado exitosamente.
+                                                </div>
+                                                <div class="modal-footer d-flex justify-content-center">
+                                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Modal de Confirmación para Guardar -->
+                                    <div class="modal fade" id="modalConfirmacionGuardar" tabindex="-1" aria-labelledby="modalConfirmacionGuardarLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="modalConfirmacionGuardarLabel">Confirmar Guardado</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    ¿Está seguro de que desea guardar el cargo?
+                                                </div>
+                                                <div class="modal-footer d-flex justify-content-center">
+                                                    <button type="button" class="btn btn-success" id="confirmGuardarBtn">Aceptar</button>
+                                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal de Éxito para Guardado -->
+                                    <div class="modal fade" id="modalExitoGuardar" tabindex="-1" aria-labelledby="modalExitoGuardarLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="modalExitoGuardarLabel">Guardado Exitoso</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    El cargo se ha guardado correctamente.
+                                                </div>
+                                                <div class="modal-footer d-flex justify-content-center">
+                                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -169,6 +263,130 @@
             }
             setInterval(actualizarFechaHora, 1000);
         }); 
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButtons = document.querySelectorAll('.btn-confirm-delete');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(event) {
+                    event.preventDefault(); // Evita el comportamiento por defecto del enlace
+        
+                    const href = this.getAttribute('href');
+                    const modalId = `#modalEliminar${this.getAttribute('data-id')}`;
+                    const deleteModal = bootstrap.Modal.getInstance(document.querySelector(modalId));
+        
+                    // Realiza la solicitud al servidor
+                    fetch(href, { method: 'GET' }) // Ajusta el método si tu backend lo requiere (e.g., 'DELETE')
+                        .then(response => {
+                            if (response.ok) {
+                                // Cierra el modal de confirmación
+                                if (deleteModal) {
+                                    deleteModal.hide();
+                                }
+        
+                                // Muestra el modal de éxito
+                                const successModal = new bootstrap.Modal(document.getElementById('modalExito'));
+                                successModal.show();
+        
+                                // Recarga la página después de un breve retraso
+                                setTimeout(() => location.reload(), 2000);
+                            } else {
+                                console.error('Error al eliminar el cargo.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error de red:', error);
+                        });
+                });
+            });
+        });    
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const editForms = document.querySelectorAll('form[action*="editar_cargo"]');
+            editForms.forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault(); // Previene la acción por defecto del formulario
+                    console.log("Formulario de edición enviado"); // Log para verificar el envío
+        
+                    const actionUrl = this.action;
+                    const formData = new FormData(this);
+        
+                    fetch(actionUrl, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        // Aquí agregas los logs para depurar la respuesta
+                        console.log("Respuesta del servidor:", response.status);
+                        response.text().then(text => console.log('Cuerpo de la respuesta:', text));
+        
+                        // Si la respuesta es exitosa, mostramos el modal de éxito
+                        if (response.ok) {
+                            console.log("Solicitud exitosa, mostrando modal de éxito");
+        
+                            // Cerrar el modal de edición
+                            const modalId = this.closest('.modal').id; // Encuentra el modal que contiene el formulario
+                            const modalInstance = bootstrap.Modal.getInstance(document.getElementById(modalId));
+                            if (modalInstance) {
+                                modalInstance.hide(); // Cierra el modal
+                            }
+        
+                            // Mostrar el modal de éxito
+                            const successModal = document.getElementById('modalExitoEditar');
+                            if (successModal) {
+                                const bootstrapModal = new bootstrap.Modal(successModal);
+                                bootstrapModal.show();
+                            } else {
+                                console.error("Modal de confirmación de edición no encontrado");
+                            }
+        
+                            // Recargar la página después de un breve retraso
+                            setTimeout(() => location.reload(), 2000);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error de red:', error);
+                    });
+                });
+            });
+        });    
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const guardarForm = document.querySelector('form[action*="agregar_cargo"]');
+            const guardarBtn = guardarForm.querySelector('button[type="submit"]');
+            const confirmGuardarBtn = document.getElementById('confirmGuardarBtn');
+        
+            guardarBtn.addEventListener('click', function(event) {
+                event.preventDefault(); // Previene el envío inmediato del formulario
+                const confirmModal = new bootstrap.Modal(document.getElementById('modalConfirmacionGuardar'));
+                confirmModal.show();
+            });
+        
+            confirmGuardarBtn.addEventListener('click', function() {
+                const confirmModal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmacionGuardar'));
+                confirmModal.hide(); // Cierra el modal de confirmación
+        
+                const actionUrl = guardarForm.action;
+                const formData = new FormData(guardarForm);
+        
+                fetch(actionUrl, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        const successModal = new bootstrap.Modal(document.getElementById('modalExitoGuardar'));
+                        successModal.show();
+        
+                        setTimeout(() => location.reload(), 2000); // Recarga la página después de un breve retraso
+                    } else {
+                        console.error('Error al guardar el cargo.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error de red:', error);
+                });
+            });
+        });        
     </script> 
 </body>
 

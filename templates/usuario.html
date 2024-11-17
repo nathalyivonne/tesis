@@ -2,238 +2,563 @@
 <html lang="es">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Check Service Cargo</title>
-  <link rel="stylesheet" href="/static/css/pagina.css"> 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
-    crossorigin="anonymous"></script>
-  <link rel="stylesheet"
-    href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
-  <script src="https://kit.fontawesome.com/325f4c844a.js" crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Service Cargo</title>
+    <link rel="stylesheet" href="/static/css/pagina.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet"
+        href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+    <script src="https://kit.fontawesome.com/325f4c844a.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
-  <input type="checkbox" id="nav-toggle">
-  <div class="sidebar">
-    <div class="sidebar-brand">
-      <h2><span class="la la-truck"></span><span>Check Service Cargo</span></h2>
-    </div>
-    <div class="sidebar-menu">
-      <ul>
-        <li>
-          <a href="" class="active"><span class="fa-solid fa-table-columns"></span>
-            <span> DASHBOARD </span></a>
-        </li>
-        <li>
-          <li class=""><a class="fa-solid fa-id-card" href="{{ url_for('cargo')}}">Cargo</a></li>
-          <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a></li>
-          <li class=""><a class="fa-solid fa-users" href="{{ url_for('roles')}}">Roles</a></li>
-          <li class=""><a class="fa-solid fa-file" href="{{ url_for('tipoDocumento')}}">Tipo Documento</a></li>
-          <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehiculo</a></li>
-          <li class=""><a class="fa-solid fa-user" href="{{ url_for('usuario')}}">Usuario</a></li>
-        </li>
-      </ul>
-    </div>
-  </div>
-  <div class="main-content">
-    <header style="display: flex; justify-content: space-between; padding: 5px; background-color: #f0f0f0; align-items: center;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-          <label for="nav-toggle">
-              <span class="fa fa-bars"></span>
-          </label>
-          <h2 style="margin: 0;"> MANTENIMIENTO USUARIO</h2>
-      </div>
-      <div class="header-buttons" style="display: flex; align-items: center; gap: 10px;">
-          <div id="fecha-hora-sistema" style="font-size: 14px; color: #333;"></div>
-          <a href="/admin" class="btn-exit btn-inicio">INICIO</a>
-          <a href="/" class="btn-exit btn-exit-red">EXIT</a>
-      </div>
-  </header>
-    <main>
-      <h1 class="text-center mt-5 mb-5 text-primary">USUARIO</h1>
-      <div class="container">
-        <div class="card shadow">
-          <div class="card-body">
-            <form action="{{ url_for('agregar_usuario') }}" method="GET">
-              <div class="row mb-3">
-                <div class="col">
-                  <label>Nombre de Usuario</label>
-                  <input type="text" class="form-control mb-3" name="nombreusuario" />
-                </div>
-                <div class="col">
-                  <label>Contraseña</label>
-                  <input type="text" class="form-control mb-3" name="contrasena" />
-                </div>
-                <div class="col">
-                  <label>Tipo de Documento</label>
-                  <input type="text" class="form-control mb-3" name="tipodocumento" />
-                </div>
-                <div class="col">
-                  <label>Documento</label>
-                  <input type="text" class="form-control mb-3" name="documento" />
-                </div>
-                <div class="col">
-                  <label>Nombres</label>
-                  <input type="text" class="form-control mb-3" name="nombres" />
-                </div>
-                <div class="col">
-                  <label>Apellidos</label>
-                  <input type="text" class="form-control mb-3" name="apellidos" />
-                </div>
-                <div class="col">
-                  <label>Email</label>
-                  <input type="text" class="form-control mb-3" name="email" />
-                </div>
-                <div class="col">
-                  <label>Teléfono</label>
-                  <input type="text" class="form-control mb-3" name="telefono" />
-                </div>
-                <div class="col">
-                  <label>Dirección</label>
-                  <input type="text" class="form-control mb-3" name="direccion" />
-                </div>
-                <div class="col">
-                  <label>Estado</label>
-                  <div class="form-check">
-                    <input type="checkbox" class="form-check-input" name="estado" id="estado" />
-                    <label class="form-check-label" for="estado">Activo</label>
-                  </div>
-                </div>
-                <div class="col">
-                  <label>Cargo</label>
-                  <input type="text" class="form-control mb-3" name="cargoid" />
-                </div>
-                <div class="col">
-                  <label>Rol</label>
-                  <input type="text" class="form-control mb-3" name="rolid" />
-                </div>
-                <div class="col">
-                  <button class="btn btn-primary mb-3 mt-4" type="submit">Guardar</button>
-                </div>
-              </div>
-            </form>
-            <div class="table-responsive">
-              <table class="table table-bordered">
-                <thead>
-                  <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Nombre de Usuario</th>
-                    <th scope="col">Contraseña</th>
-                    <th scope="col">Tipo de Documento</th>
-                    <th scope="col">Documento</th>
-                    <th scope="col">Nombres</th>
-                    <th scope="col">Apellidos</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Teléfono</th>
-                    <th scope="col">Dirección</th>
-                    <th scope="col">Estado</th>
-                    <th scope="col">Cargo</th>
-                    <th scope="col">Rol</th>
-                    <th scope="col">Editar</th>
-                    <th scope="col">Eliminar</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for u in data %}
-                  <tr>
-                    <td>{{u.usuarioid}}</td>
-                    <td>{{u.nombreusuario}}</td>
-                    <td>{{u.contrasena}}</td>
-                    <td>{{u.tipodocumento}}</td>
-                    <td>{{u.documento}}</td>
-                    <td>{{u.nombres}}</td>
-                    <td>{{u.apellidos}}</td>
-                    <td>{{u.email}}</td>
-                    <td>{{u.telefono}}</td>
-                    <td>{{u.direccion}}</td>
-                    <td>{{u.estado}}</td>
-                    <td>{{u.cargoid}}</td>
-                    <td>{{u.rolid}}</td>
-                    <td>
-                      <button class="btn btn-primary btn-sm" id="btn-edit{{u.usuarioid}}" data-bs-toggle="modal"
-                        data-bs-target="#modal{{u.usuarioid}}">
-                        Editar
-                      </button>
-                    </td>
-                    <td>
-                      <a href="{{url_for('eliminar_usuario', usuarioid=u.usuarioid)}}"
-                        class="btn btn-danger btn-sm">Eliminar</a>
-                    </td>
-                  </tr>
-                  <div class="modal fade" id="modal{{u.usuarioid}}" tabindex="-1" aria-labelledby="exampleModalLabel"
-                    aria-hidden="true">
-                    <div class="modal-dialog">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h1 class="modal-title fs-5" id="exampleModalLabel">{{u.nombreusuario}}</h1>
-                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                          <form action="/editar_usuario/{{u.usuarioid}}" method="post">
-                            <label>Nombre Usuario</label>
-                            <input type="text" class="form-control mb-3" name="nombreusuario" value="{{u.nombreusuario}}" />
-                            <label>Contraseña</label>
-                            <input type="text" class="form-control mb-3" name="contrasena" value="{{u.contrasena}}" />
-                            <label>Tipo de Documento</label>
-                            <input type="text" class="form-control mb-3" name="tipodocumento" value="{{u.tipodocumento}}" />
-                            <label>Documento</label>
-                            <input type="text" class="form-control mb-3" name="documento" value="{{u.documento}}" />
-                            <label>Nombres</label>
-                            <input type="text" class="form-control mb-3" name="nombres" value="{{u.nombres}}" />
-                            <label>Apellidos</label>
-                            <input type="text" class="form-control mb-3" name="apellidos" value="{{u.apellidos}}" />
-                            <label>Email</label>
-                            <input type="text" class="form-control mb-3" name="correo" value="{{u.email}}" /> 
-                            <label>Teléfono</label>
-                            <input type="text" class="form-control mb-3" name="telefono" value="{{u.telefono}}" />
-                            <label>Dirección</label>
-                            <input type="text" class="form-control mb-3" name="direccion" value="{{u.direccion}}" /> 
-                            <label>Cargo ID</label>
-                            <input type="text" class="form-control mb-3" name="cargoid" value="{{u.cargoid}}" />
-                            <label>Cargo ID</label>
-                            <input type="text" class="form-control mb-3" name="cargoid" value="{{u.rolid}}" />                                                        
-                            <label>Estado</label>
-                            <div class="form-check">
-                              <input type="checkbox" class="form-check-input" name="estado" id="estado{{u.usuarioid}}"
-                                value="true" {% if u.estado %}checked{% endif %} />
-                              <label class="form-check-label" for="estado{{u.usuarioid}}">Activo</label>
-                            </div>
-                            <div class="modal-footer">
-                              <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                            </div>
-                          </form>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
+    <input type="checkbox" id="nav-toggle">
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h2><span class="la la-truck"></span><span>Check Service Cargo</span></h2>
         </div>
-      </div>
-    </main>
-  </div>
+        <div class="sidebar-menu">
+            <ul>
+                <li>
+                    <a href="" class="active"><span class="fa-solid fa-table-columns"></span>
+                        <span> DASHBOARD </span></a>
+                </li>
+                <li>
+                <li class=""><a class="fa-solid fa-id-card" href="{{ url_for('cargo')}}">Cargo</a></li>
+                <li class=""><a class="fa-solid fa-folder-open" href="/static/html/manifiesto.html">Manifiesto</a></li>
+                <li class=""><a class="fa-solid fa-users" href="{{ url_for('roles')}}">Roles</a></li>
+                <li class=""><a class="fa-solid fa-file" href="{{ url_for('tipoDocumento')}}">Tipo Documento</a></li>
+                <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehículo</a></li>
+                <li class=""><a class="fa-solid fa-user" href="{{ url_for('usuario')}}">Usuario</a></li>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="main-content">
+        <header
+            style="display: flex; justify-content: space-between; padding: 5px; background-color: #f0f0f0; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="nav-toggle" style="visibility: hidden;">
+                <label for="nav-toggle">
+                    <span class="fa fa-bars"></span>
+                </label>
+                <h2 style="margin: 0;"> MANTENIMIENTO USUARIO</h2>
+            </div>
+            <div class="header-buttons" style="display: flex; align-items: center; gap: 10px;">
+                <div id="fecha-hora-sistema" style="font-size: 14px; color: #333;"></div>
+                <a href="/admin" class="btn-exit btn-inicio">INICIO</a>
+                <a href="/" class="btn-exit btn-exit-red">EXIT</a>
+            </div>
+        </header>
+        <main>
+            <h1 class="text-center mt-5 mb-5 text-primary">USUARIO</h1>
+            <div class="container">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <form action="{{ url_for('agregar_usuario') }}" method="POST">
+                            <div class="container mt-4">
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="nombreusuario">Nombre de Usuario</label>
+                                        <input type="text" class="form-control" id="nombreusuario" name="nombreusuario" placeholder="Ingrese el nombre de usuario">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="contrasena">Contraseña</label>
+                                        <input type="password" class="form-control" id="contrasena" name="contrasena" placeholder="Ingrese la contraseña">
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="tipodocumento">Tipo de Documento</label>
+                                        <select class="form-control" id="tipodocumento" name="tipodocumento">
+                                            <option value="" selected disabled>Seleccione un tipo de documento</option>
+                                            {% for TipoDocumento in tipodocumentos %}
+                                            <option value="{{ TipoDocumento.TipodocumentoID }}">{{ TipoDocumento.Acronimo }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="documento">Documento</label>
+                                        <input type="text" class="form-control" id="documento" name="documento" placeholder="Ingrese el documento">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="nombres">Nombres</label>
+                                        <input type="text" class="form-control" id="nombres" name="nombres" placeholder="Ingrese los nombres">
+                                    </div>
+                                </div>
+                        
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="apellidos">Apellidos</label>
+                                        <input type="text" class="form-control" id="apellidos" name="apellidos" placeholder="Ingrese los apellidos">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email">Email</label>
+                                        <input type="email" class="form-control" id="email" name="email" placeholder="Ingrese el email">
+                                    </div>
+                                </div>
+                        
+                                <div class="row mb-3">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="telefono">Teléfono</label>
+                                        <input type="text" class="form-control" id="telefono" name="telefono" placeholder="Ingrese el teléfono">
+                                    </div>
+                                    <div class="col-md-8 mb-3">
+                                        <label for="direccion">Dirección</label>
+                                        <input type="text" class="form-control" id="direccion" name="direccion" placeholder="Ingrese la dirección">
+                                    </div>
+                                </div>
+                        
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="cargo">Cargo</label>
+                                        <select class="form-control" id="cargo" name="cargoid">
+                                            <option value="" selected disabled>Seleccione un cargo</option>
+                                            {% for cargo in cargos %}
+                                            <option value="{{ cargo.cargoid }}">{{ cargo.titulo }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="rol">Rol</label>
+                                        <select class="form-control" id="rol" name="rolid">
+                                            <option value="" selected disabled>Seleccione un rol</option>
+                                            {% for rol in roles %}
+                                            <option value="{{ rol.rolid }}">{{ rol.descripcion }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                        
+                                <div class="row mb-3">
+                                    <div class="col-md-2">
+                                        <label for="estado">Estado</label>
+                                        <input type="checkbox" class="form-check-input mt-2" id="estado" name="estado">
+                                    </div>
+                                    <div class="col-md-10 d-flex align-items-end">
+                                        <button class="btn btn-primary" type="submit">Guardar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>                                           
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">ID</th>
+                                        <th scope="col">Nombre de Usuario</th>
+                                        <th scope="col">Contraseña</th>
+                                        <th scope="col">Tipo de Documento</th>
+                                        <th scope="col">Documento</th>
+                                        <th scope="col">Nombres</th>
+                                        <th scope="col">Apellidos</th>
+                                        <th scope="col">Email</th>
+                                        <th scope="col">Teléfono</th>
+                                        <th scope="col">Dirección</th>
+                                        <th scope="col">Cargo</th>
+                                        <th scope="col">Rol</th>
+                                        <th scope="col">Estado</th>
+                                        <th scope="col">Editar</th>
+                                        <th scope="col">Eliminar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for u in data %}
+                                    <tr>
+                                        <td>{{u.usuarioid}}</td>
+                                        <td>{{u.nombreusuario}}</td>
+                                        <td>{{u.contrasena}}</td>
+                                        <td>{{u.Acronimo }}</td>
+                                        <td>{{u.documento}}</td>
+                                        <td>{{u.nombres}}</td>
+                                        <td>{{u.apellidos}}</td>
+                                        <td>{{u.email}}</td>
+                                        <td>{{u.telefono}}</td>
+                                        <td>{{u.direccion}}</td>
+                                        <td>{{u.titulo}}</td>
+                                        <td>{{u.descripcion}}</td>
+                                        <td>{{ 'Activo' if u.estado else 'No activo' }}</td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm" id="btn-edit{{u.usuarioid}}"
+                                                data-bs-toggle="modal" data-bs-target="#modal{{u.usuarioid}}">
+                                                Editar
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalEliminar{{ u.usuarioid }}">
+                                                Eliminar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <div class="modal fade" id="modal{{u.usuarioid}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h1 class="modal-title fs-5" id="exampleModalLabel"> Editar Usuario - {{u.nombreusuario}}</h1>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <form action="{{ url_for('editar_usuario', usuarioid=u.usuarioid) }}" method="post"> 
+
+                                                        <div class="mb-3">
+                                                            <label for="nombreusuario">Nombre Usuario
+                                                                <input type="text" id="nombreusuario" class="form-control" name="nombreusuario" value="{{ u.nombreusuario }}">
+                                                            </label>    
+                                                        </div> 
+                                                        
+                                                        <div class="mb-3">
+                                                            <label for="contrasena">Contraseña
+                                                                <input type="text" id="contrasena" class="form-control" name="contrasena" value="{{ u.contrasena }}">
+                                                            </label>    
+                                                        </div> 
+
+                                                        <div class="col">
+                                                            <label>Tipo de Documento
+                                                                <select class="form-control mb-3" name="tipodocumento">
+                                                                    {% if tipodocumentos %}
+                                                                        {% for TipoDocumento in tipodocumentos %}
+                                                                            <option value="{{ TipoDocumento.TipodocumentoID }}" {% if TipoDocumento.TipodocumentoID == u.tipodocumentoid %}selected{% endif %}>
+                                                                                {{ TipoDocumento.Acronimo }} 
+                                                                            </option>
+                                                                        {% endfor %}
+                                                                    {% else %}
+                                                                        <option value="" disabled>No se encontraron tipos de documentos</option>
+                                                                    {% endif %}
+                                                                </select>
+                                                            </label>
+                                                        </div>                                                        
+
+                                                        <div class="mb-3">
+                                                            <label for="documento">Documento
+                                                                <input type="text" id="documento" class="form-control" name="documento" value="{{ u.documento }}">
+                                                            </label>    
+                                                        </div> 
+
+                                                        <div class="mb-3">
+                                                            <label for="nombres">Nombres
+                                                                <input type="text" id="nombres" class="form-control" name="nombres" value="{{ u.nombres }}">
+                                                            </label>    
+                                                        </div> 
+
+                                                        <div class="mb-3">
+                                                            <label for="apellidos">Apellidos
+                                                                <input type="text" id="apellidos" class="form-control" name="apellidos" value="{{ u.apellidos }}">
+                                                            </label>    
+                                                        </div> 
+
+                                                        <div class="mb-3">
+                                                            <label for="email">Email
+                                                                <input type="text" id="email" class="form-control" name="email" value="{{ u.correo }}">
+                                                            </label>    
+                                                        </div> 
+                                                        
+                                                        <div class="mb-3">
+                                                            <label for="telefono">Teléfono
+                                                                <input type="text" id="telefono" class="form-control" name="telefono" value="{{ u.telefono }}">
+                                                            </label>    
+                                                        </div> 
+                                                        
+                                                        <div class="mb-3">
+                                                            <label for="direccion">Dirección
+                                                                <input type="text" id="direccion" class="form-control" name="direccion" value="{{ u.direccion }}">
+                                                            </label>    
+                                                        </div> 
+
+                                                        <div class="col">
+                                                            <label>Cargo
+                                                                <select class="form-control mb-3" name="cargoid">
+                                                                    {% if cargos %}
+                                                                        {% for cargo in cargos %}
+                                                                            <option value="{{ cargo.cargoid }}" {% if cargo.cargoid == u.cargoid %}selected{% endif %}>
+                                                                                {{ cargo.titulo }}
+                                                                            </option>
+                                                                        {% endfor %}
+                                                                    {% else %}
+                                                                        <option value="" disabled>No se encontraron cargos</option>
+                                                                    {% endif %}
+                                                                </select>
+                                                            </label>
+                                                        </div>
+
+                                                        <div class="col">
+                                                            <label>Rol
+                                                                <select class="form-control mb-3" name="rolid">
+                                                                    {% if roles %}
+                                                                        {% for rol in roles %}
+                                                                            <option value="{{ rol.rolid }}" {% if rol.rolid == u.rolid %}selected{% endif %}>
+                                                                                {{ rol.descripcion }}
+                                                                            </option>
+                                                                        {% endfor %}
+                                                                    {% else %}
+                                                                        <option value="" disabled>No se encontraron roles</option>
+                                                                    {% endif %}
+                                                                </select>
+                                                            </label>
+                                                        </div> 
+
+                                                        <div class="mb-3">
+                                                            <label for="estado">Estado</label>
+                                                            <input type="checkbox" class="form-check-input" id="estado" name="estado" {% if u.estado %}checked{% endif %}>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Modal de Confirmación de Eliminación -->
+                                    <div class="modal fade" id="modalEliminar{{u.usuarioid}}" tabindex="-1" aria-labelledby="modalEliminarLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="modalEliminarLabel">Confirmar Eliminación</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    ¿Estás seguro de que deseas eliminar el usuario <strong>{{u.nombreusuario}}</strong>?
+                                                </div>
+                                                <div class="modal-footer d-flex justify-content-center">
+                                                    <!-- Aquí colocas el nuevo botón de aceptación -->
+                                                    <a href="{{ url_for('eliminar_usuario', usuarioid=u.usuarioid) }}" 
+                                                    class="btn btn-success btn-confirm-delete" 
+                                                    data-id="{{u.usuarioid}}">
+                                                    Aceptar
+                                                    </a>
+                                                    <!-- Botón de cancelación -->
+                                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Modal de Éxito -->
+                                    <div class="modal fade" id="modalExito" tabindex="-1" aria-labelledby="modalExitoLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="modalExitoLabel">Eliminación Exitosa</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    El usuario se ha eliminado correctamente.
+                                                </div>
+                                                <div class="modal-footer d-flex justify-content-center">
+                                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Modal de Éxito para Edición -->
+                                    <div class="modal fade" id="modalExitoEditar" tabindex="-1" aria-labelledby="modalExitoEditarLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="modalExitoEditarLabel">Edición Exitosa</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    El usuario se ha editado exitosamente.
+                                                </div>
+                                                <div class="modal-footer d-flex justify-content-center">
+                                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Modal de Confirmación para Guardar -->
+                                    <div class="modal fade" id="modalConfirmacionGuardar" tabindex="-1" aria-labelledby="modalConfirmacionGuardarLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="modalConfirmacionGuardarLabel">Confirmar Guardado</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    ¿Está seguro de que desea guardar el usuario?
+                                                </div>
+                                                <div class="modal-footer d-flex justify-content-center">
+                                                    <button type="button" class="btn btn-success" id="confirmGuardarBtn">Aceptar</button>
+                                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal de Éxito para Guardado -->
+                                    <div class="modal fade" id="modalExitoGuardar" tabindex="-1" aria-labelledby="modalExitoGuardarLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="modalExitoGuardarLabel">Guardado Exitoso</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    El usuario se ha guardado correctamente.
+                                                </div>
+                                                <div class="modal-footer d-flex justify-content-center">
+                                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 </body>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-      function actualizarFechaHora() {
-          const fechaHoraSistema = document.getElementById('fecha-hora-sistema');
-          if (fechaHoraSistema) {
-              const ahora = new Date();
-              const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-              const opcionesHora = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
-              const fecha = ahora.toLocaleDateString('es-ES', opcionesFecha);
-              const hora = ahora.toLocaleTimeString('es-ES', opcionesHora);
-              fechaHoraSistema.textContent = `${fecha} ${hora}`;
-          }
-      }
-      setInterval(actualizarFechaHora, 1000); 
-  }); 
-</script> 
+    document.addEventListener('DOMContentLoaded', function () {
+        function actualizarFechaHora() {
+            const fechaHoraSistema = document.getElementById('fecha-hora-sistema');
+            if (fechaHoraSistema) {
+                const ahora = new Date();
+                const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                const opcionesHora = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                const fecha = ahora.toLocaleDateString('es-ES', opcionesFecha);
+                const hora = ahora.toLocaleTimeString('es-ES', opcionesHora);
+                fechaHoraSistema.textContent = `${fecha} ${hora}`;
+            }
+        }
+        setInterval(actualizarFechaHora, 1000);
+    }); 
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteButtons = document.querySelectorAll('.btn-confirm-delete');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault(); // Evita el comportamiento por defecto del enlace
+    
+                const href = this.getAttribute('href');
+                const modalId = `#modalEliminar${this.getAttribute('data-id')}`;
+                const deleteModal = bootstrap.Modal.getInstance(document.querySelector(modalId));
+    
+                // Realiza la solicitud al servidor
+                fetch(href, { method: 'GET' }) // Ajusta el método si tu backend lo requiere (e.g., 'DELETE')
+                    .then(response => {
+                        if (response.ok) {
+                            // Cierra el modal de confirmación
+                            if (deleteModal) {
+                                deleteModal.hide();
+                            }
+    
+                            // Muestra el modal de éxito
+                            const successModal = new bootstrap.Modal(document.getElementById('modalExito'));
+                            successModal.show();
+    
+                            // Recarga la página después de un breve retraso
+                            setTimeout(() => location.reload(), 2000);
+                        } else {
+                            console.error('Error al eliminar el usuario.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error de red:', error);
+                    });
+            });
+        });
+    });    
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const editForms = document.querySelectorAll('form[action*="editar_usuario"]');
+        editForms.forEach(form => {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault(); // Previene la acción por defecto del formulario
+                console.log("Formulario de edición enviado"); // Log para verificar el envío
+    
+                const actionUrl = this.action;
+                const formData = new FormData(this);
+    
+                fetch(actionUrl, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // Aquí agregas los logs para depurar la respuesta
+                    console.log("Respuesta del servidor:", response.status);
+                    response.text().then(text => console.log('Cuerpo de la respuesta:', text));
+    
+                    // Si la respuesta es exitosa, mostramos el modal de éxito
+                    if (response.ok) {
+                        console.log("Solicitud exitosa, mostrando modal de éxito");
+    
+                        // Cerrar el modal de edición
+                        const modalId = this.closest('.modal').id; // Encuentra el modal que contiene el formulario
+                        const modalInstance = bootstrap.Modal.getInstance(document.getElementById(modalId));
+                        if (modalInstance) {
+                            modalInstance.hide(); // Cierra el modal
+                        }
+    
+                        // Mostrar el modal de éxito
+                        const successModal = document.getElementById('modalExitoEditar');
+                        if (successModal) {
+                            const bootstrapModal = new bootstrap.Modal(successModal);
+                            bootstrapModal.show();
+                        } else {
+                            console.error("Modal de confirmación de edición no encontrado");
+                        }
+    
+                        // Recargar la página después de un breve retraso
+                        setTimeout(() => location.reload(), 2000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error de red:', error);
+                });
+            });
+        });
+    });    
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const guardarForm = document.querySelector('form[action*="agregar_usuario"]');
+        const guardarBtn = guardarForm.querySelector('button[type="submit"]');
+        const confirmGuardarBtn = document.getElementById('confirmGuardarBtn');
+    
+        guardarBtn.addEventListener('click', function(event) {
+            event.preventDefault(); // Previene el envío inmediato del formulario
+            const confirmModal = new bootstrap.Modal(document.getElementById('modalConfirmacionGuardar'));
+            confirmModal.show();
+        });
+    
+        confirmGuardarBtn.addEventListener('click', function() {
+            const confirmModal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmacionGuardar'));
+            confirmModal.hide(); // Cierra el modal de confirmación
+    
+            const actionUrl = guardarForm.action;
+            const formData = new FormData(guardarForm);
+    
+            fetch(actionUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    const successModal = new bootstrap.Modal(document.getElementById('modalExitoGuardar'));
+                    successModal.show();
+    
+                    setTimeout(() => location.reload(), 2000); // Recarga la página después de un breve retraso
+                } else {
+                    console.error('Error al guardar el usuario.');
+                }
+            })
+            .catch(error => {
+                console.error('Error de red:', error);
+            });
+        });
+    });
+
+</script>
+
 </html>

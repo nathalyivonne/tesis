@@ -143,7 +143,7 @@
                     <li class=""><a class="fa-solid fa-users" href="{{ url_for('roles')}}">Roles</a></li>
                     <li class=""><a class="fa-solid fa-file" href="{{ url_for('tipoDocumento')}}">Tipo Documento</a>
                     </li>
-                    <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehiculo</a></li>
+                    <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehículo</a></li>
                     <li class=""><a class="fa-solid fa-user" href="{{ url_for('usuario')}}">Usuario</a></li>
                 </ul>
             </div>
@@ -152,6 +152,7 @@
             <header
                 style="display: flex; justify-content: space-between; padding: 5px; background-color: #f0f0f0; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="nav-toggle" style="visibility: hidden;"> 
                     <label for="nav-toggle">
                         <span class="fa fa-bars"></span>
                     </label>
@@ -193,17 +194,17 @@
                     <table id="dataTable">
                         <thead>
                             <tr>
-                                <th onclick="sortTable(0)">Item</th>
-                                <th onclick="sortTable(1)">Codigo</th>
-                                <th onclick="sortTable(2)">Cliente</th>
-                                <th onclick="sortTable(3)">Direccion</th>
-                                <th onclick="sortTable(4)">Distrito</th>
-                                <th onclick="sortTable(5)">Servicio</th>
-                                <th onclick="sortTable(6)">Fecha y Hora de Subida</th>
-                                <th onclick="sortTable(7)">Fecha y Hora de Entrega</th>
-                                <th onclick="sortTable(8)">Cumplimiento</th>
-                                <th onclick="sortTable(9)">Estado</th>
-                                <th onclick="sortTable(10)">Cumplimiento Formateado</th>
+                                <th onclick="sortTable(0)" tabindex="0" onkeypress="if(event.key === 'Enter') sortTable(0);">Item</th>
+                                <th onclick="sortTable(1)" tabindex="0" onkeypress="if(event.key === 'Enter') sortTable(1);">Codigo</th>
+                                <th onclick="sortTable(2)" tabindex="0" onkeypress="if(event.key === 'Enter') sortTable(2);">Cliente</th>
+                                <th onclick="sortTable(3)" tabindex="0" onkeypress="if(event.key === 'Enter') sortTable(3);">Dirección</th>
+                                <th onclick="sortTable(4)" tabindex="0" onkeypress="if(event.key === 'Enter') sortTable(4);">Distrito</th>
+                                <th onclick="sortTable(5)" tabindex="0" onkeypress="if(event.key === 'Enter') sortTable(5);">Servicio</th>
+                                <th onclick="sortTable(6)" tabindex="0" onkeypress="if(event.key === 'Enter') sortTable(6);">Fecha y Hora de Subida</th>
+                                <th onclick="sortTable(7)" tabindex="0" onkeypress="if(event.key === 'Enter') sortTable(7);">Fecha y Hora de Entrega</th>
+                                <th onclick="sortTable(8)" tabindex="0" onkeypress="if(event.key === 'Enter') sortTable(8);">Cumplimiento</th>
+                                <th onclick="sortTable(9)" tabindex="0" onkeypress="if(event.key === 'Enter') sortTable(9);">Estado</th>
+                                <th onclick="sortTable(10)" tabindex="0" onkeypress="if(event.key === 'Enter') sortTable(10);">Cumplimiento Formateado</th>
                             </tr>
                         </thead>
                         <tbody>

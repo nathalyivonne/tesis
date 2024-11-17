@@ -91,7 +91,7 @@
 }
 
 #nav-toggle:checked~.main-content {
-    width: calc(100% -70px);
+    width: calc(100% - 70px);
     left: 70px;
 }
 
@@ -179,7 +179,8 @@ table {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-th, td {
+th,
+td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #ddd;
@@ -200,16 +201,22 @@ th {
     grid-template-columns: 67% auto;
 }
 
-/* .table-responsive{
-    width: 100%;
-    overflow: auto;
-} */
-
-
 .table-responsive {
     width: 100%;
     overflow-x: auto;
     margin-top: 20px;
+    display: flex;
+}
+
+table th, table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table {
+    width: auto;
+    margin: auto; /* Centra la tabla dentro de .table-responsive */
+    text-align: center; /* Centra el texto en cada celda */
 }
 
 @media only screen and (max-width:1200) {
@@ -275,7 +282,6 @@ th {
     }
 
     header h2 label {
-        display: inline-block;
         text-align: center;
         background: var(--main-color);
         padding-left: 0rem;
@@ -455,15 +461,41 @@ header h2 {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px; 
+    gap: 20px;
     margin-bottom: 16px;
 }
 
-#filterContainer, #searchContainer, #dateFilterContainer {
+#filterContainer,
+#searchContainer,
+#dateFilterContainer {
     display: flex;
     align-items: center;
 }
 
-#filterContainer select, #searchContainer input, #dateFilterContainer input {
+#filterContainer select,
+#searchContainer input,
+#dateFilterContainer input {
     margin-left: 8px;
+}
+
+.modal-content {
+    text-align: center;
+}
+
+.modal-footer .btn-secondary {
+    background-color: #f8f9fa;
+    color: #000;
+}
+
+.modal-footer .btn-danger {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.modal-footer .btn-danger:hover {
+    background-color: #c82333;
+}
+
+select.form-control {
+    width: 100%; /* Ajusta según lo que necesites */
 }

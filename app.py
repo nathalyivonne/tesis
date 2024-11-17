@@ -236,6 +236,13 @@ def mutate(solution, mutation_rate):
 
 # Función principal del algoritmo genético
 def genetic_algorithm(pop_size, direcciones, max_generations):
+    if not direcciones:
+        raise ValueError("La lista de direcciones no puede estar vacía.")
+    
+    # Validación para asegurarse de que cada dirección es una cadena de texto
+    if not all(isinstance(direccion, str) for direccion in direcciones):
+        raise TypeError("Cada dirección debe ser una cadena de texto.")
+    
     population = initialize_population(pop_size, direcciones)
     for generation in range(max_generations):
         fitness_values = [fitness(solution) for solution in population]
@@ -626,14 +633,20 @@ def eliminar_roles(rolid):
 
 @app.route('/editar_roles/<string:rolid>', methods=['POST'])
 def editar_roles(rolid):
-    descripcion = request.form['descripcion']
-    estado = 'estado' in request.form
-    if descripcion:
-        cursor = db.conn.cursor()
-        sql = "UPDATE roles SET descripcion = ?, estado = ? WHERE rolid = ?"
-        data = (descripcion, estado, rolid)
-        cursor.execute(sql, data)
-        db.conn.commit()
+    try:
+        descripcion = request.form['descripcion']
+        estado = 'estado' in request.form
+        if descripcion:
+            cursor = db.conn.cursor()
+            sql = "UPDATE roles SET descripcion = ?, estado = ? WHERE rolid = ?"
+            data = (descripcion, estado, rolid)
+            cursor.execute(sql, data)
+            db.conn.commit()
+        else:
+            return redirect(url_for('roles'))
+    except Exception as e:
+        print(f"Error al editar el rol: {e}")
+        return f"Error: {e}", 500
     return redirect(url_for('roles'))
 ################################ TIPO DOCUMENTO ###############################
 @app.route('/tipoDocumento')
@@ -651,16 +664,22 @@ def tipoDocumento():
 
 @app.route('/agregar_tipodocumento', methods=['POST'])
 def agregar_tipodocumento():
-    Acronimo = request.form['Acronimo']
-    Descripcion = request.form['Descripcion']
-    estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
-    if Acronimo and Descripcion:
-        cursor = db.conn.cursor()
-        sql = "INSERT INTO TipoDocumento (Acronimo, Descripcion, estado) VALUES (?, ?, ?)"
-        data = (Acronimo, Descripcion, estado)
-        cursor.execute(sql, data)
-        db.conn.commit()
-    return redirect(url_for('tipoDocumento'))
+    try:
+        Acronimo = request.form['Acronimo']
+        Descripcion = request.form['Descripcion']
+        estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
+        
+        if Acronimo and Descripcion:
+            cursor = db.conn.cursor()
+            sql = "INSERT INTO TipoDocumento (Acronimo, Descripcion, estado) VALUES (?, ?, ?)"
+            data = (Acronimo, Descripcion, estado)
+            cursor.execute(sql, data)
+            db.conn.commit()
+        return redirect(url_for('tipoDocumento'))
+    except KeyError as e:
+        return f"Falta clave de formulario: {e}", 400
+    except Exception as e:
+        return f"Error: {e}", 500
 
 @app.route('/eliminar_tipodocumento/<string:TipodocumentoID>', methods=['GET'])
 def eliminar_tipodocumento(TipodocumentoID):
@@ -686,16 +705,48 @@ def editar_tipodocumento(TipodocumentoID):
 ################################ USUARIO ###############################
 @app.route('/usuario')
 def usuario():
+    # Consulta para obtener los usuarios con sus relaciones con TipoDocumento, Cargo y Roles
     cursor = db.conn.cursor()
-    cursor.execute("SELECT * FROM usuario")
+    query = """
+        SELECT u.*, d.Acronimo, c.titulo, r.descripcion
+        FROM Usuario u
+        JOIN TipoDocumento d ON d.TipodocumentoID = u.tipodocumento AND d.estado = 1
+        JOIN Cargo c ON c.cargoid = u.cargoid AND c.estado = 1
+        JOIN Roles r ON r.rolid = u.rolid AND r.estado = 1;
+    """
+    cursor.execute(query)
     myresult = cursor.fetchall()
-    # Convertir los datos a diccionario
+
+    # Convertir los datos de los usuarios a una lista de diccionarios
     insertObject = []
     columnNames = [column[0] for column in cursor.description]
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    return render_template('usuario.html', data=insertObject)
+
+    # Consulta para obtener los tipos de documento activos
+    cursor = db.conn.cursor()
+    cursor.execute("SELECT TipodocumentoID, Acronimo FROM TipoDocumento WHERE estado = 1")
+    tipodocumentos_activos = cursor.fetchall()
+    tipodocumentos = [{'TipodocumentoID': row[0], 'Acronimo': row[1]} for row in tipodocumentos_activos]
+    cursor.close()
+
+    # Consulta para obtener los cargos activos
+    cursor = db.conn.cursor()
+    cursor.execute("SELECT cargoid, titulo FROM Cargo WHERE estado = 1")
+    cargos_activos = cursor.fetchall()
+    cargos = [{'cargoid': row[0], 'titulo': row[1]} for row in cargos_activos]
+    cursor.close()
+
+    # Consulta para obtener los roles activos
+    cursor = db.conn.cursor()
+    cursor.execute("SELECT rolid, descripcion FROM Roles WHERE estado = 1")
+    roles_activos = cursor.fetchall()
+    roles = [{'rolid': row[0], 'descripcion': row[1]} for row in roles_activos]
+    cursor.close()
+
+    # Pasar `insertObject` (usuarios), `tipodocumentos`, `cargos` y `roles` a la plantilla
+    return render_template('usuario.html', data=insertObject, tipodocumentos=tipodocumentos, cargos=cargos, roles=roles)
 
 @app.route('/agregar_usuario', methods=['POST'])
 def agregar_usuario():
@@ -730,51 +781,94 @@ def eliminar_usuario(usuarioid):
 
 @app.route('/editar_usuario/<string:usuarioid>', methods=['POST'])
 def editar_usuario(usuarioid):
-    email = request.form ['email']
-    contrasena = request.form['contrasena']
-    nombreusuario = request.form['nombreusuario']    
-    tipodocumento = request.form['tipodocumento']
-    documento = request.form['documento']
-    nombres = request.form['nombres']
-    apellidos = request.form['apellidos']
-    telefono = request.form['telefono']
-    direccion = request.form['direccion']
-    estado = 'estado' in request.form
-    cargoid = request.form['cargoid']
-    rolid = request.form['rolid']
-    if email and nombreusuario and contrasena and tipodocumento and documento and nombres and apellidos and telefono and direccion and cargoid and roldid:
-        cursor = db.conn.cursor()
-        sql = "UPDATE usuario SET email = ?, nombreusuario = ?, contrsena = ?, tipodocumento = ?, documento = ?, nombres = ?, apellidos = ?, telefono = ?, direccion = ?, estado = ?, cargoid = ?, rolid = ? WHERE usuarioid = ?"
-        data = (email, nombreusuario, contrasena, tipodocumento, documento, nombres, apellidos, telefono, direccion, estado, cargoid, usuarioid, rolid)
-        cursor.execute(sql, data)
-        db.conn.commit()
-    return redirect(url_for('usuario'))
+    try:
+        email = request.form.get('email')
+        contrasena = request.form.get('contrasena')
+        nombreusuario = request.form.get('nombreusuario')
+        tipodocumento = request.form.get('tipodocumento')
+        documento = request.form.get('documento')
+        nombres = request.form.get('nombres')
+        apellidos = request.form.get('apellidos')
+        telefono = request.form.get('telefono')
+        direccion = request.form.get('direccion')
+        estado = 'estado' in request.form
+        cargoid = request.form.get('cargoid')
+        rolid = request.form.get('rolid')
+
+        # Verificación para asegurar que tipodocumento no sea nulo
+        if not tipodocumento:
+            print("Error: tipodocumento no puede ser nulo.")
+            return "Error: tipodocumento es obligatorio y no puede ser nulo", 400
+
+        # Verificación de campos obligatorios
+        if email and nombreusuario and contrasena and documento and nombres and apellidos and telefono and direccion and cargoid and rolid:
+            cursor = db.conn.cursor()
+            sql = """
+                UPDATE usuario
+                SET email = ?, nombreusuario = ?, contrasena = ?, tipodocumento = ?, documento = ?, nombres = ?, apellidos = ?, telefono = ?, direccion = ?, estado = ?, cargoid = ?, rolid = ?
+                WHERE usuarioid = ?
+            """
+            data = (email, nombreusuario, contrasena, tipodocumento, documento, nombres, apellidos, telefono, direccion, estado, cargoid, rolid, usuarioid)
+            cursor.execute(sql, data)
+            db.conn.commit()
+            cursor.close()
+        else:
+            # Manejo de error en caso de que los campos obligatorios falten
+            print("Campos obligatorios faltantes")
+            return "Error: Campos obligatorios faltantes", 400
+
+        return redirect(url_for('usuario'))
+    except Exception as e:
+        print(f"Error al editar el usuario: {e}")
+        print("Datos recibidos:", request.form)
+        return "Error al procesar la solicitud", 400
 ################################ VEHICULO ##############################
 @app.route('/vehiculo')
 def vehiculo():
+    # Consulta para obtener los vehículos
     cursor = db.conn.cursor()
-    cursor.execute("SELECT * FROM vehiculo")
+    query = """
+        SELECT v.*, u.nombres, u.apellidos 
+        FROM vehiculo v
+        JOIN Usuario u ON v.usuarioid = u.usuarioid
+    """
+    cursor.execute(query)
     myresult = cursor.fetchall()
-    # Convertir los datos a diccionario
+
+    # Convertir los datos de los vehículos a una lista de diccionarios
     insertObject = []
     columnNames = [column[0] for column in cursor.description]
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    return render_template('vehiculo.html', data=insertObject)
+    
+    cursor = db.conn.cursor()
+    cursor.execute("SELECT usuarioid, nombres, apellidos FROM Usuario WHERE estado = 1")
+    usuarios_activos = cursor.fetchall()
+
+    # Opcional: imprime para verificar si los usuarios activos están cargando correctamente
+    print(usuarios_activos)
+
+    # Convertir los usuarios a una lista de diccionarios
+    usuarios = [{'usuarioid': row[0], 'nombres': row[1], 'apellidos': row[2]} for row in usuarios_activos]
+    
+    # Cerrar el cursor
+    cursor.close()
+
+    # Pasar ambos `insertObject` (vehículos) y `usuarios` a la plantilla
+    return render_template('vehiculo.html', data=insertObject, usuarios=usuarios)
 
 @app.route('/agregar_vehiculo', methods=['POST'])
 def agregar_vehiculo():
-    nombre = request.form['nombre']
     marca = request.form['marca']
     modelo = request.form['modelo']
     placa = request.form['placa']
     usuarioid = request.form['usuarioid']
     estado = 1 if 'estado' in request.form else 0  # Esto asignará 1 si el checkbox está marcado, y 0 si no está marcado
-    if nombre and marca and modelo and placa and usuarioid:
+    if marca and modelo and placa and usuarioid:
         cursor = db.conn.cursor()
-        sql = "INSERT INTO vehiculo (nombre, marca, modelo, placa, usuarioid, estado) VALUES (?, ?, ?, ?, ?, ?)"
-        data = (nombre, marca, modelo, placa, usuarioid, estado)
+        sql = "INSERT INTO vehiculo (marca, modelo, placa, usuarioid, estado) VALUES (?, ?, ?, ?, ?)"
+        data = (marca, modelo, placa, usuarioid, estado)
         cursor.execute(sql, data)
         db.conn.commit()
     return redirect(url_for('vehiculo'))
@@ -790,16 +884,15 @@ def eliminar_vehiculo(vehiculoid):
 
 @app.route('/editar_vehiculo/<string:vehiculoid>', methods=['POST'])
 def editar_vehiculo(vehiculoid):
-    nombre = request.form['nombre']
     marca = request.form['marca']
     modelo = request.form['modelo']
     placa = request.form['placa']
     usuarioid = request.form['usuarioid']
     estado = 'estado' in request.form
-    if nombre and marca and modelo and placa and usuarioid:
+    if marca and modelo and placa and usuarioid:
         cursor = db.conn.cursor()
-        sql = "UPDATE vehiculo SET nombre = ?, marca = ?, modelo = ?, placa = ?, usuarioid = ?, estado = ? WHERE vehiculoid = ?"
-        data = (nombre, marca, modelo, placa, usuarioid, estado, vehiculoid)
+        sql = "UPDATE vehiculo SET marca = ?, modelo = ?, placa = ?, usuarioid = ?, estado = ? WHERE vehiculoid = ?"
+        data = (marca, modelo, placa, usuarioid, estado, vehiculoid)
         cursor.execute(sql, data)
         db.conn.commit()
     return redirect(url_for('vehiculo'))
