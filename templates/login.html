@@ -100,7 +100,8 @@
             <img src="/static/img/imagen1.jpg" alt="Descripción relevante del contenido">
         </div>
         <div class="form-container">
-            <form action="acceso-login" method="post">
+            <form method="POST" action="/acceso-login">
+                {{ form.hidden_tag() }} 
                 <h1 class="text-center">INICIAR SESIÓN</h1>
                 {% if mensaje %}
                 <div class="alert alert-danger" role="alert">
@@ -109,13 +110,11 @@
                 {% endif %}
                 <div class="form-group mb-3">
                     <label for="exampleInputEmail1">CORREO ELECTRÓNICO</label>
-                    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
-                        placeholder="Ingrese su correo" name="txtEmail">
+                    {{ form.txtEmail(class_="form-control", id="exampleInputEmail1", placeholder="Ingrese su correo") }}
                 </div>
                 <div class="form-group mb-3">
                     <label for="exampleInputPassword1">CONTRASEÑA</label>
-                    <input type="password" class="form-control" id="exampleInputPassword1"
-                        placeholder="Ingrese su contraseña" name="txtContrasena">
+                    {{ form.txtContrasena(class_="form-control", id="exampleInputPassword1", placeholder="Ingrese su contraseña") }}
                 </div>
                 <div class="text-center">
                     <button type="submit" class="btn btn-custom">INGRESAR</button>

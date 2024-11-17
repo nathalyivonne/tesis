@@ -12,12 +12,23 @@ from azure.mgmt.datafactory import DataFactoryManagementClient
 import googlemaps
 import json
 import random
-import secrets
 import os
 import database as db
 import pandas as pd
+import secrets
+from secrets import SystemRandom
+from flask_wtf import FlaskForm 
+from wtforms import StringField, PasswordField
+from wtforms.validators import DataRequired
+from flask_wtf.csrf import CSRFProtect, CSRFError
+
+class LoginForm(FlaskForm):
+    txtEmail = StringField('Email', validators=[DataRequired()])
+    txtContrasena = PasswordField('Contraseña', validators=[DataRequired()])
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = '177eb9c449abc838136808a76e66eaaec'
+csrf = CSRFProtect(app) 
 
 adf_client = db.adf_client
 gmaps = db.gmaps
@@ -27,9 +38,10 @@ datafactoryname = db.datafactoryname
 pipelinename = db.pipelinename
 
 
-@app.route('/')
+@app.route('/', methods=["GET", "POST"])
 def home():
-    return render_template('login.html')
+    form = LoginForm()
+    return render_template('login.html', form=form)
 
 @app.route('/admin')
 def admin():
@@ -37,9 +49,14 @@ def admin():
 
 @app.route('/acceso-login', methods=["POST"])
 def login():
-    if request.method == 'POST' and 'txtEmail' in request.form and 'txtContrasena' in request.form:
-        _email = request.form['txtEmail']
-        _contrasena = request.form['txtContrasena']
+    form = LoginForm()
+    if form.validate_on_submit(): 
+        print("Formulario validado correctamente")
+        _email = form.txtEmail.data
+        _contrasena = form.txtContrasena.data
+    #if request.method == 'POST' and 'txtEmail' in request.form and 'txtContrasena' in request.form:
+        #_email = request.form['txtEmail']
+        #_contrasena = request.form['txtContrasena']
 
         try:
             cursor = db.conn.cursor()
@@ -55,15 +72,19 @@ def login():
                 elif rolid == 2:
                     return render_template("admin2.html")
                 else:
-                    return render_template('login.html', mensaje="Rol no válido")
+                    return render_template('login.html', form=form, mensaje="Rol no válido")
+                    #return render_template('login.html', mensaje="Rol no válido")
             else:
-                return render_template('login.html', mensaje="Usuario o contraseña incorrecta")
+                return render_template('login.html', form=form, mensaje="Usuario o contraseña incorrecta")
+                #return render_template('login.html', mensaje="Usuario o contraseña incorrecta")
         except pyodbc.Error as e:
             return f"Error de base de datos: {e}"
         except Exception as e:
             return f"Error inesperado: {e}"
     else:
-        return render_template('login.html')
+        print("Errores en el formulario:", form.errors)
+    #return render_template('login.html')
+    return render_template('login.html', form=form)
 
 @app.route('/analizar', methods=['POST'])
 def upload():
@@ -137,6 +158,9 @@ def ver_tabla():
         return f"Error de base de datos: {e}"
     except Exception as e:
         return f"Error: {e}"
+
+csrf.exempt(ver_tabla)
+
 def fitness(solution):
     # Sumar las longitudes de las direcciones como medida de distancia total
     total_distance = sum(len(direccion) for direccion in solution)
@@ -158,8 +182,8 @@ def initialize_population(pop_size, direcciones):
     num_genes = len(direcciones)
     
     for _ in range(pop_size):
-        # Generar una solución aleatoria de direcciones
-        solution = random.sample(direcciones, num_genes)
+        solution = secrets.SystemRandom().sample(direcciones, num_genes)
+        #solution = random.sample(direcciones, num_genes)
         initial_population.append(solution)
     
     return initial_population
@@ -168,15 +192,18 @@ def initialize_population(pop_size, direcciones):
 def select_parents(population, fitness_values, num_parents):
     selected_parents = []
     for _ in range(num_parents):
-        idx1 = random.randint(0, len(population) - 1)
-        idx2 = random.randint(0, len(population) - 1)
+        idx1 = secrets.randbelow(len(population))
+        idx2 = secrets.randbelow(len(population))
+        #idx1 = random.randint(0, len(population) - 1)
+        #idx2 = random.randint(0, len(population) - 1)
         parent = population[idx1] if fitness_values[idx1] < fitness_values[idx2] else population[idx2]
         selected_parents.append(parent)
     return selected_parents
 
 # Función de crossover (un punto), creacion de los hijos
 def crossover(parent1, parent2):
-    point = random.randint(0, len(parent1) - 1)
+    point = secrets.randbelow(len(parent1)) 
+    #point = random.randint(0, len(parent1) - 1)
     child1 = parent1[:point] + parent2[point:]
     child2 = parent2[:point] + parent1[point:]
     
@@ -186,8 +213,8 @@ def crossover(parent1, parent2):
 def mutate(solution, mutation_rate):
     mutated_solution = solution[:]
     for i in range(len(mutated_solution)):
-        if random.random() < mutation_rate:
-            # Obtener la dirección original
+        if secrets.SystemRandom().random() < mutation_rate:
+        #if random.random() < mutation_rate:
             original_address = solution[i]
             
             # Dividir la dirección en partes (por ejemplo, calle, número, etc.)
@@ -196,7 +223,8 @@ def mutate(solution, mutation_rate):
             # Modificar una parte aleatoria de la dirección
             if len(address_parts) > 1:
                 # Escoger aleatoriamente una parte para modificar
-                index_to_mutate = random.randint(0, len(address_parts) - 1)
+                index_to_mutate = secrets.SystemRandom().randint(0, len(address_parts) - 1)
+                #index_to_mutate = random.randint(0, len(address_parts) - 1)
                 
                 # Modificar esa parte de la dirección original
                 mutated_part = address_parts[index_to_mutate].strip()
@@ -1016,5 +1044,9 @@ def reporte_porcentaje_faltantes():
     finally:
         cursor.close()  
                 
+#if __name__ == '__main__':
+#    app.run(debug=True)
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() in ['true', '1']
+    app.run(debug=debug_mode)

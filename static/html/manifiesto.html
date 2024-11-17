@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>Check Service Cargo</title>
     <link rel="stylesheet" href="/static/css/pagina.css">
-    <link rel="stylesheet"
-        href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+    <link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
     <script src="https://kit.fontawesome.com/325f4c844a.js" crossorigin="anonymous"></script>
     <style>
         #loadingIcon {
@@ -163,8 +162,6 @@
     </style>
     <script>
         async function convertToBase64() {
-            // Muestra el ícono de carga
-            //document.getElementById('loadingIcon').style.display = 'block';
             const progressContainer = document.getElementById('progressContainer');
             const percentageText = document.getElementById('percentageText');
             const fileInput = document.getElementById('photo');
@@ -176,7 +173,7 @@
                 const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
                 if (!validTypes.includes(file.type)) {
                     errorMessage.textContent = "Formato de archivo incorrecto, solo se acepta formato jpeg, jpg y png.";
-                    errorMessage.style.display = "block"; // Mostrar el mensaje
+                    errorMessage.style.display = "block"; 
                     return;
                 }
 
