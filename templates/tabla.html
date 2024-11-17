@@ -143,7 +143,7 @@
                     <li class=""><a class="fa-solid fa-users" href="{{ url_for('roles')}}">Roles</a></li>
                     <li class=""><a class="fa-solid fa-file" href="{{ url_for('tipoDocumento')}}">Tipo Documento</a>
                     </li>
-                    <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehículo</a></li>
+                    <li class=""><a class="fa-solid fa-truck" href="{{ url_for('vehiculo')}}">Vehiculo</a></li>
                     <li class=""><a class="fa-solid fa-user" href="{{ url_for('usuario')}}">Usuario</a></li>
                 </ul>
             </div>
@@ -152,12 +152,12 @@
             <header
                 style="display: flex; justify-content: space-between; padding: 5px; background-color: #f0f0f0; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="checkbox" id="nav-toggle" style="visibility: hidden;"> 
                     <label for="nav-toggle">
                         <span class="fa fa-bars"></span>
                     </label>
+                    <input type="checkbox" id="nav-toggle" style="visibility: hidden;">
                     <h2 style="margin: 0;"> MANTENIMIENTO MANIFIESTO</h2>
-                </div>
+                </div>                
                 <div class="header-buttons" style="display: flex; align-items: center; gap: 10px;">
                     <div id="fecha-hora-sistema" style="font-size: 14px; color: #333;"></div>
                     <a href="/admin" class="btn-exit btn-inicio">INICIO</a>

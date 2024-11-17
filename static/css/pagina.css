@@ -244,7 +244,7 @@ table th, table td {
     }
 
     .main-content header {
-        width: calc(100% -70px);
+        width: calc(100% - 70px);
         left: 70px;
     }
 }
