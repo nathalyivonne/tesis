@@ -282,7 +282,7 @@ def ver_mapa():
         
         direcciones = [f"{row.direccion.strip()}, {row.distrito.strip()}" for row in rows]
         servicios = [row.servicio.strip() for row in rows]
-        servicios_unicos = sorted(set(servicios))  # Obtener servicios únicos y ordenarlos
+        servicios_unicos = sorted(set(servicios))  
         fecha_hora_subidas = [row.fecha_hora_subida for row in rows] 
         
         # Verificar si no hay direcciones y mostrar mensaje
@@ -311,7 +311,7 @@ def ver_mapa():
                         'address': direccion,
                         'latitude': latitud,
                         'longitude': longitud,
-                        'servicio': servicios[i],  # Usar el servicio correspondiente al índice
+                        'servicio': servicios[i], 
                         'fecha_hora_subida': fecha_hora_subidas[i].strftime('%Y-%m-%d %H:%M:%S') if fecha_hora_subidas[i] else None
                     })
                 else:
