@@ -83,6 +83,7 @@ def login():
     #return render_template('login.html')
     return render_template('login.html', form=form)
 
+@csrf.exempt
 @app.route('/analizar', methods=['POST'])
 def upload():
     base64_data = request.form['base64Data']
@@ -140,6 +141,7 @@ def upload():
     except Exception as e:
         return f"Error: {e}"
 
+@csrf.exempt
 @app.route('/ver_tabla', methods=['GET', 'POST'])
 def ver_tabla():
     try:
@@ -155,8 +157,6 @@ def ver_tabla():
         return f"Error de base de datos: {e}"
     except Exception as e:
         return f"Error: {e}"
-
-csrf.exempt(ver_tabla)
 
 def fitness(solution):
     # Sumar las longitudes de las direcciones como medida de distancia total
@@ -375,6 +375,7 @@ def format_date_time(date_time_str):
             print(f"Invalid date format received: {date_time_str}. Using current time.")
             return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+@csrf.exempt
 @app.route('/actualizar_hora_entrega', methods=['POST'])
 def actualizar_hora_entrega():
     data = request.json
@@ -477,6 +478,7 @@ def actualizar_hora_entrega():
     finally:
         cursor.close()
         
+@csrf.exempt
 @app.route('/eliminar_entrega', methods=['POST'])
 def eliminar_entrega():
     data = request.json
@@ -534,18 +536,29 @@ def cargo():
     cursor.close()
     return render_template('cargo.html', data=insertObject)
 
+@csrf.exempt
 @app.route('/agregar_cargo', methods=['POST'])
 def agregar_cargo():
-    titulo = request.form['titulo']
-    descripcion = request.form['descripcion']
-    estado = 1 if 'estado' in request.form else 0 
-    if titulo and descripcion:
-        cursor = db.conn.cursor()
-        sql = "INSERT INTO cargo (titulo, descripcion, estado) VALUES (?, ?, ?)"
-        data = (titulo, descripcion, estado)
-        cursor.execute(sql, data)
-        db.conn.commit()
-    return redirect(url_for('cargo'))
+    titulo = request.form.get('titulo')
+    descripcion = request.form.get('descripcion')
+    estado = 1 if request.form.get('estado') else 0 
+    try:
+        if titulo and descripcion:
+            titulo = titulo.strip()
+            descripcion = descripcion.strip()
+            if titulo and descripcion:
+                cursor = db.conn.cursor()
+                sql = "INSERT INTO cargo (titulo, descripcion, estado) VALUES (?, ?, ?)"
+                data = (titulo, descripcion, estado)
+                cursor.execute(sql, data)
+                db.conn.commit()
+                cursor.close()
+                return redirect(url_for('cargo'))
+        else:
+            return "Faltan campos requeridos", 400
+    except Exception as e:
+        print(f"Error al insertar cargo: {e}")
+        return "Error al insertar cargo", 500
 
 @app.route('/eliminar_cargo/<string:cargoid>', methods=['GET'])
 def eliminar_cargo(cargoid):
@@ -556,6 +569,7 @@ def eliminar_cargo(cargoid):
     db.conn.commit()
     return redirect(url_for('cargo')) 
 
+@csrf.exempt
 @app.route('/editar_cargo/<string:cargoid>', methods=['POST'])
 def editar_cargo(cargoid):
     titulo = request.form['titulo']
@@ -581,6 +595,7 @@ def roles():
     cursor.close()
     return render_template('roles.html', data=insertObject)
 
+@csrf.exempt
 @app.route('/agregar_roles', methods=['POST'])
 def agregar_roles():
     descripcion = request.form['descripcion']
@@ -602,6 +617,7 @@ def eliminar_roles(rolid):
     db.conn.commit()
     return redirect(url_for('roles')) 
 
+@csrf.exempt
 @app.route('/editar_roles/<string:rolid>', methods=['POST'])
 def editar_roles(rolid):
     try:
@@ -632,6 +648,7 @@ def tipoDocumento():
     cursor.close()
     return render_template('tipoDocumento.html', data=insertObject)
 
+@csrf.exempt
 @app.route('/agregar_tipodocumento', methods=['POST'])
 def agregar_tipodocumento():
     try:
@@ -660,6 +677,7 @@ def eliminar_tipodocumento(TipodocumentoID):
     db.conn.commit()
     return redirect(url_for('tipoDocumento')) 
 
+@csrf.exempt
 @app.route('/editar_tipodocumento/<string:TipodocumentoID>', methods=['POST'])
 def editar_tipodocumento(TipodocumentoID):
     Acronimo = request.form['Acronimo']
@@ -712,6 +730,7 @@ def usuario():
 
     return render_template('usuario.html', data=insertObject, tipodocumentos=tipodocumentos, cargos=cargos, roles=roles)
 
+@csrf.exempt
 @app.route('/agregar_usuario', methods=['POST'])
 def agregar_usuario():
     email = request.form ['email']
@@ -743,6 +762,7 @@ def eliminar_usuario(usuarioid):
     db.conn.commit()
     return redirect(url_for('usuario')) 
 
+@csrf.exempt
 @app.route('/editar_usuario/<string:usuarioid>', methods=['POST'])
 def editar_usuario(usuarioid):
     try:
@@ -810,6 +830,7 @@ def vehiculo():
     cursor.close()
     return render_template('vehiculo.html', data=insertObject, usuarios=usuarios)
 
+@csrf.exempt
 @app.route('/agregar_vehiculo', methods=['POST'])
 def agregar_vehiculo():
     marca = request.form['marca']
@@ -834,6 +855,7 @@ def eliminar_vehiculo(vehiculoid):
     db.conn.commit()
     return redirect(url_for('vehiculo')) 
 
+@csrf.exempt
 @app.route('/editar_vehiculo/<string:vehiculoid>', methods=['POST'])
 def editar_vehiculo(vehiculoid):
     marca = request.form['marca']
