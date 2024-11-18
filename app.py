@@ -536,7 +536,7 @@ def cargo():
     cursor.close()
     return render_template('cargo.html', data=insertObject)
 
-@csrf.exempt
+#@csrf.exempt
 @app.route('/agregar_cargo', methods=['POST'])
 def agregar_cargo():
     titulo = request.form.get('titulo')
@@ -569,7 +569,7 @@ def eliminar_cargo(cargoid):
     db.conn.commit()
     return redirect(url_for('cargo')) 
 
-@csrf.exempt
+#@csrf.exempt
 @app.route('/editar_cargo/<string:cargoid>', methods=['POST'])
 def editar_cargo(cargoid):
     titulo = request.form['titulo']
