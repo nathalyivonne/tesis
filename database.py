@@ -26,7 +26,9 @@ endpoint = client.get_secret("endpoint").value
 modelid = client.get_secret("modelid").value
 keyocr = client.get_secret("keyocr").value
 
-if not all([server, database, username, password, subscription, resourcegroupname, datafactoryname, pipelinename, googlemapsapikey, endpoint, modelid, keyocr]):
+secretkey = client.get_secret("secretkey").value
+
+if not all([server, database, username, password, subscription, resourcegroupname, datafactoryname, pipelinename, googlemapsapikey, endpoint, modelid, keyocr, secretkey]):
     raise ValueError("No se pudieron recuperar todas las credenciales requeridas.")
 
 driver = '{ODBC Driver 17 for SQL Server}'

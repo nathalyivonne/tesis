@@ -27,7 +27,7 @@ class LoginForm(FlaskForm):
     txtContrasena = PasswordField('Contraseña', validators=[DataRequired()])
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '177eb9c449abc838136808a76e66eaaec'
+app.config['SECRET_KEY'] = db.secretkey
 csrf = CSRFProtect(app) 
 
 adf_client = db.adf_client
