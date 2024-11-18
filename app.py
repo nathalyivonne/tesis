@@ -54,9 +54,6 @@ def login():
         print("Formulario validado correctamente")
         _email = form.txtEmail.data
         _contrasena = form.txtContrasena.data
-    #if request.method == 'POST' and 'txtEmail' in request.form and 'txtContrasena' in request.form:
-        #_email = request.form['txtEmail']
-        #_contrasena = request.form['txtContrasena']
 
         try:
             cursor = db.conn.cursor()
