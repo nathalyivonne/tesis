@@ -217,7 +217,7 @@
                                                 </div>
                                                 <div class="modal-body">
                                                     <form action="{{ url_for('editar_usuario', usuarioid=u.usuarioid) }}" method="post"> 
-
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <div class="mb-3">
                                                             <label for="nombreusuario">Nombre Usuario
                                                                 <input type="text" id="nombreusuario" class="form-control" name="nombreusuario" value="{{ u.nombreusuario }}">
@@ -485,6 +485,8 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         const editForms = document.querySelectorAll('form[action*="editar_usuario"]');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content'); 
+
         editForms.forEach(form => {
             form.addEventListener('submit', function(event) {
                 event.preventDefault(); // Previene la acción por defecto del formulario
@@ -495,6 +497,10 @@
     
                 fetch(actionUrl, {
                     method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Accept': 'application/json'
+                    },
                     body: formData
                 })
                 .then(response => {

@@ -132,6 +132,7 @@
                                                 </div>
                                                 <div class="modal-body">
                                                     <form action="{{ url_for('editar_cargo', cargoid=c.cargoid) }}" method="post">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <div class="col">
                                                             <label for="titulo">Título
                                                                 <input type="text" id="titulo" class="form-control mb-3" name="titulo" value="{{ c.titulo }}">
@@ -314,6 +315,8 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const editForms = document.querySelectorAll('form[action*="editar_cargo"]');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content'); 
+
             editForms.forEach(form => {
                 form.addEventListener('submit', function(event) {
                     event.preventDefault(); // Previene la acción por defecto del formulario
@@ -324,6 +327,10 @@
         
                     fetch(actionUrl, {
                         method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'Accept': 'application/json'
+                        },
                         body: formData
                     })
                     .then(response => {
@@ -368,7 +375,7 @@
             const confirmGuardarBtn = document.getElementById('confirmGuardarBtn');
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content'); 
-
+            
             guardarBtn.addEventListener('click', function(event) {
                 event.preventDefault(); // Previene el envío inmediato del formulario
                 const confirmModal = new bootstrap.Modal(document.getElementById('modalConfirmacionGuardar'));

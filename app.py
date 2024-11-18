@@ -569,7 +569,7 @@ def eliminar_cargo(cargoid):
     db.conn.commit()
     return redirect(url_for('cargo')) 
 
-@csrf.exempt
+#@csrf.exempt
 @app.route('/editar_cargo/<string:cargoid>', methods=['POST'])
 def editar_cargo(cargoid):
     titulo = request.form['titulo']
@@ -617,7 +617,7 @@ def eliminar_roles(rolid):
     db.conn.commit()
     return redirect(url_for('roles')) 
 
-@csrf.exempt
+#@csrf.exempt
 @app.route('/editar_roles/<string:rolid>', methods=['POST'])
 def editar_roles(rolid):
     try:
@@ -677,7 +677,7 @@ def eliminar_tipodocumento(TipodocumentoID):
     db.conn.commit()
     return redirect(url_for('tipoDocumento')) 
 
-@csrf.exempt
+#@csrf.exempt
 @app.route('/editar_tipodocumento/<string:TipodocumentoID>', methods=['POST'])
 def editar_tipodocumento(TipodocumentoID):
     Acronimo = request.form['Acronimo']
@@ -762,7 +762,7 @@ def eliminar_usuario(usuarioid):
     db.conn.commit()
     return redirect(url_for('usuario')) 
 
-@csrf.exempt
+#@csrf.exempt
 @app.route('/editar_usuario/<string:usuarioid>', methods=['POST'])
 def editar_usuario(usuarioid):
     try:
@@ -855,7 +855,7 @@ def eliminar_vehiculo(vehiculoid):
     db.conn.commit()
     return redirect(url_for('vehiculo')) 
 
-@csrf.exempt
+#@csrf.exempt
 @app.route('/editar_vehiculo/<string:vehiculoid>', methods=['POST'])
 def editar_vehiculo(vehiculoid):
     marca = request.form['marca']
