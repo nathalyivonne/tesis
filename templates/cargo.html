@@ -367,8 +367,8 @@
             const guardarBtn = guardarForm.querySelector('button[type="submit"]');
             const confirmGuardarBtn = document.getElementById('confirmGuardarBtn');
 
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content'); // Obtiene el token CSRF del meta tag
-        
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content'); 
+
             guardarBtn.addEventListener('click', function(event) {
                 event.preventDefault(); // Previene el envío inmediato del formulario
                 const confirmModal = new bootstrap.Modal(document.getElementById('modalConfirmacionGuardar'));
@@ -385,7 +385,7 @@
                 fetch(actionUrl, {
                     method: 'POST',
                     headers: {
-                        'X-CSRFToken': csrfToken, // Incluye el token CSRF en el encabezado de la solicitud
+                        'X-CSRFToken': csrfToken,
                         'Accept': 'application/json'
                     },
                     body: formData

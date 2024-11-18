@@ -569,7 +569,7 @@ def eliminar_cargo(cargoid):
     db.conn.commit()
     return redirect(url_for('cargo')) 
 
-#@csrf.exempt
+@csrf.exempt
 @app.route('/editar_cargo/<string:cargoid>', methods=['POST'])
 def editar_cargo(cargoid):
     titulo = request.form['titulo']
@@ -595,7 +595,7 @@ def roles():
     cursor.close()
     return render_template('roles.html', data=insertObject)
 
-@csrf.exempt
+#@csrf.exempt
 @app.route('/agregar_roles', methods=['POST'])
 def agregar_roles():
     descripcion = request.form['descripcion']
@@ -648,7 +648,7 @@ def tipoDocumento():
     cursor.close()
     return render_template('tipoDocumento.html', data=insertObject)
 
-@csrf.exempt
+#@csrf.exempt
 @app.route('/agregar_tipodocumento', methods=['POST'])
 def agregar_tipodocumento():
     try:
@@ -730,7 +730,7 @@ def usuario():
 
     return render_template('usuario.html', data=insertObject, tipodocumentos=tipodocumentos, cargos=cargos, roles=roles)
 
-@csrf.exempt
+#@csrf.exempt
 @app.route('/agregar_usuario', methods=['POST'])
 def agregar_usuario():
     email = request.form ['email']
@@ -830,7 +830,7 @@ def vehiculo():
     cursor.close()
     return render_template('vehiculo.html', data=insertObject, usuarios=usuarios)
 
-@csrf.exempt
+#@csrf.exempt
 @app.route('/agregar_vehiculo', methods=['POST'])
 def agregar_vehiculo():
     marca = request.form['marca']
