@@ -158,205 +158,301 @@ def ver_tabla():
     except Exception as e:
         return f"Error: {e}"
 
-def fitness(solution):
-    # Sumar las longitudes de las direcciones como medida de distancia total
-    total_distance = sum(len(direccion) for direccion in solution)
-    return total_distance
+# distance_matrix.py
+from typing import List, Dict
+import time
 
-# Función para inicializar la población
-def initialize_population(pop_size, direcciones):
+def chunk_addresses(addresses: List[str], chunk_size: int = 10) -> List[List[str]]:
+    """Divide la lista de direcciones en chunks más pequeños."""
+    return [addresses[i:i + chunk_size] for i in range(0, len(addresses), chunk_size)]
+
+def get_distance_matrix(addresses: List[str], gmaps) -> List[List[float]]:
     """
-    Inicializa una población de soluciones para el algoritmo genético.
+    Obtiene la matriz de distancias usando Google Maps Distance Matrix API,
+    manejando las limitaciones de la API dividiendo en chunks.
+    """
+    CHUNK_SIZE = 10  # Google Maps API tiene un límite de 10x10 elementos por solicitud
+    chunks = chunk_addresses(addresses, CHUNK_SIZE)
+    matrix_size = len(addresses)
+    distance_matrix = [[float('inf')] * matrix_size for _ in range(matrix_size)]
     
-    Args:
-        pop_size (int): Tamaño de la población.
-        direcciones (list): Lista de direcciones a optimizar.
+    try:
+        for i, origins_chunk in enumerate(chunks):
+            origin_start = i * CHUNK_SIZE
+            
+            for j, destinations_chunk in enumerate(chunks):
+                dest_start = j * CHUNK_SIZE
+                
+                # Añadir delay para evitar límites de rate
+                time.sleep(0.5)
+                
+                result = gmaps.distance_matrix(
+                    origins_chunk,
+                    destinations_chunk,
+                    mode="driving",
+                    language="es",
+                    units="metric"
+                )
+                
+                # Procesar resultados
+                for row_idx, row in enumerate(result['rows']):
+                    for elem_idx, element in enumerate(row['elements']):
+                        if element['status'] == 'OK':
+                            matrix_i = origin_start + row_idx
+                            matrix_j = dest_start + elem_idx
+                            if matrix_i < matrix_size and matrix_j < matrix_size:
+                                distance_matrix[matrix_i][matrix_j] = element['distance']['value']
         
-    Returns:
-        list: Población inicial de soluciones.
-    """
-    initial_population = []
-    num_genes = len(direcciones)
+        return distance_matrix
+    except Exception as e:
+        print(f"Error al obtener matriz de distancias: {e}")
+        return None
+
+# route_optimizer.py
+def calculate_total_distance(route: List[int], distance_matrix: List[List[float]]) -> float:
+    """Calcula la distancia total de una ruta."""
+    if not route or not distance_matrix:
+        return float('inf')
     
+    total = 0
+    for i in range(len(route) - 1):
+        total += distance_matrix[route[i]][route[i + 1]]
+    # Añadir retorno al inicio
+    total += distance_matrix[route[-1]][route[0]]
+    return total
+
+def initialize_population(pop_size: int, num_locations: int) -> List[List[int]]:
+    """Inicializa la población con permutaciones aleatorias."""
+    population = []
     for _ in range(pop_size):
-        solution = secrets.SystemRandom().sample(direcciones, num_genes)
-        #solution = random.sample(direcciones, num_genes)
-        initial_population.append(solution)
+        # Mantener el punto de inicio (índice 0) fijo
+        route = list(range(1, num_locations))
+        random.shuffle(route)
+        route = [0] + route  # Añadir el punto de inicio al principio
+        population.append(route)
+    return population
+
+def crossover_pmx(parent1: List[int], parent2: List[int]) -> tuple:
+    """Implementa Partially Mapped Crossover (PMX)."""
+    size = len(parent1)
+    point1, point2 = sorted(random.sample(range(1, size), 2))
     
-    return initial_population
-
-# Función de selección de padres (torneo binario)
-def select_parents(population, fitness_values, num_parents):
-    selected_parents = []
-    for _ in range(num_parents):
-        idx1 = secrets.randbelow(len(population))
-        idx2 = secrets.randbelow(len(population))
-        #idx1 = random.randint(0, len(population) - 1)
-        #idx2 = random.randint(0, len(population) - 1)
-        parent = population[idx1] if fitness_values[idx1] < fitness_values[idx2] else population[idx2]
-        selected_parents.append(parent)
-    return selected_parents
-
-# Función de crossover (un punto), creacion de los hijos
-def crossover(parent1, parent2):
-    point = secrets.randbelow(len(parent1)) 
-    #point = random.randint(0, len(parent1) - 1)
-    child1 = parent1[:point] + parent2[point:]
-    child2 = parent2[:point] + parent1[point:]
+    def pmx_helper(p1, p2):
+        child = [-1] * size
+        child[0] = 0  # Mantener el punto de inicio fijo
+        
+        # Copiar segmento del primer padre
+        child[point1:point2] = p1[point1:point2]
+        
+        # Mapear elementos del segundo padre
+        mapping = dict(zip(p1[point1:point2], p2[point1:point2]))
+        
+        # Rellenar resto de posiciones
+        for i in range(1, size):
+            if i < point1 or i >= point2:
+                current = p2[i]
+                while current in child:
+                    current = mapping.get(current, current)
+                child[i] = current
+                
+        return child
+    
+    child1 = pmx_helper(parent1, parent2)
+    child2 = pmx_helper(parent2, parent1)
     
     return child1, child2
 
-# Función de mutación (bit flip) mejorada para direcciones
-def mutate(solution, mutation_rate):
-    mutated_solution = solution[:]
-    for i in range(len(mutated_solution)):
-        if secrets.SystemRandom().random() < mutation_rate:
-        #if random.random() < mutation_rate:
-            original_address = solution[i]
-            
-            # Dividir la dirección en partes (por ejemplo, calle, número, etc.)
-            address_parts = original_address.split(',')
-            
-            # Modificar una parte aleatoria de la dirección
-            if len(address_parts) > 1:
-                # Escoger aleatoriamente una parte para modificar
-                index_to_mutate = secrets.SystemRandom().randint(0, len(address_parts) - 1)
-                #index_to_mutate = random.randint(0, len(address_parts) - 1)
-                
-                # Modificar esa parte de la dirección original
-                mutated_part = address_parts[index_to_mutate].strip()
-                address_parts[index_to_mutate] = mutated_part
-            
-            # Reconstruir la dirección mutada
-            mutated_address = ','.join(address_parts)
-            
-            # Actualizar la solución mutada
-            mutated_solution[i] = mutated_address
-    
-    return mutated_solution
+def mutate(solution: List[int], mutation_rate: float) -> List[int]:
+    """Aplica mutación swap preservando el punto de inicio."""
+    if random.random() < mutation_rate:
+        idx1, idx2 = random.sample(range(1, len(solution)), 2)
+        solution[idx1], solution[idx2] = solution[idx2], solution[idx1]
+    return solution
 
-# Función principal del algoritmo genético
-def genetic_algorithm(pop_size, direcciones, max_generations):
-    if not direcciones:
-        raise ValueError("La lista de direcciones no puede estar vacía.")
+def genetic_algorithm(addresses: List[str], gmaps, pop_size: int = 50, 
+                     generations: int = 100, mutation_rate: float = 0.1) -> List[int]:
+    """
+    Implementa el algoritmo genético para optimización de rutas.
+    """
+    # Obtener matriz de distancias
+    distance_matrix = get_distance_matrix(addresses, gmaps)
+    if not distance_matrix:
+        raise ValueError("No se pudo obtener la matriz de distancias")
     
-    # Validación para asegurarse de que cada dirección es una cadena de texto
-    if not all(isinstance(direccion, str) for direccion in direcciones):
-        raise TypeError("Cada dirección debe ser una cadena de texto.")
+    num_locations = len(addresses)
+    population = initialize_population(pop_size, num_locations)
+    best_route = None
+    best_distance = float('inf')
     
-    population = initialize_population(pop_size, direcciones)
-    for generation in range(max_generations):
-        fitness_values = [fitness(solution) for solution in population]
-        parents = select_parents(population, fitness_values, num_parents=2)
-        offspring = []
-        for i in range(0, pop_size, 2):
-            child1, child2 = crossover(parents[0], parents[1])  
-            offspring.append(mutate(child1, mutation_rate=0.1))
-            offspring.append(mutate(child2, mutation_rate=0.1))
-        population = offspring
-    best_solution = min(population, key=fitness)
-    return best_solution
+    for generation in range(generations):
+        # Evaluar población
+        fitness_scores = [calculate_total_distance(route, distance_matrix) 
+                         for route in population]
+        
+        # Actualizar mejor ruta
+        min_idx = fitness_scores.index(min(fitness_scores))
+        if fitness_scores[min_idx] < best_distance:
+            best_distance = fitness_scores[min_idx]
+            best_route = population[min_idx]
+        
+        # Selección y reproducción
+        new_population = [best_route]  # Elitismo
+        
+        while len(new_population) < pop_size:
+            # Selección por torneo
+            tournament = random.sample(list(enumerate(fitness_scores)), 5)
+            parents = sorted(tournament, key=lambda x: x[1])[:2]
+            parent1, parent2 = population[parents[0][0]], population[parents[1][0]]
+            
+            # Crossover y mutación
+            child1, child2 = crossover_pmx(parent1, parent2)
+            child1, child2 = mutate(child1, mutation_rate), mutate(child2, mutation_rate)
+            
+            new_population.extend([child1, child2])
+        
+        population = new_population[:pop_size]
+    
+    return best_route
 
+def validar_direccion(direccion):
+    try:
+        result = db.gmaps.geocode(direccion)
+        if result:
+            return True
+        return False
+    except Exception:
+        return False
+
+# routes.py
 @app.route('/ver_mapa', methods=['GET'])
 def ver_mapa():
     try:
         fecha_filtro = request.args.get('fecha', None)
         
-        cursor = db.conn.cursor()
-
+        conn = pyodbc.connect(db.connection_string)
+        cursor = conn.cursor()
+        
         if fecha_filtro:
             cursor.execute("""
-                SELECT direccion, distrito, servicio, fecha_hora_subida 
+                SELECT TOP 25 direccion, distrito, servicio, fecha_hora_subida 
                 FROM manifiesto2 
                 WHERE CAST(fecha_hora_subida AS DATE) = ?
             """, (fecha_filtro,))
         else:
             cursor.execute("""
-                SELECT direccion, distrito, servicio, fecha_hora_subida 
+                SELECT TOP 25 direccion, distrito, servicio, fecha_hora_subida 
                 FROM manifiesto2
             """)
         
         rows = cursor.fetchall()
         print(f"Filtrado por fecha {fecha_filtro}: {rows}")
-        cursor.close()
+        cursor.close()  # Cerrar el cursor
+        conn.close()    # Cerrar la conexión
         
-        direcciones = [f"{row.direccion.strip()}, {row.distrito.strip()}" for row in rows]
-        servicios = [row.servicio.strip() for row in rows]
-        servicios_unicos = sorted(set(servicios))  
-        fecha_hora_subidas = [row.fecha_hora_subida for row in rows] 
-        
-        # Verificar si no hay direcciones y mostrar mensaje
-        if not direcciones:
+        if not rows:
             return render_template('mapa.html', mensaje="No se encontraron direcciones para mostrar")
         
-        # Ejecutar el algoritmo genético para optimizar las direcciones
-        pop_size = 10  # Tamaño de la población inicial
-        max_generations = 50  # Número máximo de generaciones
-        best_solution = genetic_algorithm(pop_size, direcciones, max_generations)  # Pasar direcciones como lista
+        # Punto de inicio/fin
+        START_ADDRESS = "CALLE LOS SAUCES 568 URBANIZACION SANTA VICTORIA, CHICLAYO"
         
-        # Geocodificar todas las direcciones usando Google Maps API
+        # Preparar direcciones incluyendo punto de inicio
+        direcciones = [START_ADDRESS]
+        for row in rows:
+            direccion_completa = f"{row.direccion.strip()}, {row.distrito.strip()}, Chiclayo, Peru"
+            if validar_direccion(direccion_completa):
+                direcciones.append(direccion_completa)
+            else:
+                print(f"Dirección inválida: {direccion_completa}")
+        
+        # Obtener matriz de distancias
+        distance_matrix = []
+        for origen in direcciones:
+            row_distances = []
+            for destino in direcciones:
+                if origen == destino:
+                    row_distances.append(0)
+                    continue
+                
+                try:
+                    result = db.gmaps.distance_matrix(
+                        origen,
+                        destino,
+                        mode="driving",
+                        language="es"
+                    )
+                    
+                    if result['rows'][0]['elements'][0]['status'] == 'OK':
+                        distance = result['rows'][0]['elements'][0]['distance']['value']
+                        row_distances.append(distance)
+                    else:
+                        row_distances.append(float('inf'))
+                except Exception as e:
+                    print(f"Error obteniendo distancia entre {origen} y {destino}: {e}")
+                    row_distances.append(float('inf'))
+            
+            distance_matrix.append(row_distances)
+        
+        # Implementar algoritmo del vecino más cercano
+        def nearest_neighbor(distances, start_idx=0):
+            n = len(distances)
+            unvisited = set(range(n))
+            route = [start_idx]
+            unvisited.remove(start_idx)
+            
+            while unvisited:
+                current = route[-1]
+                next_city = min(unvisited, key=lambda x: distances[current][x])
+                route.append(next_city)
+                unvisited.remove(next_city)
+            
+            # Volver al inicio
+            route.append(start_idx)
+            return route
+        
+        # Obtener ruta optimizada
+        optimal_route = nearest_neighbor(distance_matrix)
+        
+        # Geocodificar direcciones en orden optimizado
         geocoded_addresses = []
-        for i, direccion in enumerate(best_solution):
+        for i, idx in enumerate(optimal_route[:-1]):  # Excluir última repetición del inicio
+            direccion = direcciones[idx]
             try:
-                geocode_result = gmaps.geocode(direccion)
+                geocode_result = db.gmaps.geocode(direccion)
                 if geocode_result:
                     location = geocode_result[0]['geometry']['location']
-                    latitud = location['lat']
-                    longitud = location['lng']
-                    
-                    etiqueta = f'DIRECCION {i + 1}'
+                    # Si idx es 0, es el punto de inicio/fin
+                    if idx == 0:
+                        geocoded_addresses.append({
+                            'label': 'INICIO/FIN',
+                            'address': direccion,
+                            'latitude': location['lat'],
+                            'longitude': location['lng'],
+                            'servicio': 'INICIO/FIN',
+                            'orden': i,
+                            'fecha_hora_subida': None
+                        })
+                    else:
+                        # Restamos 1 a idx porque el array rows no incluye la dirección de inicio
+                        geocoded_addresses.append({
+                            'label': f'Parada {i}',
+                            'address': direccion,
+                            'latitude': location['lat'],
+                            'longitude': location['lng'],
+                            'servicio': rows[idx-1].servicio,
+                            'orden': i,
+                            'fecha_hora_subida': rows[idx-1].fecha_hora_subida.strftime('%Y-%m-%d %H:%M:%S') if rows[idx-1].fecha_hora_subida else None
+                        })
+            except Exception as e:
+                print(f"Error geocodificando {direccion}: {e}")
 
-                    geocoded_addresses.append({
-                        'label': etiqueta,
-                        'address': direccion,
-                        'latitude': latitud,
-                        'longitude': longitud,
-                        'servicio': servicios[i], 
-                        'fecha_hora_subida': fecha_hora_subidas[i].strftime('%Y-%m-%d %H:%M:%S') if fecha_hora_subidas[i] else None
-                    })
-                else:
-                    print(f"No se encontraron resultados para la dirección: {direccion}")
-            except googlemaps.exceptions.ApiError as ex:
-                print(f"Error de API al geocodificar {direccion}: {ex}")
+        # Convertir a JSON para el template
+        json_data = json.dumps(geocoded_addresses)
+        servicios_unicos = sorted(set(row.servicio.strip() for row in rows))
         
-        # Verificar si hay direcciones geocodificadas
-        if not geocoded_addresses:
-            return render_template('mapa.html', mensaje="No se encontraron direcciones geocodificadas para mostrar")
+        return render_template('mapa.html', 
+                             direcciones_geocodificadas=json_data,
+                             servicios_unicos=servicios_unicos)
         
-        # Filtrar duplicados por coordenadas después de geocodificar
-        unique_geocoded_addresses = []
-        seen_addresses = set()
-        for address in geocoded_addresses:
-            coordinates = (address['latitude'], address['longitude'])
-            if coordinates not in seen_addresses:
-                unique_geocoded_addresses.append(address)
-                seen_addresses.add(coordinates)
-            else:
-                print(f"Dirección duplicada encontrada: {address['address']} (Lat: {address['latitude']}, Lng: {address['longitude']})")
-        def custom_serializer(obj):
-            if isinstance(obj, datetime):
-                return obj.strftime('%Y-%m-%d %H:%M:%S')
-            raise TypeError(f"Type {type(obj)} not serializable")
-
-        # Geocodificar y agregar la dirección de inicio
-        start_address = "CALLE LOS SAUCES 568 URBANIZACION SANTA VICTORIA, CHICLAYO"
-        geocode_result = gmaps.geocode(start_address)
-        if geocode_result:
-            location = geocode_result[0]['geometry']['location']
-            unique_geocoded_addresses.append({
-                'label': 'DIRECCION 1', 
-                'address': start_address,
-                'latitude': location['lat'],
-                'longitude': location['lng'],
-                'servicio': 'Punto Final'
-            })
-        else:
-            print(f"No se encontraron resultados para la dirección de inicio: {start_address}")
- 
-        json_data = json.dumps(unique_geocoded_addresses, default=custom_serializer, indent=4)
-        return render_template('mapa.html', direcciones_geocodificadas=json_data, servicios_unicos= servicios_unicos)   
-    except pyodbc.Error as e:
-        return f"Error de base de datos: {e}"
     except Exception as e:
         return f"Error inesperado: {e}"
 
@@ -1069,3 +1165,4 @@ def reporte_porcentaje_faltantes():
 if __name__ == '__main__':
     debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() in ['true', '1']
     app.run(debug=debug_mode)
+    

@@ -672,13 +672,16 @@
             };
 
             directionsService.route(request, function(response, status) {
-                if (status == 'OK') {
-                    directionsRenderer.setDirections(response);
-                } else {
-                    window.alert('No se pudo trazar la ruta debido a: ' + status);
-                }
-            });
-        }
+            if (status == 'OK') {
+                directionsRenderer.setDirections(response);
+            } else if (status == 'ZERO_RESULTS') {
+                markers.forEach(marker => marker.setMap(map));
+                alert('No se pudo encontrar una ruta entre los puntos. Mostrando solo las ubicaciones.');
+            } else {
+                alert('Error al trazar la ruta: ' + status);
+            }
+        });
+    }
         function getCurrentDateTime() {
             var now = new Date();
             var year = now.getFullYear();
