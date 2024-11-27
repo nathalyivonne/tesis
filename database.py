@@ -30,7 +30,7 @@ try:
     resourcegroupname = get_secret_cached("resourcegroupname")
     datafactoryname = get_secret_cached("datafactoryname")
     pipelinename = get_secret_cached("pipelinename")
-    googlemapsapikey = get_secret_cached("googlemapsapikey")
+    googlemapsapikey2 = get_secret_cached("googlemapsapikey2")
     endpoint = get_secret_cached("endpoint")
     modelid = get_secret_cached("modelid")
     keyocr = get_secret_cached("keyocr")
@@ -40,7 +40,7 @@ except Exception as e:
 
 # Validar que los secretos esenciales estén presentes
 required_secrets = [server, database, username, password, subscription, resourcegroupname, 
-                    datafactoryname, pipelinename, googlemapsapikey, endpoint, modelid,
+                    datafactoryname, pipelinename, googlemapsapikey2, endpoint, modelid,
                     keyocr, secretkey]
 if not all(required_secrets):
     raise ValueError("No se pudieron recuperar todas las credenciales requeridas.")
@@ -70,7 +70,7 @@ adf_client = DataFactoryManagementClient(credential, subscription)
 
 # Inicializar el cliente de Google Maps
 try:
-    gmaps = googlemaps.Client(key=googlemapsapikey)
+    gmaps = googlemaps.Client(key=googlemapsapikey2)
     print("Cliente de Google Maps inicializado correctamente.")
 except Exception as e:
     raise ValueError(f"Error al inicializar el cliente de Google Maps: {e}")

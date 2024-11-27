@@ -499,3 +499,15 @@ header h2 {
 select.form-control {
     width: 100%; /* Ajusta según lo que necesites */
 }
+
+.marker-label {
+    background-color: #f33c3c !important;
+    border: none !important;
+    margin-top: -5px !important;
+}
+
+.gm-style-iw {
+    padding: 12px;
+    border-radius: 8px;
+}
+
