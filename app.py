@@ -334,13 +334,13 @@ def ver_mapa():
         
         if fecha_filtro:
             cursor.execute("""
-                SELECT TOP 25 direccion, distrito, servicio, fecha_hora_subida 
+                SELECT direccion, distrito, servicio, fecha_hora_subida 
                 FROM manifiesto2 
                 WHERE CAST(fecha_hora_subida AS DATE) = ?
             """, (fecha_filtro,))
         else:
             cursor.execute("""
-                SELECT TOP 25 direccion, distrito, servicio, fecha_hora_subida 
+                SELECT direccion, distrito, servicio, fecha_hora_subida 
                 FROM manifiesto2
             """)
         
