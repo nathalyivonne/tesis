@@ -288,6 +288,7 @@
                             <th>FECHA Y HORA DE ENTREGA</th>
                             <th>CUMPLIMIENTO</th>
                             <th>FECHA Y HORA DE SUBIDA</th>
+                            <!--<th>CÓDIGO</th> -->
                         </tr>
                     </thead>
                     <tbody id="direccion-items"></tbody>
@@ -688,8 +689,12 @@
                 tr.appendChild(tdCumplimientoFormateado);
 
                 const tdDateTimeSubida = document.createElement('td');
-                tdDateTimeSubida.textContent = direccion.fecha_hora_subida || ''; // Asumimos que `fecha_hora_subida` está en los datos de `direcciones`
+                tdDateTimeSubida.textContent = direccion.fecha_hora_subida || '';
                 tr.appendChild(tdDateTimeSubida);
+
+                //const tdCodigo = document.createElement('td');
+                //tdCodigo.textContent = direccion.codigo || '';
+                //tr.appendChild(tdCodigo);
 
                 direccionItems.appendChild(tr);
             });  
@@ -770,6 +775,7 @@
                         fecha_hora_entrega: row.querySelector('td:nth-child(5)').textContent, 
                         cumplimiento_formateado: row.querySelector('td:nth-child(6)').textContent,
                         fecha_hora_subida: row.querySelector('td:nth-child(7)').textContent
+                        //codigo: row.querySelector('td:nth-child(8)').textContent
                     };
                     items.push(item);
                 }
